@@ -9,8 +9,9 @@ A private, browser-only tool for mapping a fleet customer's **parent business an
 - `index.html` is also a complete single file: save it and open it from disk if you prefer.
 
 ## Privacy model
-- 100% client-side. No backend, no analytics, no fonts/CDNs. The page's Content-Security-Policy sets `default-src 'none'` and limits `connect-src` to Wex's Salesforce only (`https://wexinc.my.salesforce.com https://login.salesforce.com https://test.salesforce.com https://*.force.com`). The app cannot reach any other host, even by mistake.
-- Without the optional Salesforce connection, the only network traffic is the browser downloading the app's own code (HTML, icon, manifest, service worker) from GitHub Pages. No customer data is ever in those requests.
+- 100% client-side. No backend, no analytics, no fonts/CDNs. The page's Content-Security-Policy sets `default-src 'none'` and **`connect-src 'none'`**: the app cannot contact any server at all, even by mistake. There is no connection to Salesforce.
+- The only network traffic is the browser downloading the app's own code (HTML, icon, manifest, service worker) from GitHub Pages. No customer data is ever in those requests.
+- Salesforce report exports you upload are read **inside the browser** (no upload anywhere, despite the button name) and saved encrypted on that device.
 - Accounts, contacts and uploaded files are saved in the browser's IndexedDB on that device only. Clearing site data erases them — use **Export workspace** for backups.
 - **Sharing between reps:** Export workspace → send the `.json` file through an approved internal channel → the other rep uses **Open workspace file** (merge or replace).
 - The repository contains no customer data. The only demo data is clearly fictional ("Sample: …", `example.com`, 555 numbers) and loads only when you press **Load sample**.
@@ -19,7 +20,7 @@ A private, browser-only tool for mapping a fleet customer's **parent business an
 ## Passcode lock & encryption at rest
 - On first run each browser sets its own passcode (6+ characters). The whole app stays behind the lock screen until it's entered.
 - The passcode is never stored. PBKDF2-SHA256 (600,000 iterations, random 16-byte salt, WebCrypto) derives a 256-bit **AES-GCM** key and a separate verifier hash. The workspace and every attachment in IndexedDB are AES-GCM encrypted with a fresh IV; nothing readable is stored. Data saved before the lock existed is encrypted automatically when the passcode is first set.
-- **Auto-lock** after 15 minutes of no activity (1–120 min in ☰ → Settings & passcode), plus a 🔒 Lock button. Locking clears the data and any Salesforce session from memory. Reloading always starts locked. After 5 wrong tries, unlocking is delayed (30 s, doubling, up to 15 min).
+- **Auto-lock** after 15 minutes of no activity (1–120 min in ☰ → Settings & passcode), plus a 🔒 Lock button. Locking clears the data from memory. Reloading always starts locked. After 5 wrong tries, unlocking is delayed (30 s, doubling, up to 15 min).
 - **Change passcode** (needs the current one) re-encrypts everything in one atomic step.
 - **Forgot passcode:** there is no reset and no backdoor. The only option is to erase this browser's data (type ERASE to confirm). Keep exported backups.
 - **Exports are passcode-protected by default** (separate passcode chosen at export, PBKDF2 + AES-GCM). The importing rep is asked for it. Share that passcode separately from the file. This can be turned off in Settings.
@@ -34,22 +35,21 @@ A private, browser-only tool for mapping a fleet customer's **parent business an
 | Contacts | **Parent level** (applies to that account and everything under it — shown as *Inherited* on children) or **Child only** (just the checked location). Coverage matrix shows who covers what. |
 | Billing | Each child is *Billed at parent* (rolls up to the nearest parent credit line) or *Billed at child* (own limit, cycle, terms, billing contact). Summary of total exposure, own lines, roll-ups. |
 | Copy for Salesforce | 📋 on every field; *Copy all* (labeled lines) and *Copy row* (tab-separated header + values, pastes into Excel/SF); copy table, copy business summary. |
-| Paste / import | Paste rows from a Salesforce list view/report, labeled `Field: value` lines, or a Salesforce report CSV (footer lines stripped). Map columns once — the mapping is remembered. Creates or updates accounts (matched by SF ID, then name) and contacts (matched by email). |
+| Upload Salesforce exports | Drop one or many Salesforce report exports (see below); the map builds itself. |
+| Paste | Paste rows from a Salesforce list view/report, labeled `Field: value` lines, or a Salesforce report CSV (footer lines stripped). Map columns once — the mapping is remembered. Creates or updates accounts (matched by SF ID, then name) and contacts (matched by email). |
 | Files | Upload CSV fleet data (and any other attachment) to any parent or child. Preview CSVs. **Build master file** = one `.xlsx` with tabs *Summary, Accounts, Contacts, Billing, All Fleet Data* (stacked with Account/Source columns; union of headers when files differ) and one tab per CSV. Also a `.zip` of separate CSVs + attachments. |
 
-## Salesforce connection (optional, read-only — off until Wex approves it)
-The **Paste / import** tab has a Salesforce card. It is built but does nothing until a Wex Salesforce admin supplies a Consumer Key. No passwords or secrets are ever entered into this app.
+## Upload Salesforce exports
+No direct Salesforce connection: reps run reports in Salesforce, **Export** them, and drop the files on **⬆ Upload Salesforce exports** (header button, empty screen, or drag anywhere). Several files at once is fine.
 
-- **Instance URL:** prefilled `https://wexinc.my.salesforce.com` (editable; must be a Salesforce address).
-- **How it signs in:** OAuth 2.0 Authorization Code + **PKCE** on Salesforce's own login page — no client secret in the browser. Each rep signs in as themselves, so Salesforce sharing rules still apply. The access token is kept in `sessionStorage` (gone when the tab closes) and is never saved in the workspace or exported.
-- **What it does:** *Pull business from Salesforce* takes an Account ID or exact name and reads the account, its children (4 levels), their contacts, latest Case # and Opportunity, into the map. **Read-only**: only SOQL `GET` queries; the only `POST` is the OAuth token exchange. Nothing is written back.
-- **Admin checklist (once):**
-  1. **Approval first.** Connecting any tool to Wex's Salesforce needs sign-off from Wex IT / Information Security (and the Salesforce platform team).
-  2. Salesforce admin creates an **External Client App** (or Connected App): OAuth on, scope `api`, **Require PKCE**, no client secret required for the web-server flow, callback URL `https://nptrulock.github.io/wex-account-mapper/`. Assign permitted profiles/permission sets. Send the rep the Consumer Key.
-  3. **CORS:** in the **wexinc** org, Setup → CORS → add **`https://nptrulock.github.io`** to *Allowed Origins*, and enable **CORS for OAuth endpoints** (Setup → CORS). Without this, the browser blocks sign-in and queries ("Failed to fetch").
-- **Code:** `src/sf.js` registers a `salesforce-api` adapter on the `DataSources` registry (`src/core.js`); everything flows through the same `applyImport()` as paste/CSV.
-- Alternative worth asking the admins about: putting this view inside Salesforce (a Lightning Web Component plus custom fields for billing mode / credit line).
+- **Formats:** every Salesforce `.xls` flavor — Classic "Excel" export (an HTML table), Excel 2003 XML (SpreadsheetML), and genuine Excel 97-2003 (BIFF8) — plus `.xlsx` and `.csv` (UTF-8 / UTF-16 / Windows-1252). "Details only" and **Formatted** reports both work: title/filter blocks, grouping rows (`Account Name: … (n records)`), blank group cells, Subtotal / Total / Grand Totals rows and the Copyright / Confidential / Generated By footer are skipped or filled down automatically. Dates come through as `m/d/yyyy` (with time when present); IDs and case numbers keep leading zeros. All parsing is hand-written code in `src/readers.js`; nothing is fetched.
+- **Report type** is detected from the headers (Accounts, Contacts, Opportunities, Cases, Billing / credit, Other) and can be changed per file. Columns are **auto-mapped** to Account ID, name, Parent Account (ID or name), Ultimate Parent, owner/rep, stage, Case #, Opportunity, contacts (and their level), credit line, billing level, cycle, terms and billing contact. *Adjust columns* changes any mapping; changes are remembered for that report layout.
+- **Linking across files:** accounts match by Account ID (15 or 18 characters), then by name (a name never merges two different IDs, so same-named locations stay separate). The hierarchy is built after all files are read, so parents can come from any file; a parent that's only named gets a placeholder.
+- **Stages:** values clearly meaning Application Follow-up / Implementation Call / Monitor & Control are mapped automatically. Any other value is listed once with a chooser; your choice is remembered. The raw value is always kept as *Salesforce stage*. Opportunity sales stages are kept as an extra field, not used as the Wex stage.
+- **Nothing is lost:** columns without a home are kept as **extra fields** on the account (or contact) — shown under *From Salesforce exports* with 📋 copy buttons, included in *Copy all* and as columns in the master `.xlsx`. Extra opportunities / cases on the same account are kept as *Other …* fields.
+- **Preview first:** per-file format, header row, rows used / skipped, mapped vs extra columns, and the new vs updated counts before *Import everything*. Re-uploading the same files only updates (no duplicates).
 
 ## Development
-- Source in `src/` (`app.css`, `core.js`, `model.js`, `app.js`, `sf.js`, `app2.js`, `shell.html`, `sw.js`). `python3 tools/build.py` inlines everything into `index.html` and stamps the service-worker cache version.
-- The XLSX and ZIP writers are hand-written (no third-party libraries).
+- Source in `src/` (`app.css`, `core.js`, `readers.js`, `model.js`, `app.js`, `lock.js`, `app2.js`, `upload.js`, `shell.html`, `sw.js`). `python3 tools/build.py` inlines everything into `index.html` and stamps the service-worker cache version.
+- The XLSX/ZIP writers and the XLS/XLSX/CSV readers (inflate, OLE/CFB, BIFF8, SpreadsheetML, HTML) are hand-written (no third-party libraries).
+- Tests: `python3 tests/make_fixtures.py` builds **fictional** Salesforce-style exports in `tests/fixtures/` (one per format); `python3 tests/upload_test.py [url]` runs the upload checks in headless Chrome. Never add real exports to the repo.

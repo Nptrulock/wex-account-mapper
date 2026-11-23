@@ -8,16 +8,16 @@ function migrate(ws){
   ws.contacts = Array.isArray(ws.contacts) ? ws.contacts : [];
   ws.files = Array.isArray(ws.files) ? ws.files : [];
   ws.mappings = ws.mappings || {}; ws.mappings.accounts = ws.mappings.accounts || {}; ws.mappings.contacts = ws.mappings.contacts || {}; ws.mappings.sig = ws.mappings.sig || {};
-  for (const a of ws.accounts){ a.linkedIds = Array.isArray(a.linkedIds) ? a.linkedIds : []; if (!STAGE[a.stage]) a.stage = 'app'; if (a.billMode !== 'own') a.billMode = 'parent'; }
-  for (const c of ws.contacts){ c.accountIds = Array.isArray(c.accountIds) ? c.accountIds : []; if (c.level !== 'child') c.level = 'parent'; }
+  for (const a of ws.accounts){ a.extra = a.extra && typeof a.extra === 'object' ? a.extra : {}; a.linkedIds = Array.isArray(a.linkedIds) ? a.linkedIds : []; if (!STAGE[a.stage]) a.stage = 'app'; if (a.billMode !== 'own') a.billMode = 'parent'; }
+  for (const c of ws.contacts){ c.extra = c.extra && typeof c.extra === 'object' ? c.extra : {}; c.accountIds = Array.isArray(c.accountIds) ? c.accountIds : []; if (c.level !== 'child') c.level = 'parent'; }
   return ws;
 }
 function newAccount(o = {}){
-  const a = {id: uid('acc'), parentId: null, name: '', sfId: '', caseNo: '', oppName: '', oppNo: '', oppId: '', repName: '', repEmail: '', repPhone: '', stage: 'app', billMode: 'parent', creditLimit: '', billCycle: '', terms: '', billContact: '', notes: '', linkedIds: [], created: Date.now(), updated: Date.now(), ...o};
+  const a = {id: uid('acc'), extra: {}, parentId: null, name: '', sfId: '', caseNo: '', oppName: '', oppNo: '', oppId: '', repName: '', repEmail: '', repPhone: '', stage: 'app', billMode: 'parent', creditLimit: '', billCycle: '', terms: '', billContact: '', notes: '', linkedIds: [], created: Date.now(), updated: Date.now(), ...o};
   if (!a.parentId) a.billMode = 'own';
   WS.accounts.push(a); return a;
 }
-function newContact(o = {}){ const c = {id: uid('con'), name: '', title: '', email: '', phone: '', role: '', level: 'parent', accountIds: [], created: Date.now(), ...o}; WS.contacts.push(c); return c; }
+function newContact(o = {}){ const c = {id: uid('con'), extra: {}, name: '', title: '', email: '', phone: '', role: '', level: 'parent', accountIds: [], created: Date.now(), ...o}; WS.contacts.push(c); return c; }
 const acc = id => WS.accounts.find(a => a.id === id);
 const con = id => WS.contacts.find(c => c.id === id);
 const byName = (a, b) => (a.name || '').localeCompare(b.name || '', undefined, {numeric: true, sensitivity: 'base'});
@@ -67,6 +67,8 @@ function acctPairs(a){
   else pairs.push(['Credit Line Held By', h.name + (h.sfId ? ' (' + h.sfId + ')' : '')]);
   const linked = a.linkedIds.map(acc).filter(Boolean);
   if (linked.length) pairs.push(['Linked Accounts', linked.map(x => x.name).join('; ')]);
+  if (a.sfStage) pairs.push(['Salesforce Stage', a.sfStage]);
+  for (const [k, v] of Object.entries(a.extra || {})) pairs.push([k, v]);
   pairs.push(['Notes', a.notes]);
   return pairs;
 }
@@ -75,7 +77,7 @@ const acctTSV = a => { const p = acctPairs(a); return toTSV([p.map(x => x[0]), p
 function contactPairs(c){
   const at = c.accountIds.map(acc).filter(Boolean);
   return [['Name', c.name], ['Title', c.title], ['Email', c.email], ['Phone', c.phone], ['Role', c.role],
-    ['Level', c.level === 'parent' ? 'Parent level (whole business)' : 'Child only'], ['Account(s)', at.map(x => x.name).join('; ')], ['Account ID(s)', at.map(x => x.sfId).filter(Boolean).join('; ')]];
+    ['Level', c.level === 'parent' ? 'Parent level (whole business)' : 'Child only'], ['Account(s)', at.map(x => x.name).join('; ')], ['Account ID(s)', at.map(x => x.sfId).filter(Boolean).join('; ')], ...Object.entries(c.extra || {})];
 }
 const contactLabeled = c => contactPairs(c).map(([k, v]) => k + ': ' + (v ?? '')).join('\n');
 const contactTSV = c => { const p = contactPairs(c); return toTSV([p.map(x => x[0]), p.map(x => x[1])]); };

@@ -43,6 +43,7 @@ function acctModal(a){
     + '<div class="row small" style="margin:4px 0 8px">Children: ' + (kids(a.id).map(k => '<span class="chip" data-act="open" data-id="' + k.id + '" style="cursor:pointer">' + esc(shortName(k, root)) + '</span>').join(' ') || '<span class="muted">none</span>') + '<button class="small" data-act="addchild" data-id="' + a.id + '">+ Child</button></div>'
     + '<div class="row small">Linked: ' + (a.linkedIds.map(acc).filter(Boolean).map(l => '<span class="chip link"><span data-act="open" data-id="' + l.id + '" style="cursor:pointer">🔗 ' + esc(l.name) + '</span> <a href="#" data-act="unlink" data-id="' + a.id + '" data-v="' + l.id + '" title="Unlink">✕</a></span>').join(' ') || '<span class="muted">none</span>') + '</div>'
     + (linkOpts ? '<div class="row" style="margin-top:6px"><select id="linkSel" style="max-width:280px">' + linkOpts + '</select><button class="small" data-act="link" data-id="' + a.id + '">Link account</button></div><div class="small muted">Link related accounts that are not parent/child (sister companies, other business units).</div>' : '') + '</div>'
+    + (a.sfStage || Object.keys(a.extra || {}).length ? '<div class="sec"><h4>From Salesforce exports</h4>' + (a.sfStage ? '<div class="f"><label>Salesforce stage</label><input readonly value="' + esc(a.sfStage) + '"><button class="cp" data-act="copy" data-text="' + esc(a.sfStage) + '" data-what="Salesforce stage">📋</button></div>' : '') + Object.entries(a.extra || {}).map(([k, v]) => '<div class="f"><label>' + esc(k) + '</label><input readonly value="' + esc(v) + '"><button class="cp" data-act="copy" data-text="' + esc(v) + '" data-what="' + esc(k) + '">📋</button></div>').join('') + '</div>' : '')
     + '<div class="sec"><h4>Notes</h4><textarea id="f_notes" data-f="notes" rows="4">' + esc(a.notes) + '</textarea><div class="row" style="margin-top:6px"><button class="small" data-act="copyfield" data-sel="#f_notes" data-what="notes">📋 Copy notes</button></div></div>'
     + '<div class="row"><button class="danger" data-act="delacct" data-id="' + a.id + '">Delete account</button><span class="spacer"></span><button class="primary" data-act="close">Done</button></div></div>';
 }
@@ -52,6 +53,7 @@ function contactModal(c){
   const accts = root ? tree(root.id) : [];
   return '<div class="mh"><h3>Contact: ' + esc(c.name || 'new') + '</h3><button class="small" data-act="copycontact" data-id="' + c.id + '">Copy</button><button data-act="close">✕</button></div><div class="mb">'
     + '<div class="sec">' + CONTACT_FIELDS.map(f => fieldRow(f.label, f.k, c[f.k], f.k === 'email' ? 'email' : f.k === 'phone' ? 'tel' : 'text', 'data-cf')).join('') + '</div>'
+    + (Object.keys(c.extra || {}).length ? '<div class="sec"><h4>From Salesforce exports</h4>' + Object.entries(c.extra).map(([k, v]) => '<div class="f"><label>' + esc(k) + '</label><input readonly value="' + esc(v) + '"><button class="cp" data-act="copy" data-text="' + esc(v) + '" data-what="' + esc(k) + '">📋</button></div>').join('') + '</div>' : '')
     + '<div class="sec"><h4>Level</h4><div class="radio-cards"><label class="' + (c.level === 'parent' ? 'on' : '') + '" data-act="setlevel" data-v="parent"><input type="radio" name="lv"' + (c.level === 'parent' ? ' checked' : '') + '><span><b>Parent level</b><br><span class="small muted">Applies to the account(s) checked below and every child under them</span></span></label>'
     + '<label class="' + (c.level === 'child' ? 'on' : '') + '" data-act="setlevel" data-v="child"><input type="radio" name="lv"' + (c.level === 'child' ? ' checked' : '') + '><span><b>Child only</b><br><span class="small muted">Only the checked location(s)</span></span></label></div>'
     + '<div class="small" style="margin:10px 0 4px"><b>Attached to</b></div><div class="checklist">' + accts.map(({a, depth}) => '<label><input type="checkbox" data-act-change="cacct" data-v="' + a.id + '"' + (c.accountIds.includes(a.id) ? ' checked' : '') + '><span style="padding-left:' + depth * 14 + 'px">' + esc(a.name) + '</span></label>').join('') + '</div></div>'
@@ -69,7 +71,7 @@ async function previewFile(id){
 function importView(){
   const I = UI.imp || (UI.imp = {step: 1, type: 'accounts', text: '', under: UI.biz || ''});
   const rs = roots();
-  let h = sfCard() + '<div class="card"><h3>Paste or import from Salesforce</h3><div class="small muted">Nothing leaves this browser. Paste rows copied from a Salesforce list view/report (with the header row), labeled lines like <span class="kbd">Account Name: …</span>, or choose a report export (.csv). You map the columns once — the mapping is remembered.</div></div>';
+  let h = uploadView() + '<details class="card" id="pasteBox"' + (UI.pasteOpen || (UI.imp && (UI.imp.step > 1 || UI.imp.result)) ? ' open' : '') + '><summary><b>Or paste rows instead</b> <span class="small muted">(copied from a Salesforce list view or report)</span></summary><div style="height:8px"></div><div class="card"><h3>Paste or import from Salesforce</h3><div class="small muted">Nothing leaves this browser. Paste rows copied from a Salesforce list view/report (with the header row), labeled lines like <span class="kbd">Account Name: …</span>, or choose a report export (.csv). You map the columns once — the mapping is remembered.</div></div>';
   h += '<div class="card"><div class="row"><b>1.</b> What are you importing?<div class="seg"><button class="' + (I.type === 'accounts' ? 'on' : '') + '" data-act="imptype" data-v="accounts">Accounts</button><button class="' + (I.type === 'contacts' ? 'on' : '') + '" data-act="imptype" data-v="contacts">Contacts</button></div></div>'
     + '<textarea id="impText" rows="8" style="margin-top:10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px" placeholder="Paste here (Ctrl/⌘+V)…">' + esc(I.text) + '</textarea>'
     + '<div class="row" style="margin-top:8px"><button class="primary" data-act="impread">Read pasted data</button><span class="muted">or</span><label class="btnlike"><input type="file" id="impFile" accept=".csv,.tsv,.txt,text/csv" class="hidden"><span class="button" role="button">Choose Salesforce report CSV…</span></label>' + (I.fileName ? '<span class="small muted">' + esc(I.fileName) + '</span>' : '') + '</div></div>';
@@ -86,6 +88,7 @@ function importView(){
       + '</tbody></table></div><div class="row" style="margin-top:10px"><span class="spacer"></span><button class="primary" data-act="impgo" id="impGo">Import ' + I.plan.length + ' ' + I.type + '</button></div></div>';
   }
   if (I.result) h += '<div class="okbar">✓ Imported: ' + I.result.created + ' new, ' + I.result.updated + ' updated.' + (I.result.warnings.length ? '<br>⚠ ' + I.result.warnings.map(esc).join('<br>⚠ ') : '') + ' <button class="small" data-act="tab" data-tab="chart">View chart</button> <button class="small" data-act="impreset">New import</button></div>';
+  h += '</details>';
   return h;
 }
 function impRead(text, fileName){
@@ -222,13 +225,10 @@ const ACT = {
   importws: () => { UI.menu = false; renderMenu(); $('#fileWs').click(); },
   menu: () => { UI.menu = !UI.menu; renderMenu(); },
   clearall: async () => { UI.menu = false; renderMenu(); if (!confirm('Erase ALL accounts, contacts and files from this browser?\n\nExport a workspace file first if you want a backup.')) return; await Store.clearAll(true); WS = blankWs(); UI.biz = null; UI.modal = null; $('#modal').classList.add('hidden'); UI.imp = null; touch(); toast('Everything erased from this browser'); },
-  sfconnect: () => SF.connect(),
-  sfdisconnect: () => SF.disconnect(),
-  sfpull: async el => { if (SF.busy) return; SF.busy = true; el.disabled = true; el.textContent = 'Pulling…'; try { SF.status = await SF.pullBusiness($('#sfRef').value); } catch (e) { SF.status = 'Could not pull from Salesforce: ' + e.message; } SF.busy = false; render(); },
   settings: () => { UI.menu = false; renderMenu(); UI.modal = {kind: 'preview', html: Lock.settingsHtml()}; renderModal(); },
   locknow: () => Lock.lockNow(),
   changepass: () => Lock.changePass(),
-  about: () => { UI.menu = false; renderMenu(); UI.modal = {kind: 'preview', html: '<div class="mh"><h3>About Account Mapper</h3><button data-act="close">✕</button></div><div class="mb"><p><b>🔒 Your data stays in this browser. Nothing is uploaded.</b></p><p>The page has a strict Content-Security-Policy: no analytics, fonts or CDNs, and the app can\'t contact any address except Wex\'s Salesforce (only if you connect it). Accounts, contacts and files are saved in this browser\'s storage on this device only, encrypted (AES-GCM) with a key made from your passcode.</p><p>' + esc(LOCK_NOTE) + ' Clearing site data erases them, so export a workspace file as a backup.</p><p>Optional Salesforce connection (Paste / import tab): read-only, signs in on Salesforce\'s own page with OAuth + PKCE, and can only talk to Salesforce addresses. It downloads records into this browser; it never writes to Salesforce or sends data anywhere else.</p><p>To hand a business to another rep, use <b>Export workspace</b> and send the .json file through an approved, internal channel. They use <b>Open workspace file</b>.</p><p class="small muted">Version ' + APP_VERSION + ' · storage: ' + (Store.mode === 'idb' ? 'IndexedDB' : 'localStorage (limited)') + '</p></div>'}; renderModal(); },
+  about: () => { UI.menu = false; renderMenu(); UI.modal = {kind: 'preview', html: '<div class="mh"><h3>About Account Mapper</h3><button data-act="close">✕</button></div><div class="mb"><p><b>🔒 Your data stays in this browser. Nothing is uploaded.</b></p><p>The page has a strict Content-Security-Policy: no analytics, fonts or CDNs, and the app can\'t contact any address at all. Accounts, contacts and files are saved in this browser\'s storage on this device only, encrypted (AES-GCM) with a key made from your passcode.</p><p>' + esc(LOCK_NOTE) + ' Clearing site data erases them, so export a workspace file as a backup.</p><p>Salesforce data comes in only through report exports you upload (or paste). The files are read inside this browser; the app has no connection to Salesforce or anywhere else.</p><p>To hand a business to another rep, use <b>Export workspace</b> and send the .json file through an approved, internal channel. They use <b>Open workspace file</b>.</p><p class="small muted">Version ' + APP_VERSION + ' · storage: ' + (Store.mode === 'idb' ? 'IndexedDB' : 'localStorage (limited)') + '</p></div>'}; renderModal(); },
 };
 function backOrClose(){ const back = UI.backTo; UI.backTo = null; if (back && acc(back)) openModal('acct', back); else { UI.modal = null; renderModal(); } }
 function renderMenu(){ $('#menuPop').classList.toggle('hidden', !UI.menu); }
@@ -248,7 +248,6 @@ let bgTimer = null;
 document.addEventListener('input', ev => {
   const t = ev.target;
   if (t.id === 'q' || t.id === 'q2'){ UI.q = t.value; const id = t.id, pos = t.selectionStart; render(); const n = $('#' + id); if (n){ n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} } return; }
-  if (t.dataset.sf){ const c = SF.cfg(); c[t.dataset.sf] = t.dataset.sf === 'instanceUrl' ? SF.cleanUrl(t.value) : t.value.trim(); SF.saveCfg(c); const b = $('[data-act=sfconnect]'); if (b) b.disabled = !c.clientId; return; }
   if (t.id === 'impText' && UI.imp){ UI.imp.text = t.value; return; }
   if (t.dataset.f && UI.modal && UI.modal.kind === 'acct'){ const a = acc(UI.modal.id); a[t.dataset.f] = t.value; a.updated = Date.now(); if (t.dataset.f === 'name') $('.mh h3').textContent = t.value || '(unnamed)'; touch(false); clearTimeout(bgTimer); bgTimer = setTimeout(render, 300); }
   if (t.dataset.cf && UI.modal && UI.modal.kind === 'contact'){ const c = con(UI.modal.id); c[t.dataset.cf] = t.value; touch(false); clearTimeout(bgTimer); bgTimer = setTimeout(render, 300); }
@@ -273,7 +272,6 @@ document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && UI.modal
 /* ---------- boot ---------- */
 async function boot(){
   await Store.open();
-  SF.capture();
   if (Store.mode !== 'idb') $('#storeWarn').classList.remove('hidden');
   Vault.meta = await Lock.loadMeta();
   if (!Vault.meta){ const legacy = await Store.rawGet('kv', 'ws'); Lock.legacy = !!(legacy && !legacy.enc && legacy.accounts && legacy.accounts.length); }

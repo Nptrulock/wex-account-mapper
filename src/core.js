@@ -1,12 +1,11 @@
 'use strict';
 /* =====================================================================
    Account Mapper — local-only, single-file app.
-   No network access except the optional, read-only Salesforce connection:
-   the page CSP sets default-src 'none' and limits connect-src to Wex's
-   Salesforce hosts. All data lives in this
+   NO network access: the page's Content-Security-Policy sets
+   connect-src 'none' and default-src 'none'. All data lives in this
    browser (IndexedDB, with localStorage fallback) and in files you export.
    ===================================================================== */
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const WS_FORMAT = 'account-mapper-workspace';
 
 const STAGES = [
@@ -51,7 +50,7 @@ const uid = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).
 const norm = s => String(s ?? '').trim().toLowerCase().replace(/[\s_\-]+/g, ' ').replace(/[^a-z0-9#& ]/g, '').trim();
 const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
 const safeFile = s => String(s || 'file').replace(/^sample:\s*/i, 'Sample ').replace(/[^\w.\- ]+/g, '').trim().replace(/\s+/g, '_').slice(0, 60) || 'file';
-function parseMoney(v){ if (v == null || v === '') return null; const n = Number(String(v).replace(/[$,\s]/g, '')); return isFinite(n) ? n : null; }
+function parseMoney(v){ if (v == null || v === '') return null; const s = String(v).replace(/[A-Za-z$€£¥,\s]/g, ''); if (!s || !/\d/.test(s)) return null; const n = Number(s); return isFinite(n) ? n : null; }
 function fmtMoney(v){ const n = parseMoney(v); if (n == null) return ''; return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 2}); }
 function fmtBytes(n){ if (n < 1024) return n + ' B'; if (n < 1048576) return (n/1024).toFixed(1) + ' KB'; return (n/1048576).toFixed(1) + ' MB'; }
 function parseStage(v){
@@ -303,8 +302,8 @@ const Store = {
 /* ---------- Data-source adapters ----------
    Every source turns outside data into plain records, then hands them to
    applyImport(type, records, opts). Built in: 'paste' (clipboard text) and
-   'csv' (Salesforce report export). A future 'salesforce-api' adapter would
-   implement the same shape — see README "Future: direct Salesforce connection". */
+   'csv' (Salesforce report export), 'upload' (multi-file exports, src/upload.js).
+   All are local: the app has no network access by design. */
 const DataSources = {
   list: [],
   register(src){ this.list.push(src); },
@@ -312,11 +311,7 @@ const DataSources = {
 };
 DataSources.register({ id:'paste', label:'Paste from Salesforce', kind:'local', toTable: text => tableFromText(text) });
 DataSources.register({ id:'csv', label:'Salesforce report CSV', kind:'local', toTable: text => { const rows = cleanReportRows(parseCSV(text)); return {headers: rows[0] || [], rows: rows.slice(1)}; } });
-/* Placeholder — intentionally NOT implemented (no credentials, no network):
-DataSources.register({ id:'salesforce-api', label:'Salesforce (connected app)', kind:'remote',
-  async connect(){ OAuth 2.0 auth-code + PKCE via a Wex-approved External Client App },
-  async fetchAccounts(query){ GET /services/data/vXX.X/query?q=SELECT Id, Name, ParentId ... },
-  async fetchContacts(accountIds){ ... }, async pushAccount(acct){ PATCH /sobjects/Account/{Id} } }); */
+DataSources.register({ id:'upload', label:'Salesforce report exports (.xls/.xlsx/.csv)', kind:'local', note:'read in-browser by readers.js + upload.js' });
 
 function tableFromText(text){
   text = String(text || '').replace(/^\uFEFF/, '');

@@ -51,7 +51,7 @@ const Lock = {
         Lock.setFails({n: 0, until: 0}); await Lock.opened();
       } else if (mode === 'erase'){
         if ($('#eraseTxt').value.trim() !== 'ERASE') return err('Type ERASE (capital letters) to confirm.');
-        busy(true); await Store.clearAll(false); localStorage.removeItem('am_fail'); sessionStorage.removeItem('am_sf_tok'); Vault.meta = null; Vault.key = null; Lock.legacy = false; busy(false);
+        busy(true); await Store.clearAll(false); localStorage.removeItem('am_fail'); Vault.meta = null; Vault.key = null; Lock.legacy = false; busy(false);
         Lock.show('setup', 'All data in this browser was erased. Set a new passcode to start fresh.');
       }
     } catch (e) { busy(false); console.warn(e); err('Something went wrong: ' + e.message); }
@@ -78,15 +78,13 @@ const Lock = {
     Lock.locked = false; document.body.classList.remove('locked'); $('#lockScreen').classList.add('hidden'); $('#lockScreen').innerHTML = '';
     Lock.lastActive = Date.now();
     setSave(WS.accounts.length ? 'Saved in this browser (encrypted) ✓' : 'Nothing saved yet');
-    try { await SF.handleRedirect(); } catch (e) { console.warn(e); }
     render();
   },
   async lockNow(reason){
     if (Lock.locked) return;
     clearTimeout(saveTimer); clearTimeout(bgTimer);
     try { if (WS && Vault.key) await Store.putWs(WS); } catch (e) { console.warn(e); }
-    WS = null; Vault.key = null; UI.modal = null; UI.imp = null; UI.menu = false;
-    sessionStorage.removeItem('am_sf_tok');
+    WS = null; Vault.key = null; UI.modal = null; UI.imp = null; UI.up = null; UI.menu = false;
     for (const id of ['#main', '#side', '#mobileBiz', '#modalCard']) $(id).innerHTML = '';
     $('#modal').classList.add('hidden'); renderMenu(); Lock.closeDialog(null);
     Lock.show('unlock', reason || '');

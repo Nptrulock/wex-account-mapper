@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src https://wexinc.my.salesforce.com https://login.salesforce.com https://test.salesforce.com https://*.force.com; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1e3a5f">
@@ -20,6 +20,7 @@
   <span class="lock" title="All data is stored only in this browser">🔒 Local only</span>
   <span class="save" id="saveState"></span>
   <span class="spacer"></span>
+  <button data-act="upload" title="Read Salesforce report exports into the map">⬆ Upload Salesforce exports</button>
   <button data-act="locknow" title="Lock the app now">🔒 Lock</button>
   <button data-act="exportws" title="Save everything to a .json file">⬇ Export workspace</button>
   <button data-act="importws" title="Open a workspace .json file">⬆ Open workspace file</button>

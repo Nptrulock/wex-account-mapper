@@ -42,14 +42,14 @@ function renderMain(){
   const m = $('#main'); const b = curBiz();
   if (UI.tab === 'import'){ m.innerHTML = (b ? bizHeader(b) : '') + tabsHtml() + importView(); return; }
   if (!b){
-    m.innerHTML = '<div class="empty"><h2>Map a business: parent, child locations, contacts, billing</h2><p>Start with a new business, paste or import from Salesforce, or load the fictional sample to look around.</p><div class="row" style="justify-content:center"><button class="primary" data-act="newbiz">+ New business</button><button data-act="tab" data-tab="import">Paste / import from Salesforce</button><button data-act="loadsample">Load sample (fictional)</button><button data-act="importws">Open workspace file</button></div><p class="small" style="margin-top:22px">🔒 Your data stays in this browser. Nothing is uploaded.</p></div>';
+    m.innerHTML = '<div class="empty"><h2>Map a business: parent, child locations, contacts, billing</h2><p>Upload your Salesforce report exports (accounts, contacts, opportunities, cases, billing) and the map builds itself — or start a business by hand, or load the fictional sample to look around.</p><div class="row" style="justify-content:center"><button class="primary" data-act="upload">⬆ Upload Salesforce exports</button><button data-act="newbiz">+ New business</button><button data-act="loadsample">Load sample (fictional)</button><button data-act="importws">Open workspace file</button></div><p class="small" style="margin-top:22px">🔒 Your data stays in this browser. Nothing is uploaded.</p></div>';
     return;
   }
   const views = {chart: chartView, table: tableView, contacts: contactsView, billing: billingView, files: filesView};
   m.innerHTML = bizHeader(b) + tabsHtml() + (views[UI.tab] || chartView)(b);
 }
 function tabsHtml(){
-  const t = [['chart', 'Chart'], ['table', 'Table'], ['contacts', 'Contacts'], ['billing', 'Billing / credit'], ['files', 'Files & master file'], ['import', 'Paste / import from Salesforce']];
+  const t = [['chart', 'Chart'], ['table', 'Table'], ['contacts', 'Contacts'], ['billing', 'Billing / credit'], ['files', 'Files & master file'], ['import', '⬆ Upload Salesforce exports']];
   return '<div class="tabs">' + t.map(([k, l]) => '<button class="tab' + (UI.tab === k ? ' on' : '') + '" data-act="tab" data-tab="' + k + '">' + l + '</button>').join('') + '</div>';
 }
 function bizHeader(b){
@@ -226,17 +226,19 @@ async function masterSheets(b){
     [{v: 'Hierarchy', s: 4}], ['Level', 'Account', 'Salesforce Account ID', 'Stage', 'Billing', 'Credit Line Held By', 'Credit Limit', 'Case #', 'Opportunity', 'Rep', 'Contacts', 'Files'].map(v => ({v, s: 1})),
     ...t.map(({a, depth}) => [depth ? 'Child L' + depth : 'Parent', '   '.repeat(depth) + (depth ? '└ ' : '') + a.name, {v: a.sfId, t: 's'}, stageLabel(a.stage), modeLabel(a), creditHolder(a).name, effMode(a) === 'own' && parseMoney(a.creditLimit) != null ? {v: parseMoney(a.creditLimit), s: 3, t: 'n'} : '', {v: a.caseNo, t: 's'}, [a.oppName, a.oppNo].filter(Boolean).join(' · '), a.repName, contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length]), [],
     [{v: 'Fleet data', s: 4}], ['CSV files combined', csvs.length], ['Headers', csvs.length ? (sameHeaders ? 'All files share the same columns — stacked with an Account column' : 'Columns differed — combined using every column found (blank where a file lacks it)') : 'No CSV files uploaded']];
-  const accounts = [['Level', 'Account', 'Parent Account', 'Parent SF ID', ...ACCOUNT_FIELDS.filter(f => f.k !== 'name').map(f => f.label), 'Credit Line Held By', 'Linked Accounts', 'Contacts', 'Files']]
+  const exKeys = [...new Set(t.flatMap(x => Object.keys(x.a.extra || {})))];
+  const accounts = [['Level', 'Account', 'Parent Account', 'Parent SF ID', ...ACCOUNT_FIELDS.filter(f => f.k !== 'name').map(f => f.label), 'Credit Line Held By', 'Linked Accounts', 'Contacts', 'Files', 'Salesforce Stage', ...exKeys]]
     .concat(t.map(({a, depth}) => { const p = acc(a.parentId); const own = effMode(a) === 'own';
       return [depth ? 'Child L' + depth : 'Parent', a.name, p ? p.name : '', p ? {v: p.sfId, t: 's'} : '', ...ACCOUNT_FIELDS.filter(f => f.k !== 'name').map(f => {
         if (f.k === 'stage') return stageLabel(a.stage); if (f.k === 'billMode') return modeLabel(a);
         if (f.k === 'creditLimit') return own && parseMoney(a.creditLimit) != null ? {v: parseMoney(a.creditLimit), s: 3, t: 'n'} : '';
         if (['billCycle', 'terms', 'billContact'].includes(f.k) && !own) return '';
-        return {v: a[f.k], t: 's'}; }), creditHolder(a).name, a.linkedIds.map(acc).filter(Boolean).map(x => x.name).join('; '), contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length]; }));
+        return {v: a[f.k], t: 's'}; }), creditHolder(a).name, a.linkedIds.map(acc).filter(Boolean).map(x => x.name).join('; '), contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length, a.sfStage || '', ...exKeys.map(k => ({v: (a.extra || {})[k] || '', t: 's'}))]; }));
   const ids = new Set(t.map(x => x.a.id));
-  const contacts = [['Name', 'Title', 'Email', 'Phone', 'Role', 'Level', 'Attached To', 'Attached SF ID(s)', 'Applies To']]
+  const cKeys = [...new Set(WS.contacts.filter(c => c.accountIds.some(id => ids.has(id))).flatMap(c => Object.keys(c.extra || {})))];
+  const contacts = [['Name', 'Title', 'Email', 'Phone', 'Role', 'Level', 'Attached To', 'Attached SF ID(s)', 'Applies To', ...cKeys]]
     .concat(WS.contacts.filter(c => c.accountIds.some(id => ids.has(id))).sort((x, y) => (x.level === y.level ? byName(x, y) : x.level === 'parent' ? -1 : 1))
-      .map(c => { const at = c.accountIds.map(acc).filter(Boolean); return [c.name, c.title, c.email, {v: c.phone, t: 's'}, c.role, c.level === 'parent' ? 'Parent level (whole business)' : 'Child only', at.map(x => x.name).join('; '), at.map(x => x.sfId).filter(Boolean).join('; '), appliesTo(c).map(x => x.name).join('; ')]; }));
+      .map(c => { const at = c.accountIds.map(acc).filter(Boolean); return [c.name, c.title, c.email, {v: c.phone, t: 's'}, c.role, c.level === 'parent' ? 'Parent level (whole business)' : 'Child only', at.map(x => x.name).join('; '), at.map(x => x.sfId).filter(Boolean).join('; '), appliesTo(c).map(x => x.name).join('; '), ...cKeys.map(k => ({v: (c.extra || {})[k] || '', t: 's'}))]; }));
   const billing = billingMatrix(b).map((r, i) => i && parseMoney(r[6]) != null ? r.map((v, j) => j === 6 ? {v: parseMoney(v), s: 3, t: 'n'} : j === 1 || j === 5 ? {v, t: 's'} : v) : r);
   const sheets = [{name: 'Summary', rows: summary, header: -1, widths: [26, 44, 24, 22, 30, 30, 14, 12, 28, 18, 30, 8]}, {name: 'Accounts', rows: accounts}, {name: 'Contacts', rows: contacts}, {name: 'Billing', rows: billing}];
   if (csvs.length) sheets.push({name: 'All Fleet Data', rows: fleet});
