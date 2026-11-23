@@ -1,0 +1,91 @@
+<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body><table>
+<tr><td>Opportunity:</td><td>1-SMPL0201</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing First Name:</td><td>Sample Ana</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Last Name:</td><td>Ruiz</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Address:</td><td>100 Sample Way</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Address Line 2:</td><td>Suite 200</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing City:</td><td>Flint</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing State:</td><td>MI</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Postal Code:</td><td>04850</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Phone:</td><td>(555) 010-0401</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Email:</td><td>ana.ruiz@example.com</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Attention</td><td>Sample Yard Office</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping Address:</td><td>100 Sample Way</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping Address Line 2:</td><td>Dock 3</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping City:</td><td>Flint</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping State:</td><td>MI</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping Postal Code:</td><td>04850</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Name</td><td>Phone</td><td>Email</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Raj Mehta</td><td>(555) 010-0402</td><td>raj.mehta@example.com</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Ben Ode</td><td>(555) 010-0403</td><td>ben.ode@example.com</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number Of Cards:</td><td>25</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Company Name:</td><td>Sample: Northwind Freight</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Second Line Embossing Option:</td><td>Company Vehicle ID</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Department:</td><td>Yes</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Vehicle Description:</td><td>No</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>License Plate #:</td><td>Yes</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Company Vehicle ID:</td><td>Yes</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Company Vehicle ID</td><td>Vehicle Description</td><td>Department</td><td>License Plate #</td><td>Card Control Option</td><td>Prompt Option</td><td>Acceptance Option</td><td>VIN Number</td></tr>
+<tr><td>SV-001</td><td>2020 Sample Box Truck</td><td>Delivery</td><td></td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0714660325134</td></tr>
+<tr><td>SV-002</td><td>2019 Sample Van</td><td>Service</td><td>SMPL840</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0105380810795</td></tr>
+<tr><td>SV-003</td><td>2020 Sample Box Truck</td><td></td><td>SMPL059</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td></td></tr>
+<tr><td>Sample Gus Grant</td><td>2021 Sample Pickup</td><td>Service</td><td>SMPL088</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0461423994714</td></tr>
+<tr><td>SV-005</td><td>2019 Sample Van</td><td>Delivery</td><td></td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0605979998169</td></tr>
+<tr><td>SV-006</td><td></td><td>Service</td><td>SMPL846</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0135572591311</td></tr>
+<tr><td>SV-007</td><td>2021 Sample Pickup</td><td></td><td>SMPL970</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0631625887985</td></tr>
+<tr><td>SV-008</td><td></td><td>Service</td><td>SMPL999</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td></td></tr>
+<tr><td>SV-009</td><td>2021 Sample Pickup</td><td>Service</td><td></td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0942988695358</td></tr>
+<tr><td>SV-010</td><td>2021 Sample Pickup</td><td>Sales</td><td>SMPL429</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0593325057700</td></tr>
+<tr><td>RENTAL VEH 1</td><td>2019 Sample Van</td><td></td><td>SMPL315</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0895759484248</td></tr>
+<tr><td>RENTAL VEH 2</td><td>2021 Sample Pickup</td><td>Service</td><td>SMPL595</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0702532973417</td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>First Name</td><td>Last Name</td><td>Department</td><td>Driver ID</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Dana</td><td>Ford</td><td>Service</td><td>000101</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Ivo</td><td>Brook</td><td>Service</td><td>000102</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Jo</td><td>Dunn</td><td>Admin</td><td>000103</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Ivo</td><td>Grant</td><td>Sales</td><td>000104</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Hana</td><td>Hale</td><td>Sales</td><td>000105</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Eli</td><td>Dunn</td><td>Delivery</td><td>000106</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Dana</td><td>Brook</td><td>Sales</td><td>000107</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Ivo</td><td>Hale</td><td>Sales</td><td>000108</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Hana</td><td>Ellis</td><td>Service</td><td>000109</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Bo</td><td>Grant</td><td>Delivery</td><td>000110</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Fran</td><td>Cole</td><td>Admin</td><td>000111</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Gus</td><td>Adams</td><td>Service</td><td>000112</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Ivo</td><td>Ford</td><td>Sales</td><td>000113</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Fran</td><td>Hale</td><td>Admin</td><td>000114</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Bo</td><td>Brook</td><td>Sales</td><td>000115</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Hana</td><td>Brook</td><td>Service</td><td>000116</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Eli</td><td>Hale</td><td>Sales</td><td>000117</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Gus</td><td>Ford</td><td>Service</td><td>000118</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Hana</td><td>Ford</td><td>Delivery</td><td>000119</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Jo</td><td>Brook</td><td>Admin</td><td>000120</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Alex</td><td>Dunn</td><td>Sales</td><td>000121</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Cam</td><td>Dunn</td><td>Admin</td><td>000122</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Gus</td><td>Hale</td><td>Service</td><td>000123</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Cam</td><td>Hale</td><td>Admin</td><td>000124</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Ivo</td><td>Ellis</td><td>Delivery</td><td>000125</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Gus</td><td>Ellis</td><td>Admin</td><td>000126</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Fran</td><td>Grant</td><td>Delivery</td><td>000127</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Cam</td><td>Brook</td><td>Delivery</td><td>000128</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Cam</td><td>Dunn</td><td>Delivery</td><td>000129</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Alex</td><td>Hale</td><td>Delivery</td><td>000130</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Eli</td><td>Ellis</td><td>Service</td><td>000131</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Cam</td><td>Grant</td><td>Sales</td><td>000132</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Jo</td><td>Ford</td><td>Delivery</td><td>000133</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Ivo</td><td>Adams</td><td>Admin</td><td>000134</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Ivo</td><td>Grant</td><td>Admin</td><td>000135</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Gus</td><td>Grant</td><td>Service</td><td>000136</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Hana</td><td>Grant</td><td>Service</td><td>000137</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Dana</td><td>Brook</td><td>Delivery</td><td>000138</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Hana</td><td>Cole</td><td>Service</td><td>000139</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Fran</td><td>Adams</td><td>Service</td><td>000140</td><td></td><td></td><td></td><td></td></tr>
+</table></body></html>

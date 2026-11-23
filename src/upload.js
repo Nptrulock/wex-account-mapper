@@ -136,7 +136,7 @@ function stageFor(raw){ const m = (WS.mappings.stageValues || {})[norm(raw)]; if
 
 /* ---- ingest: merge parsed sources into WS (call on a clone for preview) ---- */
 function ingest(sources, opts = {}){
-  const st = {accNew: 0, accUpd: 0, conNew: 0, conUpd: 0, links: 0, placeholders: [], extras: {}, stageRaw: {}, warnings: [], perSource: []};
+  const st = {fleet: [], accNew: 0, accUpd: 0, conNew: 0, conUpd: 0, links: 0, placeholders: [], extras: {}, stageRaw: {}, warnings: [], perSource: []};
   const before = new Set(WS.accounts.map(a => a.id)), beforeC = new Set(WS.contacts.map(c => c.id));
   const touchedA = new Set(), touchedC = new Set();
   /* an ID always wins; a name only matches an account that has no different ID (location accounts often share a name) */
@@ -192,6 +192,8 @@ function ingest(sources, opts = {}){
     if (p === a || subtreeIds(a.id).has(p.id)) continue;
     if (a.parentId !== p.id){ a.parentId = p.id; st.links++; }
   }
+  // Wex Fleet Data forms (after other files, so they can attach to accounts those files create)
+  for (const s of sources) if (s.kind === 'fleet' && s.include !== false) ffApply(s, {touchedA, touchedC, st, addExtra});
   for (const a of WS.accounts){
     if (!touchedA.has(a.id)) continue;
     if (!a.parentId) a.billMode = 'own';
@@ -217,6 +219,8 @@ async function upAddFiles(fileList){
       const {format, sheets} = await readSpreadsheetFile(f);
       let added = 0;
       for (const sh of sheets){
+        const form = parseFleetForm(sh.rows);
+        if (isFleetForm(form)){ U.sources.push({id: uid('src'), kind: 'fleet', type: 'fleet', file: f.name, size: f.size, mime: f.type || '', format, sheet: sh.name, sheets: sheets.length, form, target: '', blob: f}); added++; continue; }
         const table = locateTable(sh.rows); if (!table || !table.rows.length) continue;
         const type = detectType(table.headers, table.title + ' ' + f.name);
         U.sources.push({id: uid('src'), file: f.name, size: f.size, format, sheet: sh.name, sheets: sheets.length, table, type, map: upGuess(type, table.headers), open: false});
@@ -227,7 +231,7 @@ async function upAddFiles(fileList){
   }
   UI.tab = 'import'; render();
 }
-function upStageValues(U){ const vals = {}; for (const s of U.sources){ if (s.include === false) continue; s.map.forEach((f, i) => { if (f === 'a.stage') for (const r of s.table.rows) if (r[i]) vals[r[i]] = (vals[r[i]] || 0) + 1; }); } return vals; }
+function upStageValues(U){ const vals = {}; for (const s of U.sources){ if (s.include === false || !s.map) continue; s.map.forEach((f, i) => { if (f === 'a.stage') for (const r of s.table.rows) if (r[i]) vals[r[i]] = (vals[r[i]] || 0) + 1; }); } return vals; }
 function uploadView(){
   const U = UI.up || {sources: [], errors: []};
   let h = '<div class="card dropzone" id="dropZone"><div class="dz-icon">⬆</div><div><h3 style="margin:0 0 4px">Upload Salesforce exports</h3><div class="small muted">Drop report exports here — accounts, contacts, opportunities, cases, billing/credit. Several at once is fine; they’re linked by Account ID / name and Parent Account.<br>Works with .xls (all Salesforce flavors), .xlsx, .csv — “Details only” or “Formatted” reports. <b>Read in this browser only. Nothing is uploaded anywhere.</b></div></div>'
@@ -235,7 +239,7 @@ function uploadView(){
   if (U.errors.length) h += '<div class="warnbar">' + U.errors.map(esc).join('<br>') + ' <button class="small" data-act="uperrclear">Dismiss</button></div>';
   if (U.sources.length){
     const st = previewIngest(U.sources); U.lastPreview = st;
-    h += U.sources.map(s => upSourceCard(s, st)).join('');
+    h += U.sources.map(s => s.kind === 'fleet' ? ffSourceCard(s, st) : upSourceCard(s, st)).join('');
     const vals = upStageValues(U); const keys = Object.keys(vals);
     if (keys.length){
       h += '<div class="card"><h3>Stage values found <span class="small muted">— choose once, remembered</span></h3><div class="tblwrap"><table class="t"><thead><tr><th>Value in Salesforce</th><th>Rows</th><th>Show as</th></tr></thead><tbody>'
@@ -271,11 +275,14 @@ function upSourceCard(s, st){
 }
 function upRemember(){
   const U = UI.up; WS.mappings.up = WS.mappings.up || {}; WS.mappings.upSig = WS.mappings.upSig || {};
-  for (const s of U.sources){ WS.mappings.upSig[s.type + '|' + s.table.headers.map(norm).join('|')] = s.map.slice(); const m = WS.mappings.up[s.type] = WS.mappings.up[s.type] || {}; s.table.headers.forEach((h, i) => { m[norm(h)] = s.map[i]; }); }
+  for (const s of U.sources){ if (!s.table) continue; WS.mappings.upSig[s.type + '|' + s.table.headers.map(norm).join('|')] = s.map.slice(); const m = WS.mappings.up[s.type] = WS.mappings.up[s.type] || {}; s.table.headers.forEach((h, i) => { m[norm(h)] = s.map[i]; }); }
 }
 Object.assign(ACT, {
-  upgo: () => { const U = UI.up; upRemember(); const st = ingest(U.sources); const first = st.roots[0] && WS.accounts.find(a => !a.parentId && a.name === st.roots[0].name); if (first) UI.biz = first.id;
-    U.result = 'Imported: ' + st.accNew + ' new and ' + st.accUpd + ' updated accounts, ' + st.conNew + ' new and ' + st.conUpd + ' updated contacts, ' + st.links + ' parent/child links.'; U.sources = []; U.errors = []; touch(); },
+  upgo: async () => { const U = UI.up; upRemember(); const st = ingest(U.sources);
+    for (const s of U.sources){ if (s.kind !== 'fleet' || !s.blob) continue; const r = st.fleet.find(x => x.id === s.id); if (!r) continue;
+      const buf = await s.blob.arrayBuffer(); const ex = WS.files.find(x => x.accountId === r.accountId && x.name === s.file);
+      if (ex){ ex.size = s.size; ex.added = Date.now(); await Store.putFile(ex.id, buf); } else { const meta = {id: uid('file'), accountId: r.accountId, name: s.file, mime: s.mime || 'application/vnd.ms-excel', size: s.size, added: Date.now(), kind: 'other'}; await Store.putFile(meta.id, buf); WS.files.push(meta); } } const first = st.roots[0] && WS.accounts.find(a => !a.parentId && a.name === st.roots[0].name); if (first) UI.biz = first.id;
+    U.result = 'Imported: ' + st.accNew + ' new and ' + st.accUpd + ' updated accounts, ' + st.conNew + ' new and ' + st.conUpd + ' updated contacts, ' + st.links + ' parent/child links.' + (st.fleet.length ? ' Fleet Data forms: ' + st.fleet.map(x => x.account + ' (' + x.vehicles + ' vehicles, ' + x.drivers + ' drivers)').join('; ') + '.' : ''); U.sources = []; U.errors = []; touch(); },
   upclear: () => { UI.up = null; render(); },
   uperrclear: () => { UI.up.errors = []; render(); },
   uptoggle: el => { const s = UI.up.sources.find(x => x.id === el.dataset.v); s.open = !s.open; render(); },

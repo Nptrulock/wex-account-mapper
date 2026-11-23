@@ -236,3 +236,5 @@ body.dragging::after{content:'Drop Salesforce exports to read them (stays in thi
 .btnlike .button.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
 .upsrc .chip{white-space:normal}
 details.card>summary{cursor:pointer}
+.ffsrc{border-left:4px solid #2f5d8a}
+.ffsec h4 .spacer{flex:1}

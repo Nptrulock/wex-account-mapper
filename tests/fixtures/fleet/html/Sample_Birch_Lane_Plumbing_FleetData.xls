@@ -1,0 +1,47 @@
+<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body><table>
+<tr><td>Opportunity:</td><td>1-SMPL0211</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing First Name:</td><td>Sample Tom</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Last Name:</td><td>Reyes</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Address:</td><td>9 Sample Ave</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Address Line 2:</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing City:</td><td>Toledo</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing State:</td><td>OH</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Postal Code:</td><td>43604</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Phone:</td><td>(555) 010-0405</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Email:</td><td>tom.reyes@example.com</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Attention</td><td>Sample Shop</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping Address:</td><td>9 Sample Ave</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping Address Line 2:</td><td>Unit B</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping City:</td><td>Toledo</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping State:</td><td>OH</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping Postal Code:</td><td>43604</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Name</td><td>Phone</td><td>Email</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Lia Chen</td><td>(555) 010-0406</td><td>lia.chen@example.com</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number Of Cards:</td><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Company Name:</td><td>Sample: Birch Lane Plumbing</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Second Line Embossing Option:</td><td>Company Vehicle ID</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Department:</td><td>No</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Vehicle Description:</td><td>No</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>License Plate #:</td><td>No</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Company Vehicle ID:</td><td>Yes</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Company Vehicle ID</td><td>Vehicle Description</td><td>Department</td><td>License Plate #</td><td>Card Control Option</td><td>Prompt Option</td><td>Acceptance Option</td><td>VIN Number</td></tr>
+<tr><td>SV-001</td><td>2021 Sample Pickup</td><td>Sales</td><td></td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0248128583958</td></tr>
+<tr><td>SV-002</td><td>2020 Sample Box Truck</td><td>Delivery</td><td>SMPL627</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0866773840736</td></tr>
+<tr><td>RENTAL VEH 1</td><td>2021 Sample Pickup</td><td>Delivery</td><td>SMPL837</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td></td></tr>
+<tr><td>RENTAL VEH 2</td><td></td><td>Delivery</td><td>SMPL204</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0543389120696</td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>First Name</td><td>Last Name</td><td>Department</td><td>Driver ID</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Fran</td><td>Adams</td><td>Service</td><td>000901</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Eli</td><td>Hale</td><td>Sales</td><td>000902</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Dana</td><td>Ford</td><td>Admin</td><td>000903</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Fran</td><td>Ford</td><td>Service</td><td>000904</td><td></td><td></td><td></td><td></td></tr>
+</table></body></html>

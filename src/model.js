@@ -67,6 +67,7 @@ function acctPairs(a){
   else pairs.push(['Credit Line Held By', h.name + (h.sfId ? ' (' + h.sfId + ')' : '')]);
   const linked = a.linkedIds.map(acc).filter(Boolean);
   if (linked.length) pairs.push(['Linked Accounts', linked.map(x => x.name).join('; ')]);
+  pairs.push(...ffPairs(a));
   if (a.sfStage) pairs.push(['Salesforce Stage', a.sfStage]);
   for (const [k, v] of Object.entries(a.extra || {})) pairs.push([k, v]);
   pairs.push(['Notes', a.notes]);

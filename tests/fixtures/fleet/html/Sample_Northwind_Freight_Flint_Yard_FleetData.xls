@@ -1,0 +1,52 @@
+<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body><table>
+<tr><td>Opportunity:</td><td>1-SMPL0202</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing First Name:</td><td>Sample Ben</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Last Name:</td><td>Ode</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Address:</td><td>22 Sample Yard Rd</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Address Line 2:</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing City:</td><td>Flint</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing State:</td><td>MI</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Postal Code:</td><td>48501</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Phone:</td><td>(555) 010-0403</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Billing Email:</td><td>ben.ode@example.com</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Attention</td><td>Sample Ben Ode</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping Address:</td><td>22 Sample Yard Rd</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping Address Line 2:</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping City:</td><td>Flint</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping State:</td><td>MI</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Card Shipping Postal Code:</td><td>48501</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Name</td><td>Phone</td><td>Email</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number Of Cards:</td><td>6</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Company Name:</td><td>Sample: Northwind Freight</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Second Line Embossing Option:</td><td>Driver Name</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Department:</td><td>No</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Vehicle Description:</td><td>Yes</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>License Plate #:</td><td>No</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Company Vehicle ID:</td><td>Yes</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Company Vehicle ID</td><td>Vehicle Description</td><td>Department</td><td>License Plate #</td><td>Card Control Option</td><td>Prompt Option</td><td>Acceptance Option</td><td>VIN Number</td></tr>
+<tr><td>SV-001</td><td>2019 Sample Van</td><td></td><td></td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0589060197503</td></tr>
+<tr><td>SV-002</td><td>2019 Sample Van</td><td>Sales</td><td>SMPL628</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0077418936826</td></tr>
+<tr><td>SV-003</td><td>2021 Sample Pickup</td><td></td><td>SMPL385</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td></td></tr>
+<tr><td>RENTAL VEH 1</td><td>2021 Sample Pickup</td><td>Sales</td><td>SMPL978</td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0662916990321</td></tr>
+<tr><td>RENTAL VEH 2</td><td>2020 Sample Box Truck</td><td>Admin</td><td></td><td>Fuel Only</td><td>Driver ID + Odometer</td><td>Standard</td><td>1SMPL0125081654955</td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>First Name</td><td>Last Name</td><td>Department</td><td>Driver ID</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Hana</td><td>Hale</td><td>Admin</td><td>000501</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Hana</td><td>Ellis</td><td>Service</td><td>000502</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Cam</td><td>Brook</td><td>Sales</td><td>000503</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Eli</td><td>Hale</td><td>Delivery</td><td>000504</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Ivo</td><td>Adams</td><td>Delivery</td><td>000505</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Ivo</td><td>Ford</td><td>Delivery</td><td>000506</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Ivo</td><td>Adams</td><td>Sales</td><td>000507</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Sample Bo</td><td>Ellis</td><td>Sales</td><td>000508</td><td></td><td></td><td></td><td></td></tr>
+</table></body></html>

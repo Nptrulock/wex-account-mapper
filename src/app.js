@@ -56,13 +56,14 @@ function bizHeader(b){
   const s = bizStats(b);
   const names = st => tree(b.id).filter(x => x.a.stage === st).map(x => shortName(x.a, b));
   return '<div class="bizhead"><div class="row"><h2>' + esc(b.name || '(unnamed)') + '</h2>' + (isSample(b) ? '<span class="badge sample">Fictional sample</span>' : '') + '<span class="spacer"></span>'
-    + '<button data-act="open" data-id="' + b.id + '">Open parent</button><button data-act="copybiz" data-id="' + b.id + '">Copy business summary</button></div>'
+    + '<button data-act="open" data-id="' + b.id + '">Open parent</button><button data-act="copybiz" data-id="' + b.id + '">Copy business summary</button><button class="primary" data-act="buildzip" title="Master .xlsx + Master Accounts / All Vehicles / All Drivers CSVs + each account’s Vehicles and Drivers CSVs, in one .zip">⬇ Master list (one click)</button></div>'
     + '<div class="muted small">' + (b.sfId ? 'SF Account ID ' + esc(b.sfId) + ' · ' : '') + (b.repName ? 'Rep ' + esc(b.repName) + ' · ' : '') + s.n + ' accounts in this business</div>'
     + '<div class="pipeline">' + STAGES.map(x => { const n = names(x.id); return '<div class="pipe st-' + x.id + '"><div class="row"><b>' + x.n + '. ' + x.label + '</b></div><div class="n">' + s.counts[x.id] + '</div><div class="small" title="' + esc(n.join(', ')) + '">' + esc(n.slice(0, 3).join(', ')) + (n.length > 3 ? ' +' + (n.length - 3) + ' more' : '') + '</div></div>'; }).join('') + '</div>'
     + '<div class="overview">'
     + '<div class="stat"><div class="k">Overall progress</div><div class="v">' + s.pct + '%</div><div class="stagebar">' + STAGES.map(x => '<i class="s-' + x.id + '" style="width:' + (s.counts[x.id] / s.n * 100) + '%"></i>').join('') + '</div></div>'
     + '<div class="stat"><div class="k">Credit exposure</div><div class="v">' + (fmtMoney(s.exposure) || '$0') + '</div><div class="d">' + s.own + ' own line' + (s.own === 1 ? '' : 's') + ' · ' + s.up + ' roll up to parent' + (s.missing ? ' · <b style="color:#b45309">' + s.missing + ' missing limit</b>' : '') + '</div></div>'
     + '<div class="stat"><div class="k">Contacts</div><div class="v">' + (s.parentContacts + s.childContacts) + '</div><div class="d">' + s.parentContacts + ' parent-level · ' + s.childContacts + ' child-only</div></div>'
+    + (() => { const fa = tree(b.id).map(x => x.a).filter(a => a.fleet); if (!fa.length) return ''; const v = fa.reduce((n, a) => n + (a.fleet.vehicles ? a.fleet.vehicles.rows.length : 0), 0), d = fa.reduce((n, a) => n + (a.fleet.drivers ? a.fleet.drivers.rows.length : 0), 0); return '<div class="stat"><div class="k">Fleet data</div><div class="v">' + v + ' <span class="small">vehicles</span></div><div class="d">' + d + ' drivers · ' + fa.length + ' Fleet Data form' + (fa.length === 1 ? '' : 's') + '</div></div>'; })()
     + '<div class="stat"><div class="k">Files</div><div class="v">' + s.files + '</div><div class="d">' + s.csv + ' CSV fleet file' + (s.csv === 1 ? '' : 's') + '</div></div>'
     + '</div></div>';
 }
@@ -87,7 +88,7 @@ function nodeHtml(a, root){
     + '<div style="margin-top:6px">' + stageBadge(a.stage) + '</div>'
     + '<div class="node-chips">' + (own ? '<span class="chip own">💳 ' + (a === root ? 'Parent line ' : 'Own line ') + (fmtMoney(a.creditLimit) || '(no limit set)') + '</span>' : '<span class="chip up" title="Billed through ' + esc(h.name) + '">↑ Billed at parent</span>')
     + (pc ? '<span class="chip" style="background:#e0e7ff;color:#3730a3">👤 ' + pc + ' parent-level</span>' : '') + (cc ? '<span class="chip" style="background:#fce7f3;color:#9d174d">👤 ' + cc + ' child-only</span>' : '')
-    + (inherited.length ? '<span class="chip" style="border:1px dashed #94a3b8">⤵ ' + inherited.length + ' inherited</span>' : '') + (fl ? '<span class="chip">📎 ' + fl + '</span>' : '')
+    + (inherited.length ? '<span class="chip" style="border:1px dashed #94a3b8">⤵ ' + inherited.length + ' inherited</span>' : '') + (fl ? '<span class="chip">📎 ' + fl + '</span>' : '') + (a.fleet ? '<span class="chip own" title="Fleet Data form">🚚 ' + (a.fleet.vehicles ? a.fleet.vehicles.rows.length : 0) + ' · 🪪 ' + (a.fleet.drivers ? a.fleet.drivers.rows.length : 0) + '</span>' : '')
     + (a.repName ? '<span class="chip">Rep ' + esc(a.repName) + '</span>' : '')
     + linked.map(l => '<span class="chip link" data-act="goto" data-id="' + l.id + '" title="Linked account">🔗 ' + esc(l.name) + '</span>').join('') + '</div>'
     + '<div class="node-actions"><button class="small" data-act="addchild" data-id="' + a.id + '">+ Child</button><button class="small" data-act="copyacct" data-id="' + a.id + '">Copy</button><button class="small" data-act="copytsv" data-id="' + a.id + '">Copy row</button></div></div>';
@@ -184,13 +185,15 @@ function billingMatrix(b){
 /* ---------- files ---------- */
 function filesView(b){
   const t = tree(b.id); const s = bizStats(b);
-  let h = '<div class="card"><div class="row"><div><h3 style="margin:0">Master file for this business</h3><div class="small muted">One Excel workbook: Summary, Accounts, Contacts, Billing, All Fleet Data, plus one tab per uploaded CSV.</div></div><span class="spacer"></span>'
-    + '<button class="primary" data-act="buildxlsx" id="btnXlsx">⬇ Build master file (.xlsx)</button><button data-act="buildzip">⬇ Separate CSVs (.zip)</button></div>'
+  let h = '<div class="card"><div class="row"><div><h3 style="margin:0">Master file for this business</h3><div class="small muted">One Excel workbook: Summary, Accounts, Contacts, Billing, All Fleet Data, All Vehicles, All Drivers, plus a tab per uploaded CSV and per account’s Vehicles / Drivers. <b>Master list (.zip)</b> = that workbook + Master Accounts.csv, All Vehicles.csv, All Drivers.csv and every account’s own CSVs.</div></div><span class="spacer"></span>'
+    + '<button class="primary" data-act="buildzip" id="btnZip">⬇ Master list — everything (.zip)</button><button data-act="buildxlsx" id="btnXlsx">⬇ Master file (.xlsx)</button></div>'
+    + '<div class="row" style="margin-top:8px;gap:6px"><span class="small muted">Combined CSVs:</span><button class="small" data-act="ffall" data-v="accounts">⬇ Master Accounts.csv</button>' + (t.some(x => ffTable(x.a, 'vehicles')) ? '<button class="small" data-act="ffall" data-v="vehicles">⬇ All Vehicles.csv</button>' : '') + (t.some(x => ffTable(x.a, 'drivers')) ? '<button class="small" data-act="ffall" data-v="drivers">⬇ All Drivers.csv</button>' : '') + '</div>'
     + '<div class="small muted" style="margin-top:6px">' + s.files + ' file(s), ' + s.csv + ' CSV. Files are kept only in this browser.</div></div>';
   for (const {a, depth} of t){
     const fl = filesOf(a.id);
     h += '<div class="card" style="margin-left:' + Math.min(depth, 4) * 18 + 'px"><div class="row"><span class="lvl-tag">' + (depth ? 'Child' : 'Parent') + '</span><b>' + esc(a.name) + '</b>' + stageBadge(a.stage) + '<span class="spacer"></span>'
       + '<label class="btnlike"><input type="file" multiple data-upload="' + a.id + '" class="hidden" accept=".csv,.tsv,.txt,.xlsx,.xls,.pdf,.png,.jpg,.jpeg,.doc,.docx,*/*"><span class="button" role="button">⬆ Upload files</span></label></div>'
+      + (a.fleet ? '<div class="small" style="margin:6px 0">🚚 Fleet Data form: <b>' + (a.fleet.vehicles ? a.fleet.vehicles.rows.length : 0) + '</b> vehicles · <b>' + (a.fleet.drivers ? a.fleet.drivers.rows.length : 0) + '</b> drivers</div>' + ffButtons(a) : '')
       + '<div class="filelist">' + (fl.map(f => '<div class="fi"><span>' + (f.kind === 'csv' ? '📊' : '📄') + '</span><span class="nm" title="' + esc(f.name) + '">' + esc(f.name) + '</span><span class="small muted">' + fmtBytes(f.size) + (f.kind === 'csv' ? ' · ' + (f.rows ?? '?') + ' rows' : '') + '</span>'
         + (f.kind === 'csv' ? '<button class="small" data-act="preview" data-id="' + f.id + '">Preview</button>' : '') + '<button class="small" data-act="dlfile" data-id="' + f.id + '">Download</button><button class="small danger" data-act="delfile" data-id="' + f.id + '">Remove</button></div>').join('') || '<div class="small muted" style="padding:6px 0">No files. CSV fleet data is combined into the master file.</div>') + '</div></div>';
   }
@@ -217,23 +220,26 @@ async function masterSheets(b){
   const hdrKeys = [], hdrNames = [];
   for (const c of csvs) for (const h of (c.rows[0] || [])){ const k = norm(h) || h; if (!hdrKeys.includes(k)){ hdrKeys.push(k); hdrNames.push(h); } }
   const sameHeaders = csvs.length > 0 && csvs.every(c => (c.rows[0] || []).map(h => norm(h)).join('|') === (csvs[0].rows[0] || []).map(h => norm(h)).join('|'));
+  const stack = csvs.concat(t.filter(x => ffTable(x.a, 'vehicles')).map(x => ({a: x.a, f: {name: (x.a.fleet.source || 'Fleet Data') + ' — Vehicles'}, rows: ffTable(x.a, 'vehicles')})));
+  for (const c of stack.slice(csvs.length)) for (const h of (c.rows[0] || [])){ const k = norm(h) || h; if (!hdrKeys.includes(k)){ hdrKeys.push(k); hdrNames.push(h); } }
   const fleet = [['Account', 'Account SF ID', 'Source File', ...hdrNames]];
-  for (const c of csvs){ const idx = (c.rows[0] || []).map(h => hdrKeys.indexOf(norm(h) || h)); for (const r of c.rows.slice(1)){ const out = new Array(hdrKeys.length).fill(''); r.forEach((v, i) => { if (idx[i] >= 0) out[idx[i]] = v; }); fleet.push([c.a.name, c.a.sfId, c.f.name, ...out]); } }
+  for (const c of stack){ const idx = (c.rows[0] || []).map(h => hdrKeys.indexOf(norm(h) || h)); for (const r of c.rows.slice(1)){ const out = new Array(hdrKeys.length).fill(''); r.forEach((v, i) => { if (idx[i] >= 0) out[idx[i]] = v; }); fleet.push([c.a.name, c.a.sfId, c.f.name, ...out]); } }
   const summary = [[{v: 'Master file — ' + b.name, s: 2}], ['Generated', new Date().toLocaleString() + ' (Account Mapper, made locally in the browser)'], ['Salesforce Account ID', b.sfId], ['Rep', [b.repName, b.repEmail, b.repPhone].filter(Boolean).join(' · ')], [],
     [{v: 'Where the business stands', s: 4}], [{v: 'Stage', s: 1}, {v: 'Accounts', s: 1}, {v: 'Share', s: 1}],
     ...STAGES.map(x => [x.label, s.counts[x.id], Math.round(s.counts[x.id] / s.n * 100) + '%']), ['Overall progress', s.pct + '%'], [],
     [{v: 'Billing', s: 4}], ['Total credit exposure', {v: s.exposure, s: 3, t: 'n'}], ['Own credit lines', s.own], ['Billed at parent (roll up)', s.up], [],
     [{v: 'Hierarchy', s: 4}], ['Level', 'Account', 'Salesforce Account ID', 'Stage', 'Billing', 'Credit Line Held By', 'Credit Limit', 'Case #', 'Opportunity', 'Rep', 'Contacts', 'Files'].map(v => ({v, s: 1})),
     ...t.map(({a, depth}) => [depth ? 'Child L' + depth : 'Parent', '   '.repeat(depth) + (depth ? '└ ' : '') + a.name, {v: a.sfId, t: 's'}, stageLabel(a.stage), modeLabel(a), creditHolder(a).name, effMode(a) === 'own' && parseMoney(a.creditLimit) != null ? {v: parseMoney(a.creditLimit), s: 3, t: 'n'} : '', {v: a.caseNo, t: 's'}, [a.oppName, a.oppNo].filter(Boolean).join(' · '), a.repName, contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length]), [],
-    [{v: 'Fleet data', s: 4}], ['CSV files combined', csvs.length], ['Headers', csvs.length ? (sameHeaders ? 'All files share the same columns — stacked with an Account column' : 'Columns differed — combined using every column found (blank where a file lacks it)') : 'No CSV files uploaded']];
+    [{v: 'Fleet data', s: 4}], ['CSV files combined', csvs.length], ['Wex Fleet Data forms', t.filter(x => x.a.fleet).length], ['Vehicles (Fleet Data forms)', t.reduce((n, x) => n + (ffTable(x.a, 'vehicles') || [0]).length - 1, 0)], ['Drivers (Fleet Data forms)', t.reduce((n, x) => n + (ffTable(x.a, 'drivers') || [0]).length - 1, 0)], ['Headers', csvs.length ? (sameHeaders ? 'All files share the same columns — stacked with an Account column' : 'Columns differed — combined using every column found (blank where a file lacks it)') : 'No CSV files uploaded']];
   const exKeys = [...new Set(t.flatMap(x => Object.keys(x.a.extra || {})))];
-  const accounts = [['Level', 'Account', 'Parent Account', 'Parent SF ID', ...ACCOUNT_FIELDS.filter(f => f.k !== 'name').map(f => f.label), 'Credit Line Held By', 'Linked Accounts', 'Contacts', 'Files', 'Salesforce Stage', ...exKeys]]
+  const ffc = ffAccountCols(t.map(x => x.a));
+  const accounts = [['Level', 'Account', 'Parent Account', 'Parent SF ID', ...ACCOUNT_FIELDS.filter(f => f.k !== 'name').map(f => f.label), 'Credit Line Held By', 'Linked Accounts', 'Contacts', 'Files', ...ffc.headers, 'Salesforce Stage', ...exKeys]]
     .concat(t.map(({a, depth}) => { const p = acc(a.parentId); const own = effMode(a) === 'own';
       return [depth ? 'Child L' + depth : 'Parent', a.name, p ? p.name : '', p ? {v: p.sfId, t: 's'} : '', ...ACCOUNT_FIELDS.filter(f => f.k !== 'name').map(f => {
         if (f.k === 'stage') return stageLabel(a.stage); if (f.k === 'billMode') return modeLabel(a);
         if (f.k === 'creditLimit') return own && parseMoney(a.creditLimit) != null ? {v: parseMoney(a.creditLimit), s: 3, t: 'n'} : '';
         if (['billCycle', 'terms', 'billContact'].includes(f.k) && !own) return '';
-        return {v: a[f.k], t: 's'}; }), creditHolder(a).name, a.linkedIds.map(acc).filter(Boolean).map(x => x.name).join('; '), contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length, a.sfStage || '', ...exKeys.map(k => ({v: (a.extra || {})[k] || '', t: 's'}))]; }));
+        return {v: a[f.k], t: 's'}; }), creditHolder(a).name, a.linkedIds.map(acc).filter(Boolean).map(x => x.name).join('; '), contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length, ...ffc.row(a), a.sfStage || '', ...exKeys.map(k => ({v: (a.extra || {})[k] || '', t: 's'}))]; }));
   const ids = new Set(t.map(x => x.a.id));
   const cKeys = [...new Set(WS.contacts.filter(c => c.accountIds.some(id => ids.has(id))).flatMap(c => Object.keys(c.extra || {})))];
   const contacts = [['Name', 'Title', 'Email', 'Phone', 'Role', 'Level', 'Attached To', 'Attached SF ID(s)', 'Applies To', ...cKeys]]
@@ -241,14 +247,19 @@ async function masterSheets(b){
       .map(c => { const at = c.accountIds.map(acc).filter(Boolean); return [c.name, c.title, c.email, {v: c.phone, t: 's'}, c.role, c.level === 'parent' ? 'Parent level (whole business)' : 'Child only', at.map(x => x.name).join('; '), at.map(x => x.sfId).filter(Boolean).join('; '), appliesTo(c).map(x => x.name).join('; '), ...cKeys.map(k => ({v: (c.extra || {})[k] || '', t: 's'}))]; }));
   const billing = billingMatrix(b).map((r, i) => i && parseMoney(r[6]) != null ? r.map((v, j) => j === 6 ? {v: parseMoney(v), s: 3, t: 'n'} : j === 1 || j === 5 ? {v, t: 's'} : v) : r);
   const sheets = [{name: 'Summary', rows: summary, header: -1, widths: [26, 44, 24, 22, 30, 30, 14, 12, 28, 18, 30, 8]}, {name: 'Accounts', rows: accounts}, {name: 'Contacts', rows: contacts}, {name: 'Billing', rows: billing}];
-  if (csvs.length) sheets.push({name: 'All Fleet Data', rows: fleet});
+  const veh = ffAll(b, 'vehicles'), drv = ffAll(b, 'drivers');
+  if (csvs.length || veh.n) sheets.push({name: 'All Fleet Data', rows: fleet, fleet: true});
+  if (veh.n) sheets.push({name: 'All Vehicles', rows: typeColumns(veh.rows)});
+  if (drv.n) sheets.push({name: 'All Drivers', rows: typeColumns(drv.rows)});
   const bases = csvs.map(c => c.f.name.replace(/\.[^.]+$/, ''));
   let pre = bases.length > 1 ? bases.reduce((p, x) => { let i = 0; while (i < p.length && p[i] === x[i]) i++; return p.slice(0, i); }) : '';
   if (bases.some(x => x.length - pre.length < 3)) pre = '';
   csvs.forEach((c, i) => c.tabBase = bases[i].slice(pre.length).replace(/^[\s_\-]+/, '') || bases[i]);
   for (const c of csvs) sheets.push({name: shortName(c.a, b).slice(0, 17).trim() + ' - ' + c.tabBase, isFile: true, rows: typeColumns(c.rows)});
-  if (csvs.length) sheets[4].rows = typeColumns(fleet);
-  return {sheets, csvs};
+  const fs = sheets.find(s => s.fleet); if (fs) fs.rows = typeColumns(fleet);
+  const perAcct = [];
+  for (const {a} of t) for (const w of ['vehicles', 'drivers']){ const tb = ffTable(a, w); if (!tb) continue; perAcct.push({a, w, rows: tb}); sheets.push({name: shortName(a, b).slice(0, 20).trim() + ' - ' + (w === 'vehicles' ? 'Vehicles' : 'Drivers'), isFile: true, rows: typeColumns(tb)}); }
+  return {sheets, csvs, veh, drv, perAcct};
 }
 /* A column is numeric only if every value is a plain number with no leading zero; otherwise the whole column is text (keeps IDs, card #s, ZIPs intact). */
 function typeColumns(rows){
@@ -264,11 +275,16 @@ async function buildMasterXlsx(b){
   toast('Master file built: ' + sheets.length + ' tabs');
 }
 async function buildMasterZip(b){
-  const {sheets, csvs} = await masterSheets(b);
+  const {sheets, csvs, veh, drv, perAcct} = await masterSheets(b);
   const plain = rows => rows.map(r => r.map(c => c && typeof c === 'object' ? c.v : c));
   const files = sheets.filter(s => !s.isFile).map((s, i) => ({name: String(i + 1).padStart(2, '0') + '_' + safeFile(s.name) + '.csv', data: '\uFEFF' + toCSV(plain(s.rows))}));
+  files.unshift({name: safeFile(b.name) + '_master_' + today() + '.xlsx', data: new Uint8Array(await buildXlsx(sheets).arrayBuffer())}, {name: 'Master Accounts.csv', data: '\uFEFF' + toCSV(plain(sheets.find(s => s.name === 'Accounts').rows))});
+  if (veh.n) files.splice(2, 0, {name: 'All Vehicles.csv', data: '\uFEFF' + toCSV(veh.rows)});
+  if (drv.n) files.splice(veh.n ? 3 : 2, 0, {name: 'All Drivers.csv', data: '\uFEFF' + toCSV(drv.rows)});
+  for (const p of perAcct) files.push({name: 'vehicles-and-drivers/' + ffCsvName(p.a, p.w), data: '\uFEFF' + toCSV(p.rows)});
   for (const c of csvs) files.push({name: 'fleet/' + safeFile(shortName(c.a, b)) + '__' + safeFile(c.f.name.replace(/\.[^.]+$/, '')) + '.csv', data: '\uFEFF' + toCSV(c.rows)});
   for (const {a} of tree(b.id)) for (const f of filesOf(a.id)) if (f.kind !== 'csv'){ const d = await Store.getFile(f.id); if (d) files.push({name: 'attachments/' + safeFile(shortName(a, b)) + '__' + safeFile(f.name), data: d}); }
-  download(makeZip(files), safeFile(b.name) + '_master_csvs_' + today() + '.zip');
-  toast('Zip built: ' + files.length + ' files');
+  download(makeZip(files), safeFile(b.name) + '_master_list_' + today() + '.zip');
+  window.__lastZipNames = files.map(f => f.name);
+  toast('Master list built: ' + files.length + ' files in one .zip');
 }

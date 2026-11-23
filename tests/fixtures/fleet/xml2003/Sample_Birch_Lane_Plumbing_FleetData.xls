@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Fleet Data"><Table>
+<Row><Cell><Data ss:Type="String">Opportunity:</Data></Cell><Cell><Data ss:Type="String">1-SMPL0211</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing First Name:</Data></Cell><Cell><Data ss:Type="String">Sample Tom</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing Last Name:</Data></Cell><Cell><Data ss:Type="String">Reyes</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing Address:</Data></Cell><Cell><Data ss:Type="String">9 Sample Ave</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing Address Line 2:</Data></Cell><Cell/></Row>
+<Row><Cell><Data ss:Type="String">Billing City:</Data></Cell><Cell><Data ss:Type="String">Toledo</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing State:</Data></Cell><Cell><Data ss:Type="String">OH</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing Postal Code:</Data></Cell><Cell><Data ss:Type="String">43604</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing Phone:</Data></Cell><Cell><Data ss:Type="String">(555) 010-0405</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing Email:</Data></Cell><Cell><Data ss:Type="String">tom.reyes@example.com</Data></Cell></Row>
+<Row></Row>
+<Row></Row>
+<Row><Cell><Data ss:Type="String">Attention</Data></Cell><Cell><Data ss:Type="String">Sample Shop</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Card Shipping Address:</Data></Cell><Cell><Data ss:Type="String">9 Sample Ave</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Card Shipping Address Line 2:</Data></Cell><Cell><Data ss:Type="String">Unit B</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Card Shipping City:</Data></Cell><Cell><Data ss:Type="String">Toledo</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Card Shipping State:</Data></Cell><Cell><Data ss:Type="String">OH</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Card Shipping Postal Code:</Data></Cell><Cell><Data ss:Type="String">43604</Data></Cell></Row>
+<Row></Row>
+<Row></Row>
+<Row><Cell><Data ss:Type="String">Name</Data></Cell><Cell><Data ss:Type="String">Phone</Data></Cell><Cell><Data ss:Type="String">Email</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Sample Lia Chen</Data></Cell><Cell><Data ss:Type="String">(555) 010-0406</Data></Cell><Cell><Data ss:Type="String">lia.chen@example.com</Data></Cell></Row>
+<Row></Row>
+<Row><Cell><Data ss:Type="String">Number Of Cards:</Data></Cell><Cell><Data ss:Type="Number">4</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Company Name:</Data></Cell><Cell><Data ss:Type="String">Sample: Birch Lane Plumbing</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Second Line Embossing Option:</Data></Cell><Cell><Data ss:Type="String">Company Vehicle ID</Data></Cell></Row>
+<Row></Row>
+<Row></Row>
+<Row><Cell><Data ss:Type="String">Department:</Data></Cell><Cell><Data ss:Type="String">No</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Vehicle Description:</Data></Cell><Cell><Data ss:Type="String">No</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">License Plate #:</Data></Cell><Cell><Data ss:Type="String">No</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Company Vehicle ID:</Data></Cell><Cell><Data ss:Type="String">Yes</Data></Cell></Row>
+<Row></Row>
+<Row></Row>
+<Row><Cell><Data ss:Type="String">Company Vehicle ID</Data></Cell><Cell><Data ss:Type="String">Vehicle Description</Data></Cell><Cell><Data ss:Type="String">Department</Data></Cell><Cell><Data ss:Type="String">License Plate #</Data></Cell><Cell><Data ss:Type="String">Card Control Option</Data></Cell><Cell><Data ss:Type="String">Prompt Option</Data></Cell><Cell><Data ss:Type="String">Acceptance Option</Data></Cell><Cell><Data ss:Type="String">VIN Number</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">SV-001</Data></Cell><Cell><Data ss:Type="String">2021 Sample Pickup</Data></Cell><Cell><Data ss:Type="String">Sales</Data></Cell><Cell/><Cell><Data ss:Type="String">Fuel Only</Data></Cell><Cell><Data ss:Type="String">Driver ID + Odometer</Data></Cell><Cell><Data ss:Type="String">Standard</Data></Cell><Cell><Data ss:Type="String">1SMPL0248128583958</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">SV-002</Data></Cell><Cell><Data ss:Type="String">2020 Sample Box Truck</Data></Cell><Cell><Data ss:Type="String">Delivery</Data></Cell><Cell><Data ss:Type="String">SMPL627</Data></Cell><Cell><Data ss:Type="String">Fuel Only</Data></Cell><Cell><Data ss:Type="String">Driver ID + Odometer</Data></Cell><Cell><Data ss:Type="String">Standard</Data></Cell><Cell><Data ss:Type="String">1SMPL0866773840736</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">RENTAL VEH 1</Data></Cell><Cell><Data ss:Type="String">2021 Sample Pickup</Data></Cell><Cell><Data ss:Type="String">Delivery</Data></Cell><Cell><Data ss:Type="String">SMPL837</Data></Cell><Cell><Data ss:Type="String">Fuel Only</Data></Cell><Cell><Data ss:Type="String">Driver ID + Odometer</Data></Cell><Cell><Data ss:Type="String">Standard</Data></Cell><Cell/></Row>
+<Row><Cell><Data ss:Type="String">RENTAL VEH 2</Data></Cell><Cell/><Cell><Data ss:Type="String">Delivery</Data></Cell><Cell><Data ss:Type="String">SMPL204</Data></Cell><Cell><Data ss:Type="String">Fuel Only</Data></Cell><Cell><Data ss:Type="String">Driver ID + Odometer</Data></Cell><Cell><Data ss:Type="String">Standard</Data></Cell><Cell><Data ss:Type="String">1SMPL0543389120696</Data></Cell></Row>
+<Row></Row>
+<Row><Cell><Data ss:Type="String">First Name</Data></Cell><Cell><Data ss:Type="String">Last Name</Data></Cell><Cell><Data ss:Type="String">Department</Data></Cell><Cell><Data ss:Type="String">Driver ID</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Sample Fran</Data></Cell><Cell><Data ss:Type="String">Adams</Data></Cell><Cell><Data ss:Type="String">Service</Data></Cell><Cell><Data ss:Type="String">000901</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Sample Eli</Data></Cell><Cell><Data ss:Type="String">Hale</Data></Cell><Cell><Data ss:Type="String">Sales</Data></Cell><Cell><Data ss:Type="String">000902</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Sample Dana</Data></Cell><Cell><Data ss:Type="String">Ford</Data></Cell><Cell><Data ss:Type="String">Admin</Data></Cell><Cell><Data ss:Type="String">000903</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Sample Fran</Data></Cell><Cell><Data ss:Type="String">Ford</Data></Cell><Cell><Data ss:Type="String">Service</Data></Cell><Cell><Data ss:Type="String">000904</Data></Cell></Row>
+</Table></Worksheet></Workbook>
