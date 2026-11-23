@@ -16,6 +16,15 @@ A private, browser-only tool for mapping a fleet customer's **parent business an
 - The repository contains no customer data. The only demo data is clearly fictional ("Sample: …", `example.com`, 555 numbers) and loads only when you press **Load sample**.
 - Follow your company's data-handling policy for where workspace and master files are stored.
 
+## Passcode lock & encryption at rest
+- On first run each browser sets its own passcode (6+ characters). The whole app stays behind the lock screen until it's entered.
+- The passcode is never stored. PBKDF2-SHA256 (600,000 iterations, random 16-byte salt, WebCrypto) derives a 256-bit **AES-GCM** key and a separate verifier hash. The workspace and every attachment in IndexedDB are AES-GCM encrypted with a fresh IV; nothing readable is stored. Data saved before the lock existed is encrypted automatically when the passcode is first set.
+- **Auto-lock** after 15 minutes of no activity (1–120 min in ☰ → Settings & passcode), plus a 🔒 Lock button. Locking clears the data and any Salesforce session from memory. Reloading always starts locked. After 5 wrong tries, unlocking is delayed (30 s, doubling, up to 15 min).
+- **Change passcode** (needs the current one) re-encrypts everything in one atomic step.
+- **Forgot passcode:** there is no reset and no backdoor. The only option is to erase this browser's data (type ERASE to confirm). Keep exported backups.
+- **Exports are passcode-protected by default** (separate passcode chosen at export, PBKDF2 + AES-GCM). The importing rep is asked for it. Share that passcode separately from the file. This can be turned off in Settings.
+- **Honest limit:** the passcode protects data on this device. A public static site can't restrict who loads the page itself — but without the passcode there's no data to see.
+
 ## What it does
 | Area | What you get |
 |---|---|

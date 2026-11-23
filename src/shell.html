@@ -20,10 +20,12 @@
   <span class="lock" title="All data is stored only in this browser">🔒 Local only</span>
   <span class="save" id="saveState"></span>
   <span class="spacer"></span>
+  <button data-act="locknow" title="Lock the app now">🔒 Lock</button>
   <button data-act="exportws" title="Save everything to a .json file">⬇ Export workspace</button>
   <button data-act="importws" title="Open a workspace .json file">⬆ Open workspace file</button>
   <div class="menu"><button data-act="menu" aria-label="More">☰</button>
     <div class="menu-pop hidden" id="menuPop">
+      <button data-act="settings">Settings & passcode</button>
       <button data-act="loadsample">Load sample (fictional demo data)</button>
       <button data-act="about">About & privacy</button>
       <button data-act="clearall" style="color:#b91c1c">Erase everything in this browser…</button>
@@ -33,6 +35,8 @@
 <div class="warnbar hidden" id="storeWarn" style="margin:8px 16px 0">This browser blocked full local storage, so uploaded files are kept only until you close the tab. Export your workspace before leaving.</div>
 <div class="layout"><aside id="side"></aside><main><div class="mobile-biz" id="mobileBiz"></div><div id="main"></div></main></div>
 <div id="modal" class="modal hidden"><div class="modal-card" id="modalCard"></div></div>
+<div id="lockScreen" class="lockscreen hidden"></div>
+<div id="pwDialog" class="lockscreen dialog hidden"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="fileWs" accept=".json,application/json" class="hidden">
 <script>

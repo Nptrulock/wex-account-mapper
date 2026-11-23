@@ -4,3 +4,4 @@ shots/
 tools/e2e.py
 __pycache__/
 tools/sf_mock.py
+tools/lock_test.py

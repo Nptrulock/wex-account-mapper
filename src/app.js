@@ -3,6 +3,7 @@ const UI = {biz: null, tab: 'chart', layout: 'org', stage: 'all', q: '', scope: 
 let saveTimer = null;
 function setSave(t){ const el = $('#saveState'); if (el) el.textContent = t; }
 function touch(redraw = true){
+  if (!WS || !Vault.key) return;
   WS.updated = Date.now(); setSave('Saving…'); clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => { try { await Store.putWs(WS); setSave(Store.mode === 'idb' ? 'Saved in this browser ✓' : 'Saved (limited storage) ✓'); } catch (e) { setSave('Save failed — export a backup'); console.warn(e); } }, 250);
   if (redraw) render();
@@ -24,7 +25,7 @@ const isSample = a => /^sample\b/i.test(a.name || '');
 function curBiz(){ let b = UI.biz && acc(UI.biz); if (!b || !isRoot(b)){ b = roots()[0] || null; UI.biz = b ? b.id : null; } return b; }
 
 /* ---------- render ---------- */
-function render(){ renderSide(); renderMain(); }
+function render(){ if (!WS || Lock.locked) return; renderSide(); renderMain(); }
 function renderSide(){
   const rs = roots(); const b = curBiz();
   const q = UI.q.toLowerCase();

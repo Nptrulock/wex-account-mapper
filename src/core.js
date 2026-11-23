@@ -6,7 +6,7 @@
    Salesforce hosts. All data lives in this
    browser (IndexedDB, with localStorage fallback) and in files you export.
    ===================================================================== */
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const WS_FORMAT = 'account-mapper-workspace';
 
 const STAGES = [
@@ -229,7 +229,31 @@ function buildXlsx(sheets){
   return makeZip(files.map(f => ({name: f.name, data: f.data})));
 }
 
-/* ---------- Storage (IndexedDB, localStorage fallback) ---------- */
+/* ---------- Vault: passcode-derived encryption (WebCrypto) ----------
+   PBKDF2-SHA256 (600k iterations, random 16-byte salt) -> 512 bits.
+   First 256 bits = AES-GCM-256 key (non-extractable). SHA-256 of the last
+   256 bits = verifier stored in the lock record (the passcode itself is never stored).
+   Every stored record is AES-GCM encrypted with a fresh 96-bit IV. */
+const Vault = {
+  key: null, meta: null, ITER: 600000,
+  rand(n){ const a = new Uint8Array(n); crypto.getRandomValues(a); return a; },
+  async derive(pass, saltB64, iter){
+    const base = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveBits']);
+    const bits = new Uint8Array(await crypto.subtle.deriveBits({name: 'PBKDF2', salt: new Uint8Array(b642ab(saltB64)), iterations: iter, hash: 'SHA-256'}, base, 512));
+    const key = await crypto.subtle.importKey('raw', bits.slice(0, 32), {name: 'AES-GCM'}, false, ['encrypt', 'decrypt']);
+    const ver = ab2b64(await crypto.subtle.digest('SHA-256', bits.slice(32)));
+    bits.fill(0);
+    return {key, ver};
+  },
+  same(a, b){ a = String(a); b = String(b); if (a.length !== b.length) return false; let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i); return d === 0; },
+  async encrypt(u8, key = this.key){ if (!key) throw new Error('locked'); const iv = this.rand(12); const ct = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key, u8); return {enc: 1, iv: ab2b64(iv), ct}; },
+  async decrypt(r, key = this.key){ if (!key) throw new Error('locked'); const ct = typeof r.ct === 'string' ? b642ab(r.ct) : r.ct; return crypto.subtle.decrypt({name: 'AES-GCM', iv: new Uint8Array(b642ab(r.iv))}, key, ct); },
+  async encryptStr(s, key){ return this.encrypt(enc.encode(s), key); },
+  async encryptData(d, key){ const isStr = typeof d === 'string'; const r = await this.encrypt(isStr ? enc.encode(d) : new Uint8Array(d), key); r.t = isStr ? 's' : 'b'; return r; },
+  async decryptData(r, key){ const buf = await this.decrypt(r, key); return r.t === 's' ? new TextDecoder().decode(buf) : buf; },
+};
+
+/* ---------- Storage (IndexedDB, localStorage fallback). Data records are always encrypted. ---------- */
 const Store = {
   db: null, mode: 'idb', mem: new Map(),
   async open(){
@@ -248,12 +272,32 @@ const Store = {
       t.oncomplete = () => res(req ? req.result : undefined); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error || new Error('aborted'));
     });
   },
-  async getWs(){ if (this.mode === 'idb') return this._tx('kv', 'readonly', s => s.get('ws')); try { const t = localStorage.getItem('am_ws'); return t ? JSON.parse(t) : null; } catch(e){ return null; } },
-  async putWs(ws){ if (this.mode === 'idb') return this._tx('kv', 'readwrite', s => s.put(ws, 'ws')); localStorage.setItem('am_ws', JSON.stringify(ws)); },
-  async getFile(id){ if (this.mode === 'idb') return this._tx('files', 'readonly', s => s.get(id)); return this.mem.get(id); },
-  async putFile(id, data){ if (this.mode === 'idb') return this._tx('files', 'readwrite', s => s.put(data, id)); this.mem.set(id, data); },
-  async delFile(id){ if (this.mode === 'idb') return this._tx('files', 'readwrite', s => s.delete(id)); this.mem.delete(id); },
-  async clearAll(){ if (this.mode === 'idb'){ await this._tx('kv', 'readwrite', s => s.clear()); await this._tx('files', 'readwrite', s => s.clear()); } else { localStorage.removeItem('am_ws'); this.mem.clear(); } },
+  _ls(v){ if (v && v.enc && typeof v.ct !== 'string') return {...v, ct: ab2b64(v.ct)}; return v; },
+  async rawGet(store, key){ if (this.mode === 'idb') return this._tx(store, 'readonly', s => s.get(key)); if (store === 'kv'){ try { const t = localStorage.getItem('am_' + key); return t ? JSON.parse(t) : undefined; } catch (e) { return undefined; } } return this.mem.get(key); },
+  async rawPut(store, key, val){ if (this.mode === 'idb') return this._tx(store, 'readwrite', s => s.put(val, key)); if (store === 'kv') localStorage.setItem('am_' + key, JSON.stringify(this._ls(val))); else this.mem.set(key, val); },
+  async rawDel(store, key){ if (this.mode === 'idb') return this._tx(store, 'readwrite', s => s.delete(key)); if (store === 'kv') localStorage.removeItem('am_' + key); else this.mem.delete(key); },
+  async fileKeys(){ if (this.mode === 'idb') return this._tx('files', 'readonly', s => s.getAllKeys()); return [...this.mem.keys()]; },
+  /* atomic multi-write (one IndexedDB transaction) — used for migration and passcode change */
+  async putMany(kv, files, wipeFiles){
+    if (this.mode !== 'idb'){ if (wipeFiles) this.mem.clear(); for (const k in kv) await this.rawPut('kv', k, kv[k]); for (const k in files) this.mem.set(k, files[k]); return; }
+    return new Promise((res, rej) => {
+      const t = this.db.transaction(['kv', 'files'], 'readwrite'); const ks = t.objectStore('kv'), fs = t.objectStore('files');
+      if (wipeFiles) fs.clear();
+      for (const k in kv) ks.put(kv[k], k); for (const k in files) fs.put(files[k], k);
+      t.oncomplete = () => res(); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error || new Error('aborted'));
+    });
+  },
+  async getWs(){ const r = await this.rawGet('kv', 'ws'); if (!r) return null; if (r.enc) return JSON.parse(new TextDecoder().decode(await Vault.decrypt(r))); return r; },
+  async putWs(ws){ return this.rawPut('kv', 'ws', await Vault.encryptStr(JSON.stringify(ws))); },
+  async getFile(id){ const r = await this.rawGet('files', id); if (r == null) return r; return r.enc ? Vault.decryptData(r) : r; },
+  async putFile(id, data){ return this.rawPut('files', id, await Vault.encryptData(data)); },
+  async delFile(id){ return this.rawDel('files', id); },
+  async clearAll(keepLock){
+    const lock = keepLock ? await this.rawGet('kv', 'lock') : null;
+    if (this.mode === 'idb'){ await this._tx('kv', 'readwrite', s => s.clear()); await this._tx('files', 'readwrite', s => s.clear()); }
+    else { ['ws', 'lock'].forEach(k => localStorage.removeItem('am_' + k)); this.mem.clear(); }
+    if (lock) await this.rawPut('kv', 'lock', lock);
+  },
 };
 
 /* ---------- Data-source adapters ----------

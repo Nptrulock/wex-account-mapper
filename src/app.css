@@ -18,7 +18,7 @@ button.small{padding:3px 8px;min-height:26px;font-size:12px}
 button.danger{color:#b91c1c;border-color:#fecaca}
 button.cp{padding:2px 6px;min-height:26px;font-size:12px;color:var(--muted);background:#fff}
 button.cp:hover{color:var(--brand)}
-input[type=text],input[type=email],input[type=tel],input[type=search],input:not([type]),select,textarea{border:1px solid var(--border);border-radius:8px;padding:7px 9px;background:#fff;min-height:34px;width:100%}
+input[type=password],input[type=text],input[type=email],input[type=tel],input[type=search],input:not([type]),select,textarea{border:1px solid var(--border);border-radius:8px;padding:7px 9px;background:#fff;min-height:34px;width:100%}
 textarea{min-height:70px;resize:vertical}
 input:focus,select:focus,textarea:focus{outline:2px solid #93c5fd;outline-offset:0;border-color:#93c5fd}
 .hidden{display:none!important}
@@ -218,3 +218,13 @@ pre.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;backgr
 .btnlike .button{display:inline-flex;align-items:center;cursor:pointer;border:1px solid var(--border);background:#fff;border-radius:8px;padding:7px 12px;min-height:34px}
 .btnlike .button:hover{background:#f8fafc}
 .privacy{background:#ecfdf5;color:#065f46;border-bottom:1px solid #a7f3d0;padding:6px 16px;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.lockscreen{position:fixed;inset:0;z-index:90;background:linear-gradient(160deg,#0f243d,#1e3a5f 55%,#2f5d8a);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
+.lockscreen.dialog{z-index:95;background:rgba(15,23,42,.55)}
+.lock-card{background:#fff;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.3);padding:22px;width:min(420px,100%)}
+.lock-card label{display:block;margin:10px 0}
+.lock-card label input{margin-top:4px}
+.lock-err{color:#b91c1c;font-size:13px;min-height:18px;margin:4px 0 8px}
+.lock-note{margin-top:14px;font-size:12px;color:#475569;background:#f8fafc;border:1px solid var(--border);border-radius:9px;padding:9px;line-height:1.45}
+body.locked .top,body.locked .privacy,body.locked .layout,body.locked #storeWarn{display:none!important}
+.lock-card .logo{border-radius:9px;background:linear-gradient(135deg,#f59e0b,#c2410c);display:grid;place-items:center;font-weight:800;color:#fff}
+.lock-card label input{display:block;width:100%}

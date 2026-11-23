@@ -6,11 +6,13 @@ with sync_playwright() as p:
     ctx = br.new_context(); pg = ctx.new_page(); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto(URL); pg.wait_for_function('() => window.__ready === true')
+    pg.fill('#lp1', 'Sample-Passcode-123'); pg.fill('#lp2', 'Sample-Passcode-123'); pg.click('#lockForm button[type=submit]'); pg.wait_for_selector('body:not(.locked) #main', timeout=20000)
     pg.wait_for_function('() => navigator.serviceWorker && navigator.serviceWorker.controller !== null || (location.reload(), false)', timeout=15000) if False else None
     pg.evaluate('() => navigator.serviceWorker.ready.then(() => true)'); pg.wait_for_timeout(1500)
     pg.evaluate('() => loadSample()'); pg.wait_for_timeout(500)
     ctx.set_offline(True)
     pg.reload(); pg.wait_for_function('() => window.__ready === true', timeout=15000)
+    pg.fill('#lp1', 'Sample-Passcode-123'); pg.click('#unlockBtn'); pg.wait_for_selector('body:not(.locked) #main', timeout=20000)
     n = pg.locator('#tree .node').count()
     man = pg.evaluate('() => !!document.querySelector("link[rel=manifest]")')
     print(('PASS' if n == 5 else 'FAIL') + ' offline reload works, data still there (nodes=%d)' % n)

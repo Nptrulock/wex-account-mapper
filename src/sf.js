@@ -29,11 +29,13 @@ const SF = {
     const q = new URLSearchParams({response_type: 'code', client_id: c.clientId, redirect_uri: SF.callback(), code_challenge: challenge, code_challenge_method: 'S256', state, scope: 'api'});
     location.assign(c.instanceUrl + '/services/oauth2/authorize?' + q.toString());
   },
+  pending: null,
+  /* called at page load (before unlock): take the OAuth response out of the address bar */
+  capture(){ const p = new URLSearchParams(location.search); if (p.has('code') || p.has('error')){ SF.pending = p; history.replaceState(null, '', location.pathname); } },
+  /* called after the app is unlocked */
   async handleRedirect(){
-    const p = new URLSearchParams(location.search);
-    if (!p.has('code') && !p.has('error')) return;
+    const p = SF.pending; if (!p) return; SF.pending = null;
     const pk = JSON.parse(sessionStorage.getItem('am_sf_pkce') || 'null');
-    history.replaceState(null, '', location.pathname);
     sessionStorage.removeItem('am_sf_pkce');
     UI.tab = 'import';
     if (p.has('error')){ SF.status = 'Salesforce sign-in was not completed: ' + (p.get('error_description') || p.get('error')); return; }

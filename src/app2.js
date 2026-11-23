@@ -124,19 +124,34 @@ function loadSample(){
 async function exportWs(){
   const files = [];
   for (const f of WS.files){ const d = await Store.getFile(f.id); if (d == null) continue; files.push(typeof d === 'string' ? {id: f.id, encoding: 'text', data: d} : {id: f.id, encoding: 'base64', data: ab2b64(d)}); }
-  const out = {format: WS_FORMAT, version: 1, appVersion: APP_VERSION, exported: new Date().toISOString(), workspace: WS, fileData: files};
-  download(new Blob([JSON.stringify(out, null, 1)], {type: 'application/json'}), 'account-mapper-workspace_' + today() + '.json');
-  toast('Workspace exported — keep this file private');
+  let out = {format: WS_FORMAT, version: 1, appVersion: APP_VERSION, exported: new Date().toISOString(), workspace: WS, fileData: files};
+  let protectedFile = false;
+  if (Vault.meta && Vault.meta.encExport){
+    const pass = await Lock.ask({title: 'Protect this export', confirm: true, okLabel: 'Export', note: 'Choose a passcode for this file (it can differ from your app passcode). The rep who opens it will need it — share it separately, not with the file.'});
+    if (pass == null){ toast('Export cancelled'); return; }
+    toast('Encrypting…'); out = await Lock.sealExport(out, pass); protectedFile = true;
+  }
+  download(new Blob([JSON.stringify(out, null, protectedFile ? 0 : 1)], {type: 'application/json'}), 'account-mapper-workspace_' + today() + (protectedFile ? '_protected' : '') + '.json');
+  toast(protectedFile ? 'Passcode-protected workspace exported' : 'Workspace exported (not passcode-protected) — keep this file private');
 }
 async function importWs(file){
   let j; try { j = JSON.parse(await file.text()); } catch (e) { toast('That file is not a workspace (.json)'); return; }
+  if (j && j.format === WS_FORMAT && j.encrypted){
+    let err = '', inner = null;
+    for (;;){
+      const pass = await Lock.ask({title: 'Open protected workspace', note: 'This file is passcode-protected. Enter the passcode the sender gave you.', error: err, okLabel: 'Open'});
+      if (pass == null){ toast('Import cancelled'); return; }
+      inner = await Lock.openExport(j, pass); if (inner) break; err = 'Wrong passcode for this file.';
+    }
+    j = inner;
+  }
   if (!j || j.format !== WS_FORMAT || !j.workspace){ toast('That file is not an Account Mapper workspace'); return; }
   const merge = WS.accounts.length ? confirm('Merge this file into what you already have?\n\nOK = merge (matching accounts are kept, new ones added)\nCancel = choose replace') : false;
   if (!merge && WS.accounts.length && !confirm('Replace EVERYTHING in this browser with the file’s contents?')) return;
   const inc = migrate(j.workspace);
   const data = new Map((j.fileData || []).map(f => [f.id, f]));
   const putData = async id => { const f = data.get(id); if (!f) return; await Store.putFile(id, f.encoding === 'base64' ? b642ab(f.data) : f.data); };
-  if (!merge){ await Store.clearAll(); WS = inc; for (const f of WS.files) await putData(f.id); }
+  if (!merge){ await Store.clearAll(true); WS = inc; for (const f of WS.files) await putData(f.id); }
   else {
     const have = new Set(WS.accounts.map(a => a.id)); const haveC = new Set(WS.contacts.map(c => c.id)); const haveF = new Set(WS.files.map(f => f.id));
     for (const a of inc.accounts) if (!have.has(a.id)) WS.accounts.push(a);
@@ -206,11 +221,14 @@ const ACT = {
   exportws: () => { UI.menu = false; renderMenu(); exportWs(); },
   importws: () => { UI.menu = false; renderMenu(); $('#fileWs').click(); },
   menu: () => { UI.menu = !UI.menu; renderMenu(); },
-  clearall: async () => { UI.menu = false; renderMenu(); if (!confirm('Erase ALL accounts, contacts and files from this browser?\n\nExport a workspace file first if you want a backup.')) return; await Store.clearAll(); WS = blankWs(); UI.biz = null; UI.imp = null; touch(); toast('Everything erased from this browser'); },
+  clearall: async () => { UI.menu = false; renderMenu(); if (!confirm('Erase ALL accounts, contacts and files from this browser?\n\nExport a workspace file first if you want a backup.')) return; await Store.clearAll(true); WS = blankWs(); UI.biz = null; UI.modal = null; $('#modal').classList.add('hidden'); UI.imp = null; touch(); toast('Everything erased from this browser'); },
   sfconnect: () => SF.connect(),
   sfdisconnect: () => SF.disconnect(),
   sfpull: async el => { if (SF.busy) return; SF.busy = true; el.disabled = true; el.textContent = 'Pulling…'; try { SF.status = await SF.pullBusiness($('#sfRef').value); } catch (e) { SF.status = 'Could not pull from Salesforce: ' + e.message; } SF.busy = false; render(); },
-  about: () => { UI.menu = false; renderMenu(); UI.modal = {kind: 'preview', html: '<div class="mh"><h3>About Account Mapper</h3><button data-act="close">✕</button></div><div class="mb"><p><b>🔒 Your data stays in this browser. Nothing is uploaded.</b></p><p>The page has a strict Content-Security-Policy that blocks all network requests from the app (no analytics, no fonts, no CDNs). Accounts, contacts and files are saved in this browser\'s storage on this device only. Clearing site data erases them, so export a workspace file as a backup.</p><p>Optional Salesforce connection (Paste / import tab): read-only, signs in on Salesforce\'s own page with OAuth + PKCE, and can only talk to Salesforce addresses. It downloads records into this browser; it never writes to Salesforce or sends data anywhere else.</p><p>To hand a business to another rep, use <b>Export workspace</b> and send the .json file through an approved, internal channel. They use <b>Open workspace file</b>.</p><p class="small muted">Version ' + APP_VERSION + ' · storage: ' + (Store.mode === 'idb' ? 'IndexedDB' : 'localStorage (limited)') + '</p></div>'}; renderModal(); },
+  settings: () => { UI.menu = false; renderMenu(); UI.modal = {kind: 'preview', html: Lock.settingsHtml()}; renderModal(); },
+  locknow: () => Lock.lockNow(),
+  changepass: () => Lock.changePass(),
+  about: () => { UI.menu = false; renderMenu(); UI.modal = {kind: 'preview', html: '<div class="mh"><h3>About Account Mapper</h3><button data-act="close">✕</button></div><div class="mb"><p><b>🔒 Your data stays in this browser. Nothing is uploaded.</b></p><p>The page has a strict Content-Security-Policy: no analytics, fonts or CDNs, and the app can\'t contact any address except Wex\'s Salesforce (only if you connect it). Accounts, contacts and files are saved in this browser\'s storage on this device only, encrypted (AES-GCM) with a key made from your passcode.</p><p>' + esc(LOCK_NOTE) + ' Clearing site data erases them, so export a workspace file as a backup.</p><p>Optional Salesforce connection (Paste / import tab): read-only, signs in on Salesforce\'s own page with OAuth + PKCE, and can only talk to Salesforce addresses. It downloads records into this browser; it never writes to Salesforce or sends data anywhere else.</p><p>To hand a business to another rep, use <b>Export workspace</b> and send the .json file through an approved, internal channel. They use <b>Open workspace file</b>.</p><p class="small muted">Version ' + APP_VERSION + ' · storage: ' + (Store.mode === 'idb' ? 'IndexedDB' : 'localStorage (limited)') + '</p></div>'}; renderModal(); },
 };
 function backOrClose(){ const back = UI.backTo; UI.backTo = null; if (back && acc(back)) openModal('acct', back); else { UI.modal = null; renderModal(); } }
 function renderMenu(){ $('#menuPop').classList.toggle('hidden', !UI.menu); }
@@ -242,6 +260,8 @@ document.addEventListener('change', async ev => {
   if (t.id === 'impFile'){ const f = t.files[0]; if (f) impRead(await f.text(), f.name); t.value = ''; return; }
   if (t.dataset.f === 'billCycle' && UI.modal){ const a = acc(UI.modal.id); a.billCycle = t.value; touch(); return; }
   const a = t.dataset.actChange; if (!a) return;
+  if (a === 'autolock'){ Vault.meta.autoLockMin = +t.value; await Lock.saveMeta(Vault.meta); toast('Auto-lock after ' + t.value + ' min'); return; }
+  if (a === 'encexport'){ Vault.meta.encExport = t.checked; await Lock.saveMeta(Vault.meta); toast(t.checked ? 'Exports will be passcode-protected' : 'Exports will NOT be passcode-protected'); return; }
   if (a === 'bizsel'){ UI.biz = t.value; render(); }
   if (a === 'setparent'){ const x = acc(t.dataset.id); const np = t.value || null; if (np && subtreeIds(x.id).has(np)){ toast('Can’t move an account under its own child'); renderModal(); return; } x.parentId = np; if (!np) x.billMode = 'own'; UI.biz = rootOf(x).id; touch(); renderModal(); }
   if (a === 'cacct'){ const c = con(UI.modal.id); const id = t.dataset.v; if (t.checked){ if (!c.accountIds.includes(id)) c.accountIds.push(id); } else c.accountIds = c.accountIds.filter(x => x !== id); touch(); }
@@ -253,11 +273,12 @@ document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && UI.modal
 /* ---------- boot ---------- */
 async function boot(){
   await Store.open();
-  try { WS = migrate(await Store.getWs()); } catch (e) { WS = blankWs(); }
-  try { await SF.handleRedirect(); } catch (e) { console.warn(e); }
+  SF.capture();
   if (Store.mode !== 'idb') $('#storeWarn').classList.remove('hidden');
-  setSave(WS.accounts.length ? 'Saved in this browser ✓' : 'Nothing saved yet');
-  render();
+  Vault.meta = await Lock.loadMeta();
+  if (!Vault.meta){ const legacy = await Store.rawGet('kv', 'ws'); Lock.legacy = !!(legacy && !legacy.enc && legacy.accounts && legacy.accounts.length); }
+  Lock.show(Vault.meta ? 'unlock' : 'setup');
+  Lock.start();
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
