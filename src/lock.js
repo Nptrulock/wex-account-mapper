@@ -74,7 +74,8 @@ const Lock = {
     Vault.key = key; return true;
   },
   async opened(){
-    try { WS = migrate(await Store.getWs()); } catch (e) { console.warn(e); WS = blankWs(); toast('Could not read saved data'); }
+    try { MIGRATE_NOTE.junk = 0; WS = migrate(await Store.getWs()); } catch (e) { console.warn(e); WS = blankWs(); toast('Could not read saved data'); }
+    if (MIGRATE_NOTE.junk){ const n = MIGRATE_NOTE.junk; MIGRATE_NOTE.junk = 0; setTimeout(() => { touch(false); toast('Cleaned up ' + n + ' junk account' + (n === 1 ? '' : 's') + ' named after form labels'); }, 0); }
     Lock.locked = false; document.body.classList.remove('locked'); $('#lockScreen').classList.add('hidden'); $('#lockScreen').innerHTML = '';
     Lock.lastActive = Date.now();
     setSave(WS.accounts.length ? 'Saved in this browser (encrypted) ✓' : 'Nothing saved yet');

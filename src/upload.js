@@ -142,7 +142,7 @@ function ingest(sources, opts = {}){
   /* an ID always wins; a name only matches an account that has no different ID (location accounts often share a name) */
   const findAcc = (id, name) => { if (id){ const a = findAccount(id); if (a && a.sfId) return a; return (name && WS.accounts.find(x => !x.sfId && norm(x.name) === norm(name))) || null; } return (name && WS.accounts.find(x => norm(x.name) === norm(name))) || null; };
   const order = {accounts: 0, billing: 1, opportunities: 2, cases: 3, contacts: 4, other: 5};
-  const srcs = sources.filter(s => s.include !== false && s.table).sort((a, b) => order[a.type] - order[b.type]);
+  const srcs = sources.filter(s => s.include !== false && s.table && !s.kind).sort((a, b) => order[a.type] - order[b.type]);
   const pendingParents = [];
   const addExtra = (obj, k, v) => { obj.extra = obj.extra || {}; const cur = obj.extra[k]; if (!cur) obj.extra[k] = v; else if (!cur.split(' | ').includes(v)) { const parts = cur.split(' | '); if (parts.length < 12) obj.extra[k] = cur + ' | ' + v; } };
   for (const s of srcs){
@@ -154,6 +154,7 @@ function ingest(sources, opts = {}){
       if (v['c.first'] || v['c.last']) v['c.name'] = v['c.name'] || [v['c.first'], v['c.last']].filter(Boolean).join(' ');
       const hasContact = v['c.name'] || v['c.email'];
       let a = findAcc(v['a.sfId'], v['a.name']);
+      if (v['a.name'] && ffJunkName(v['a.name'])){ if (!v['a.sfId']) st.warnings.push('Skipped "' + v['a.name'] + '" — that is a form label, not an account'); delete v['a.name']; }
       if (!a && (v['a.sfId'] || v['a.name'])){ a = newAccount({name: v['a.name'] || 'Account ' + v['a.sfId'], sfId: v['a.sfId'] || ''}); a.billMode = 'parent'; }   // newAccount defaults roots to 'own'; decided after the hierarchy is linked
       if (a){
         used++; touchedA.add(a.id);
@@ -168,7 +169,7 @@ function ingest(sources, opts = {}){
           const sg = stageFor(raw); if (sg && (!a._stageSet || STAGE[sg].n > STAGE[a.stage].n)){ a.stage = sg; a._stageSet = true; }
         }
         const pRef = v['a.parentId'] || v['a.parentRef'] || v['a.ultimate'];
-        if (pRef && !(v['a.ultimate'] && !v['a.parentId'] && !v['a.parentRef'] && norm(v['a.ultimate']) === norm(a.name))) pendingParents.push([a, v['a.parentId'], v['a.parentRef'] || (!v['a.parentId'] ? v['a.ultimate'] : '')]);
+        if (pRef && !ffJunkName(pRef) && !(v['a.ultimate'] && !v['a.parentId'] && !v['a.parentRef'] && norm(v['a.ultimate']) === norm(a.name))) pendingParents.push([a, v['a.parentId'], v['a.parentRef'] || (!v['a.parentId'] ? v['a.ultimate'] : '')]);
         const pre = k => s.type === 'opportunities' && !/opportunit|opp\b/i.test(k) ? 'Opportunity: ' + k : s.type === 'cases' && !/case/i.test(k) ? 'Case: ' + k : k;
         if (!(hasContact && s.type === 'contacts')) for (const [k, val] of extras){ addExtra(a, pre(k), val); st.extras[pre(k)] = (st.extras[pre(k)] || 0) + 1; }
       }
@@ -194,6 +195,7 @@ function ingest(sources, opts = {}){
   }
   // Wex Fleet Data forms (after other files, so they can attach to accounts those files create)
   for (const s of sources) if (s.kind === 'fleet' && s.include !== false) ffApply(s, {touchedA, touchedC, st, addExtra});
+  for (const s of sources) if (s.kind === 'fleettbl' && s.include !== false) ffApplyList(s, {touchedA, st});
   for (const a of WS.accounts){
     if (!touchedA.has(a.id)) continue;
     if (!a.parentId) a.billMode = 'own';
@@ -213,7 +215,7 @@ function previewIngest(sources){
 
 /* ---- UI ---- */
 async function upAddFiles(fileList){
-  const U = UI.up = UI.up || {sources: [], errors: []};
+  const U = UI.up = UI.up || {sources: [], errors: []}; U.result = null;
   for (const f of fileList){
     try {
       const res = await readSpreadsheetFile(f); const {format, sheets} = res;
@@ -221,8 +223,21 @@ async function upAddFiles(fileList){
       // Wex Fleet Data form? Read every sheet/table as one grid; this wins over generic report detection.
       const grid = ffGrid(res), form = parseFleetForm(grid), fleet = isFleetForm(form);
       const decisions = [];
-      if (fleet){ U.sources.push({id: uid('src'), kind: 'fleet', type: 'fleet', file: f.name, size: f.size, mime: f.type || '', format, sheet: '', sheets: sheets.length, form, target: '', blob: f}); added++; decisions.push('Wex Fleet Data form'); }
-      else for (const sh of sheets){
+      const base = upBase(f.name);
+      if (fleet){
+        // the same form twice (re-added, "name (1).xls", or another copy with the same opportunity + company) → keep only the newest
+        const fk = norm(form.fields.top.opp || '') + '|' + ffKey(form.fields.card.company || '');
+        U.sources = U.sources.filter(x => !(x.kind === 'fleet' && (upBase(x.file) === base || (fk !== '|' && x.fk === fk))));
+        U.sources.push({id: uid('src'), kind: 'fleet', type: 'fleet', file: f.name, size: f.size, mime: f.type || '', format, sheet: '', sheets: sheets.length, form, fk, target: '', blob: f}); added++;
+        const t = form.tables; decisions.push('Wex Fleet Data form (' + (t.vehicles ? t.vehicles.rows.length : 'no') + ' vehicles table, ' + (t.drivers ? t.drivers.rows.length : 'no') + ' drivers table)');
+      }
+      const lists = fleet ? [] : ['vehicles', 'drivers'].filter(k => form.tables[k] && form.tables[k].rows.length && (ffListKind(form.tables[k].headers, f.name) === k || ffHeaderInfo(form.tables[k].headers).strong));
+      for (const k of lists){
+        U.sources = U.sources.filter(x => !(x.kind === 'fleettbl' && x.which === k && upBase(x.file) === base));
+        U.sources.push({id: uid('src'), kind: 'fleettbl', type: k, which: k, file: f.name, size: f.size, mime: f.type || '', format, sheet: '', sheets: sheets.length, table: {headers: form.tables[k].headers.slice(), rows: form.tables[k].rows}, target: '', blob: f}); added++;
+        decisions.push((k === 'vehicles' ? 'Vehicles' : 'Drivers') + ' list (' + form.tables[k].rows.length + ' rows)');
+      }
+      if (!fleet && !lists.length) for (const sh of sheets){
         const table = locateTable(sh.rows); if (!table || !table.rows.length) continue;
         const type = detectType(table.headers, table.title + ' ' + f.name);
         U.sources.push({id: uid('src'), file: f.name, size: f.size, format, sheet: sh.name, sheets: sheets.length, table, type, map: upGuess(type, table.headers), open: false});
@@ -235,6 +250,7 @@ async function upAddFiles(fileList){
   }
   UI.tab = 'import'; render();
 }
+const upBase = n => String(n || '').toLowerCase().replace(/\s*\(\d+\)(?=\.[a-z0-9]+$)/, '').replace(/\s+/g, ' ').trim();
 function upStageValues(U){ const vals = {}; for (const s of U.sources){ if (s.include === false || !s.map) continue; s.map.forEach((f, i) => { if (f === 'a.stage') for (const r of s.table.rows) if (r[i]) vals[r[i]] = (vals[r[i]] || 0) + 1; }); } return vals; }
 function uploadView(){
   const U = UI.up || {sources: [], errors: []};
@@ -243,7 +259,7 @@ function uploadView(){
   if (U.errors.length) h += '<div class="warnbar">' + U.errors.map(esc).join('<br>') + ' <button class="small" data-act="uperrclear">Dismiss</button></div>';
   if (U.sources.length){
     const st = previewIngest(U.sources); U.lastPreview = st;
-    h += U.sources.map(s => s.kind === 'fleet' ? ffSourceCard(s, st) : upSourceCard(s, st)).join('');
+    h += U.sources.map(s => s.kind === 'fleet' ? ffSourceCard(s, st) : s.kind === 'fleettbl' ? ffListCard(s, st) : upSourceCard(s, st)).join('');
     const vals = upStageValues(U); const keys = Object.keys(vals);
     if (keys.length){
       h += '<div class="card"><h3>Stage values found <span class="small muted">— choose once, remembered</span></h3><div class="tblwrap"><table class="t"><thead><tr><th>Value in Salesforce</th><th>Rows</th><th>Show as</th></tr></thead><tbody>'
@@ -278,16 +294,24 @@ function upSourceCard(s, st){
     + (s.open ? '<div class="tblwrap" style="margin-top:8px"><table class="t maptbl"><thead><tr><th>Column</th><th>Example</th><th>Goes into</th></tr></thead><tbody>' + s.table.headers.map((hd, i) => '<tr><td><b>' + esc(hd) + '</b></td><td class="small muted">' + esc(s.table.rows.slice(0, 3).map(r => r[i]).filter(Boolean).join(' | ').slice(0, 70)) + '</td><td><select data-act-change="upmap" data-v="' + s.id + '" data-i="' + i + '">' + opts(s.map[i]) + '</select></td></tr>').join('') + '</tbody></table></div>' : '')
     + '</div>';
 }
+function upFleetSummary(st){
+  const forms = []; for (const x of st.fleet.filter(x => x.form)){ const i = forms.findIndex(y => y.accountId === x.accountId); if (i >= 0) forms[i] = x; else forms.push(x); }
+  const lists = st.fleet.filter(x => x.list && x.account);
+  const fin = x => { const a = acc(x.accountId); return a && a.fleet ? ' (' + (a.fleet.vehicles ? a.fleet.vehicles.rows.length : 0) + ' vehicles, ' + (a.fleet.drivers ? a.fleet.drivers.rows.length : 0) + ' drivers)' : ''; };
+  return (forms.length ? ' Fleet Data forms: ' + forms.map(x => x.account + fin(x)).join('; ') + '.' : '')
+    + (lists.length ? ' Fleet lists: ' + lists.map(x => (x.which === 'vehicles' ? 'Vehicles' : 'Drivers') + ' → ' + x.account + ': ' + x.added + ' new, ' + x.updated + ' updated, ' + x.same + ' already there').join('; ') + '.' : '');
+}
 function upRemember(){
   const U = UI.up; WS.mappings.up = WS.mappings.up || {}; WS.mappings.upSig = WS.mappings.upSig || {};
-  for (const s of U.sources){ if (!s.table) continue; WS.mappings.upSig[s.type + '|' + s.table.headers.map(norm).join('|')] = s.map.slice(); const m = WS.mappings.up[s.type] = WS.mappings.up[s.type] || {}; s.table.headers.forEach((h, i) => { m[norm(h)] = s.map[i]; }); }
+  for (const s of U.sources){ if (!s.table || !s.map) continue; WS.mappings.upSig[s.type + '|' + s.table.headers.map(norm).join('|')] = s.map.slice(); const m = WS.mappings.up[s.type] = WS.mappings.up[s.type] || {}; s.table.headers.forEach((h, i) => { m[norm(h)] = s.map[i]; }); }
 }
 Object.assign(ACT, {
   upgo: async () => { const U = UI.up; upRemember(); const st = ingest(U.sources);
-    for (const s of U.sources){ if (s.kind !== 'fleet' || !s.blob) continue; const r = st.fleet.find(x => x.id === s.id); if (!r) continue;
-      const buf = await s.blob.arrayBuffer(); const ex = WS.files.find(x => x.accountId === r.accountId && x.name === s.file);
-      if (ex){ ex.size = s.size; ex.added = Date.now(); await Store.putFile(ex.id, buf); } else { const meta = {id: uid('file'), accountId: r.accountId, name: s.file, mime: s.mime || 'application/vnd.ms-excel', size: s.size, added: Date.now(), kind: 'other'}; await Store.putFile(meta.id, buf); WS.files.push(meta); } } const first = st.roots[0] && WS.accounts.find(a => !a.parentId && a.name === st.roots[0].name); if (first) UI.biz = first.id;
-    U.result = 'Imported: ' + st.accNew + ' new and ' + st.accUpd + ' updated accounts, ' + st.conNew + ' new and ' + st.conUpd + ' updated contacts, ' + st.links + ' parent/child links.' + (st.fleet.length ? ' Fleet Data forms: ' + st.fleet.map(x => x.account + ' (' + x.vehicles + ' vehicles, ' + x.drivers + ' drivers)').join('; ') + '.' : ''); U.sources = []; U.errors = []; touch(); },
+    for (const s of U.sources){ if ((s.kind !== 'fleet' && s.kind !== 'fleettbl') || !s.blob) continue; const r = st.fleet.find(x => x.id === s.id); if (!r) continue;
+      const buf = await s.blob.arrayBuffer(); const ex = WS.files.find(x => x.accountId === r.accountId && upBase(x.name) === upBase(s.file));
+      if (ex){ ex.name = s.file; ex.size = s.size; ex.added = Date.now(); await Store.putFile(ex.id, buf); } else { const meta = {id: uid('file'), accountId: r.accountId, name: s.file, mime: s.mime || 'application/vnd.ms-excel', size: s.size, added: Date.now(), kind: 'other'}; await Store.putFile(meta.id, buf); WS.files.push(meta); } } const first = st.roots[0] && WS.accounts.find(a => !a.parentId && a.name === st.roots[0].name); if (first) UI.biz = first.id;
+    const lastF = st.fleet.filter(x => x.accountId).pop(); if (lastF){ UI.lastAcct = lastF.accountId; if (!first) UI.biz = rootOf(acc(lastF.accountId)).id; }
+    U.result = 'Imported: ' + st.accNew + ' new and ' + st.accUpd + ' updated accounts, ' + st.conNew + ' new and ' + st.conUpd + ' updated contacts, ' + st.links + ' parent/child links.' + upFleetSummary(st); U.sources = []; U.errors = []; touch(); },
   upclear: () => { UI.up = null; render(); },
   uperrclear: () => { UI.up.errors = []; render(); },
   uptoggle: el => { const s = UI.up.sources.find(x => x.id === el.dataset.v); s.open = !s.open; render(); },

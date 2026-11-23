@@ -10,6 +10,8 @@ function migrate(ws){
   ws.mappings = ws.mappings || {}; ws.mappings.accounts = ws.mappings.accounts || {}; ws.mappings.contacts = ws.mappings.contacts || {}; ws.mappings.sig = ws.mappings.sig || {};
   for (const a of ws.accounts){ a.extra = a.extra && typeof a.extra === 'object' ? a.extra : {}; a.linkedIds = Array.isArray(a.linkedIds) ? a.linkedIds : []; if (!STAGE[a.stage]) a.stage = 'app'; if (a.billMode !== 'own') a.billMode = 'parent'; }
   for (const c of ws.contacts){ c.extra = c.extra && typeof c.extra === 'object' ? c.extra : {}; c.accountIds = Array.isArray(c.accountIds) ? c.accountIds : []; if (c.level !== 'child') c.level = 'parent'; }
+  ws.mappings.vehicles = ws.mappings.vehicles || {}; ws.mappings.drivers = ws.mappings.drivers || {};
+  if (typeof ffCleanJunk === 'function') ffCleanJunk(ws);   // junk accounts named after form labels ("Second Line Embossing Option:")
   return ws;
 }
 function newAccount(o = {}){
@@ -115,19 +117,21 @@ const GUESS = {
     'account name': 'accountRef', 'account': 'accountRef', 'account id': 'accountRef', 'company': 'accountRef', 'business name': 'accountRef'}
 };
 const sigOf = (type, headers) => type + '|' + headers.map(norm).join('|');
+const FLEET_TYPES = {vehicles: 1, drivers: 1};
 function guessMap(type, headers){
+  WS.mappings[type] = WS.mappings[type] || {};
   const sig = WS.mappings.sig[sigOf(type, headers)];
   if (sig && sig.length === headers.length) return sig.slice();
   const used = new Set();
   return headers.map(h => {
     const n = norm(h); const rem = WS.mappings[type][n];
-    let f = rem !== undefined ? rem : (GUESS[type][n] || '');
+    let f = rem !== undefined ? rem : FLEET_TYPES[type] ? (ffColKey(type, h) || '') : (GUESS[type][n] || '');
     if (f && used.has(f) && f !== '') f = '';
     if (f) used.add(f);
     return f;
   });
 }
-function rememberMap(type, headers, map){ WS.mappings.sig[sigOf(type, headers)] = map.slice(); headers.forEach((h, i) => { WS.mappings[type][norm(h)] = map[i] || ''; }); }
+function rememberMap(type, headers, map){ WS.mappings[type] = WS.mappings[type] || {}; WS.mappings.sig[sigOf(type, headers)] = map.slice(); headers.forEach((h, i) => { WS.mappings[type][norm(h)] = map[i] || ''; }); }
 function findAccount(ref){
   const r = String(ref || '').trim(); if (!r) return null;
   const lo = r.toLowerCase();
@@ -141,6 +145,7 @@ function recordsFrom(type, table, map){
     map.forEach((f, i) => { if (f && row[i] != null && String(row[i]).trim() !== '') r[f] = String(row[i]).trim(); });
     if (type === 'contacts' && !r.name && (r.firstName || r.lastName)) r.name = [r.firstName, r.lastName].filter(Boolean).join(' ');
     delete r.firstName; delete r.lastName;
+    if (type === 'accounts' && r.name && ffJunkName(r.name) && !r.sfId) continue;   // a form label, not an account
     if (type === 'accounts' ? r.name || r.sfId : r.name || r.email) recs.push(r);
   }
   return recs;

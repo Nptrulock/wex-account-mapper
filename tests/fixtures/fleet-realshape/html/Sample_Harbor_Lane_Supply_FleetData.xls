@@ -1,0 +1,47 @@
+<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"></head><body>
+<table border="1">
+<tr><td>Opportunity:</td><td>1-SMPL0701</td></tr>
+<tr><td>Billing First Name:</td><td>Sample Noor</td></tr>
+<tr><td>Billing Last Name:</td><td>Patel</td></tr>
+<tr><td>Billing Address:</td><td>12 Sample Wharf Rd</td></tr>
+<tr><td>Billing City:</td><td>Muskegon</td></tr>
+<tr><td>Billing State:</td><td>MI</td></tr>
+<tr><td>Billing Postal Code:</td><td>49440</td></tr>
+<tr><td>Billing Phone:</td><td>(555) 010-0701</td></tr>
+<tr><td>Billing Email:</td><td>noor.patel@example.com</td></tr>
+<tr><td></td></tr>
+<tr><td>Attention</td><td></td></tr>
+<tr><td>Card Shipping Address:</td><td></td></tr>
+<tr><td>Card Shipping City:</td><td></td></tr>
+<tr><td>Card Shipping State:</td><td></td></tr>
+<tr><td>Card Shipping Postal Code:</td><td></td></tr>
+<tr><td></td></tr>
+<tr><td>Name</td><td>Phone</td><td>Email</td></tr>
+<tr><td></td></tr>
+<tr><td>Number Of Cards:</td><td>6</td></tr>
+<tr><td>Company Name</td><td></td><td>Second Line Embossing Option</td><td>Driver Name</td></tr>
+<tr><td></td></tr>
+<tr><td>Department:</td><td>No</td></tr>
+<tr><td>Vehicle Description:</td><td>Yes</td></tr>
+<tr><td>License Plate #:</td><td>No</td></tr>
+<tr><td>Company Vehicle ID:</td><td>Yes</td></tr>
+</table>
+<br>
+<table border="1">
+<tr><th>Card Control</th><th>Vehicle ID</th><th>Department</th><th>Vehicle Description</th><th>License Plate</th><th>VIN Number</th><th>Prompt Options</th></tr>
+<tr><td>Fuel Only</td><td>9101</td><td></td><td>Sample Frd Escape SUV</td><td>SMPL101</td><td>1SMPLVIN000000101</td><td>Odometer &amp; Driver ID</td></tr>
+<tr><td>Fuel Only</td><td>9102</td><td></td><td>Sample Chv Silverado</td><td>SMPL102</td><td>1SMPLVIN000000102</td><td>Odometer &amp; Driver ID</td></tr>
+<tr><td>Fuel + Maintenance</td><td>9103</td><td></td><td>Sample Ram 2500</td><td>SMPL103</td><td>1SMPLVIN000000103</td><td>Odometer</td></tr>
+<tr><td></td><td>9104</td><td></td><td>Sample Ford Transit</td><td>SMPL104</td><td>1SMPLVIN000000104</td><td>Odometer &amp; Driver ID</td></tr>
+<tr><td>Fuel Only</td><td>9105</td><td>Sample Yard</td><td>Sample Nissan NV</td><td>SMPL105</td><td>1SMPLVIN000000105</td><td>Driver ID</td></tr>
+<tr><td>Fuel Only</td><td>9106</td><td></td><td>Sample Tyt Tacoma</td><td>SMPL106</td><td>1SMPLVIN000000106</td><td>Odometer &amp; Driver ID</td></tr>
+<tr><td></td></tr>
+<tr><td></td></tr>
+<tr><th>First Name</th><th>Last Name</th><th>Driver Department</th><th>Driver ID</th></tr>
+<tr><td>Sample Ava</td><td>Driver</td><td>Delivery</td><td>7301</td></tr>
+<tr><td>Sample Ben</td><td>Driver</td><td>Delivery</td><td>7302</td></tr>
+<tr><td>Sample Cy</td><td>Driver</td><td>Service</td><td>7303</td></tr>
+<tr><td>Sample Di</td><td>Driver</td><td>Service</td><td>7304</td></tr>
+<tr><td>Sample Ed</td><td>Driver</td><td>Delivery</td><td>7305</td></tr>
+</table>
+</body></html>

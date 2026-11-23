@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Worksheet ss:Name="Fleet Data"><Table>
+<Row><Cell><Data ss:Type="String">Opportunity:</Data></Cell><Cell><Data ss:Type="String">1-SMPL0701</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing First Name:</Data></Cell><Cell><Data ss:Type="String">Sample Noor</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing Last Name:</Data></Cell><Cell><Data ss:Type="String">Patel</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing Address:</Data></Cell><Cell><Data ss:Type="String">12 Sample Wharf Rd</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing City:</Data></Cell><Cell><Data ss:Type="String">Muskegon</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing State:</Data></Cell><Cell><Data ss:Type="String">MI</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing Postal Code:</Data></Cell><Cell><Data ss:Type="String">49440</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing Phone:</Data></Cell><Cell><Data ss:Type="String">(555) 010-0701</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Billing Email:</Data></Cell><Cell><Data ss:Type="String">noor.patel@example.com</Data></Cell></Row>
+<Row></Row>
+<Row><Cell><Data ss:Type="String">Attention</Data></Cell><Cell/></Row>
+<Row><Cell><Data ss:Type="String">Card Shipping Address:</Data></Cell><Cell/></Row>
+<Row><Cell><Data ss:Type="String">Card Shipping City:</Data></Cell><Cell/></Row>
+<Row><Cell><Data ss:Type="String">Card Shipping State:</Data></Cell><Cell/></Row>
+<Row><Cell><Data ss:Type="String">Card Shipping Postal Code:</Data></Cell><Cell/></Row>
+<Row></Row>
+<Row><Cell><Data ss:Type="String">Name</Data></Cell><Cell><Data ss:Type="String">Phone</Data></Cell><Cell><Data ss:Type="String">Email</Data></Cell></Row>
+<Row></Row>
+<Row><Cell><Data ss:Type="String">Number Of Cards:</Data></Cell><Cell><Data ss:Type="Number">6</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Company Name</Data></Cell><Cell/><Cell><Data ss:Type="String">Second Line Embossing Option</Data></Cell><Cell><Data ss:Type="String">Driver Name</Data></Cell></Row>
+<Row></Row>
+<Row><Cell><Data ss:Type="String">Department:</Data></Cell><Cell><Data ss:Type="String">No</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Vehicle Description:</Data></Cell><Cell><Data ss:Type="String">Yes</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">License Plate #:</Data></Cell><Cell><Data ss:Type="String">No</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Company Vehicle ID:</Data></Cell><Cell><Data ss:Type="String">Yes</Data></Cell></Row>
+</Table></Worksheet>
+<Worksheet ss:Name="Vehicles and Drivers"><Table>
+<Row><Cell><Data ss:Type="String">Card Control</Data></Cell><Cell><Data ss:Type="String">Vehicle ID</Data></Cell><Cell><Data ss:Type="String">Department</Data></Cell><Cell><Data ss:Type="String">Vehicle Description</Data></Cell><Cell><Data ss:Type="String">License Plate</Data></Cell><Cell><Data ss:Type="String">VIN Number</Data></Cell><Cell><Data ss:Type="String">Prompt Options</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Fuel Only</Data></Cell><Cell><Data ss:Type="String">9101</Data></Cell><Cell/><Cell><Data ss:Type="String">Sample Frd Escape SUV</Data></Cell><Cell><Data ss:Type="String">SMPL101</Data></Cell><Cell><Data ss:Type="String">1SMPLVIN000000101</Data></Cell><Cell><Data ss:Type="String">Odometer &amp; Driver ID</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Fuel Only</Data></Cell><Cell><Data ss:Type="String">9102</Data></Cell><Cell/><Cell><Data ss:Type="String">Sample Chv Silverado</Data></Cell><Cell><Data ss:Type="String">SMPL102</Data></Cell><Cell><Data ss:Type="String">1SMPLVIN000000102</Data></Cell><Cell><Data ss:Type="String">Odometer &amp; Driver ID</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Fuel + Maintenance</Data></Cell><Cell><Data ss:Type="String">9103</Data></Cell><Cell/><Cell><Data ss:Type="String">Sample Ram 2500</Data></Cell><Cell><Data ss:Type="String">SMPL103</Data></Cell><Cell><Data ss:Type="String">1SMPLVIN000000103</Data></Cell><Cell><Data ss:Type="String">Odometer</Data></Cell></Row>
+<Row><Cell/><Cell><Data ss:Type="String">9104</Data></Cell><Cell/><Cell><Data ss:Type="String">Sample Ford Transit</Data></Cell><Cell><Data ss:Type="String">SMPL104</Data></Cell><Cell><Data ss:Type="String">1SMPLVIN000000104</Data></Cell><Cell><Data ss:Type="String">Odometer &amp; Driver ID</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Fuel Only</Data></Cell><Cell><Data ss:Type="String">9105</Data></Cell><Cell><Data ss:Type="String">Sample Yard</Data></Cell><Cell><Data ss:Type="String">Sample Nissan NV</Data></Cell><Cell><Data ss:Type="String">SMPL105</Data></Cell><Cell><Data ss:Type="String">1SMPLVIN000000105</Data></Cell><Cell><Data ss:Type="String">Driver ID</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Fuel Only</Data></Cell><Cell><Data ss:Type="String">9106</Data></Cell><Cell/><Cell><Data ss:Type="String">Sample Tyt Tacoma</Data></Cell><Cell><Data ss:Type="String">SMPL106</Data></Cell><Cell><Data ss:Type="String">1SMPLVIN000000106</Data></Cell><Cell><Data ss:Type="String">Odometer &amp; Driver ID</Data></Cell></Row>
+<Row></Row>
+<Row></Row>
+<Row><Cell><Data ss:Type="String">First Name</Data></Cell><Cell><Data ss:Type="String">Last Name</Data></Cell><Cell><Data ss:Type="String">Driver Department</Data></Cell><Cell><Data ss:Type="String">Driver ID</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Sample Ava</Data></Cell><Cell><Data ss:Type="String">Driver</Data></Cell><Cell><Data ss:Type="String">Delivery</Data></Cell><Cell><Data ss:Type="String">7301</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Sample Ben</Data></Cell><Cell><Data ss:Type="String">Driver</Data></Cell><Cell><Data ss:Type="String">Delivery</Data></Cell><Cell><Data ss:Type="String">7302</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Sample Cy</Data></Cell><Cell><Data ss:Type="String">Driver</Data></Cell><Cell><Data ss:Type="String">Service</Data></Cell><Cell><Data ss:Type="String">7303</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Sample Di</Data></Cell><Cell><Data ss:Type="String">Driver</Data></Cell><Cell><Data ss:Type="String">Service</Data></Cell><Cell><Data ss:Type="String">7304</Data></Cell></Row>
+<Row><Cell><Data ss:Type="String">Sample Ed</Data></Cell><Cell><Data ss:Type="String">Driver</Data></Cell><Cell><Data ss:Type="String">Delivery</Data></Cell><Cell><Data ss:Type="String">7305</Data></Cell></Row>
+</Table></Worksheet>
+</Workbook>

@@ -5,7 +5,7 @@
    connect-src 'none' and default-src 'none'. All data lives in this
    browser (IndexedDB, with localStorage fallback) and in files you export.
    ===================================================================== */
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 const WS_FORMAT = 'account-mapper-workspace';
 
 const STAGES = [

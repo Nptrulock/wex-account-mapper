@@ -1,5 +1,5 @@
 /* ---------- modals ---------- */
-function openModal(kind, id, extra = {}){ UI.modal = {kind, id, ...extra}; renderModal(); }
+function openModal(kind, id, extra = {}){ if (kind === 'acct' && id) UI.lastAcct = id; UI.modal = {kind, id, ...extra}; renderModal(); }
 function closeModal(){
   const m = UI.modal; UI.modal = null;
   if (m && m.kind === 'contact'){ const c = con(m.id); if (c && !c.name && !c.email && !c.phone) WS.contacts = WS.contacts.filter(x => x !== c); }
@@ -73,22 +73,24 @@ function importView(){
   const I = UI.imp || (UI.imp = {step: 1, type: 'accounts', text: '', under: UI.biz || ''});
   const rs = roots();
   let h = uploadView() + '<details class="card" id="pasteBox"' + (UI.pasteOpen || (UI.imp && (UI.imp.step > 1 || UI.imp.result)) ? ' open' : '') + '><summary><b>Or paste rows instead</b> <span class="small muted">(copied from a Salesforce list view or report)</span></summary><div style="height:8px"></div><div class="card"><h3>Paste or import from Salesforce</h3><div class="small muted">Nothing leaves this browser. Paste rows copied from a Salesforce list view/report (with the header row), labeled lines like <span class="kbd">Account Name: …</span>, or choose a report export (.csv). You map the columns once — the mapping is remembered.</div></div>';
-  h += '<div class="card"><div class="row"><b>1.</b> What are you importing?<div class="seg"><button class="' + (I.type === 'accounts' ? 'on' : '') + '" data-act="imptype" data-v="accounts">Accounts</button><button class="' + (I.type === 'contacts' ? 'on' : '') + '" data-act="imptype" data-v="contacts">Contacts</button></div></div>'
+  h += '<div class="card"><div class="row"><b>1.</b> What are you importing?<div class="seg" id="impTypes">' + [['accounts', 'Accounts'], ['contacts', 'Contacts'], ['vehicles', '🚚 Vehicles'], ['drivers', '🪪 Drivers']].map(([k, l]) => '<button class="' + (I.type === k ? 'on' : '') + '" data-act="imptype" data-v="' + k + '">' + l + '</button>').join('') + '</div></div>'
     + '<textarea id="impText" rows="8" style="margin-top:10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px" placeholder="Paste here (Ctrl/⌘+V)…">' + esc(I.text) + '</textarea>'
     + '<div class="row" style="margin-top:8px"><button class="primary" data-act="impread">Read pasted data</button><span class="muted">or</span><label class="btnlike"><input type="file" id="impFile" accept=".csv,.tsv,.txt,text/csv" class="hidden"><span class="button" role="button">Choose Salesforce report CSV…</span></label>' + (I.fileName ? '<span class="small muted">' + esc(I.fileName) + '</span>' : '') + '</div></div>';
   if (I.step >= 2 && I.table){
-    const targets = I.type === 'accounts' ? ACC_TARGETS : CON_TARGETS;
+    const fl = !!FLEET_TYPES[I.type];
+    const targets = fl ? FF_COLS[I.type].map(([k, l]) => ({k, label: l})) : I.type === 'accounts' ? ACC_TARGETS : CON_TARGETS;
     h += '<div class="card maptbl"><h3>2. Match columns to fields <span class="small muted">(' + I.table.rows.length + ' row' + (I.table.rows.length === 1 ? '' : 's') + ' found)</span></h3><div class="tblwrap"><table class="t"><thead><tr><th>Column in your data</th><th>Example</th><th>Goes into</th></tr></thead><tbody>'
       + I.table.headers.map((hd, i) => '<tr><td><b>' + esc(hd) + '</b></td><td class="small muted">' + esc(I.table.rows.slice(0, 2).map(r => r[i]).filter(Boolean).join(' | ').slice(0, 80)) + '</td><td><select data-act-change="impmap" data-v="' + i + '"><option value="">— skip —</option>' + targets.map(t => '<option value="' + t.k + '"' + (I.map[i] === t.k ? ' selected' : '') + '>' + esc(t.label) + '</option>').join('') + '</select></td></tr>').join('')
-      + '</tbody></table></div><div class="row" style="margin-top:10px"><span class="small">' + (I.type === 'accounts' ? 'New accounts with no parent column go under:' : 'Contacts with no matching account attach to:') + '</span><select data-act-change="impunder" style="max-width:320px"><option value="">' + (I.type === 'accounts' ? '(make them top-level businesses)' : '(leave unattached)') + '</option>' + rs.flatMap(r => tree(r.id)).map(x => '<option value="' + x.a.id + '"' + (I.under === x.a.id ? ' selected' : '') + '>' + '\u00a0\u00a0'.repeat(x.depth) + esc(x.a.name) + '</option>').join('') + '</select><span class="spacer"></span><button data-act="impreset">Start over</button><button class="primary" data-act="impplan">Preview import</button></div></div>';
+      + '</tbody></table></div><div class="row" style="margin-top:10px"><span class="small">' + (fl ? '<b>Add these ' + I.type + ' to account:</b>' : I.type === 'accounts' ? 'New accounts with no parent column go under:' : 'Contacts with no matching account attach to:') + '</span><select id="impUnder" data-act-change="impunder" style="max-width:320px"><option value="">' + (fl ? '— choose an account —' : I.type === 'accounts' ? '(make them top-level businesses)' : '(leave unattached)') + '</option>' + rs.flatMap(r => tree(r.id)).map(x => '<option value="' + x.a.id + '"' + (I.under === x.a.id ? ' selected' : '') + '>' + '\u00a0\u00a0'.repeat(x.depth) + esc(x.a.name) + '</option>').join('') + '</select><span class="spacer"></span><button data-act="impreset">Start over</button><button class="primary" data-act="impplan">Preview import</button></div></div>';
   }
   if (I.step >= 3 && I.plan){
-    const c = I.plan.filter(p => p.op === 'create').length, u = I.plan.length - c;
-    h += '<div class="card"><h3>3. Review</h3><div class="okbar">' + c + ' new · ' + u + ' update existing (blank cells never erase what you have)</div><div class="tblwrap" style="max-height:300px"><table class="t"><thead><tr><th>Action</th><th>' + (I.type === 'accounts' ? 'Account' : 'Contact') + '</th><th>Details</th></tr></thead><tbody>'
-      + I.plan.map(p => '<tr><td>' + (p.op === 'create' ? '<span class="badge st-mc">New</span>' : '<span class="badge st-impl">Update</span>') + '</td><td>' + esc(p.label) + '</td><td class="small muted">' + esc(Object.entries(p.r).filter(([k]) => k !== 'name').map(([k, v]) => k + ': ' + v).join(' · ').slice(0, 160)) + '</td></tr>').join('')
-      + '</tbody></table></div><div class="row" style="margin-top:10px"><span class="spacer"></span><button class="primary" data-act="impgo" id="impGo">Import ' + I.plan.length + ' ' + I.type + '</button></div></div>';
+    const c = I.plan.filter(p => p.op === 'create').length, sm = I.plan.filter(p => p.op === 'same').length, u = I.plan.length - c - sm;
+    const fa = FLEET_TYPES[I.type] && acc(I.under);
+    h += '<div class="card"><h3>3. Review' + (fa ? ' <span class="small muted">→ ' + esc(fa.name) + '</span>' : '') + '</h3><div class="okbar" id="impSummary">' + c + ' new · ' + u + ' update existing' + (FLEET_TYPES[I.type] ? ' · ' + sm + ' already there (not duplicated)' : '') + ' (blank cells never erase what you have)</div><div class="tblwrap" style="max-height:300px"><table class="t"><thead><tr><th>Action</th><th>' + ({accounts: 'Account', contacts: 'Contact', vehicles: 'Vehicle', drivers: 'Driver'})[I.type] + '</th><th>Details</th></tr></thead><tbody>'
+      + I.plan.map(p => '<tr><td>' + (p.op === 'create' ? '<span class="badge st-mc">New</span>' : p.op === 'same' ? '<span class="badge">Already there</span>' : '<span class="badge st-impl">Update</span>') + '</td><td>' + esc(p.label) + '</td><td class="small muted">' + esc(Object.entries(p.r).filter(([k]) => k !== 'name').map(([k, v]) => k + ': ' + v).join(' · ').slice(0, 160)) + '</td></tr>').join('')
+      + '</tbody></table></div><div class="row" style="margin-top:10px"><span class="spacer"></span><button class="primary" data-act="impgo" id="impGo">Import ' + I.plan.length + ' ' + I.type + (fa ? ' into ' + esc(fa.name) : '') + '</button></div></div>';
   }
-  if (I.result) h += '<div class="okbar">✓ Imported: ' + I.result.created + ' new, ' + I.result.updated + ' updated.' + (I.result.warnings.length ? '<br>⚠ ' + I.result.warnings.map(esc).join('<br>⚠ ') : '') + ' <button class="small" data-act="tab" data-tab="chart">View chart</button> <button class="small" data-act="impreset">New import</button></div>';
+  if (I.result) h += '<div class="okbar" id="impResult">✓ Imported' + (I.result.acct ? ' ' + esc(I.result.what) + ' into ' + esc(I.result.acct) : '') + ': ' + I.result.created + ' new, ' + I.result.updated + ' updated' + (I.result.same != null ? ', ' + I.result.same + ' already there' : '') + '.' + (I.result.acctId ? ' <button class="small" data-act="open" data-id="' + I.result.acctId + '">Open account</button>' : '') + (I.result.warnings.length ? '<br>⚠ ' + I.result.warnings.map(esc).join('<br>⚠ ') : '') + ' <button class="small" data-act="tab" data-tab="chart">View chart</button> <button class="small" data-act="impreset">New import</button></div>';
   h += '</details>';
   return h;
 }
@@ -100,8 +102,11 @@ function impRead(text, fileName){
   const w = table.headers.length; table.rows = table.rows.map(r => { const x = r.slice(0, w); while (x.length < w) x.push(''); return x; });
   // auto-detect contacts vs accounts if headers clearly look like contacts
   const hn = table.headers.map(norm);
-  if (hn.some(h => /^(first name|last name|email|contact name|full name)$/.test(h)) && !hn.some(h => /^(parent account|case number|opportunity)/.test(h))) I.type = 'contacts';
-  I.table = table; I.under = I.type === 'contacts' ? (UI.biz || '') : ''; I.map = guessMap(I.type, table.headers); I.step = 2; I.plan = null; I.result = null;
+  const fk = ffListKind(table.headers, fileName);   // Fleet_Drivers_* / Fleet_Vehicles_* exports, or driver / vehicle columns
+  if (fk) I.type = fk;
+  else if (hn.some(h => /^(first name|last name|email|contact name|full name)$/.test(h)) && !hn.some(h => /^(parent account|case number|opportunity)/.test(h))) I.type = 'contacts';
+  else if (FLEET_TYPES[I.type]) I.type = 'accounts';
+  I.table = table; I.under = FLEET_TYPES[I.type] ? ((ffDefaultAcct() || {}).id || '') : I.type === 'contacts' ? (UI.biz || '') : ''; I.map = guessMap(I.type, table.headers); I.step = 2; I.plan = null; I.result = null;
   render();
 }
 
@@ -215,10 +220,18 @@ const ACT = {
   delfile: async el => { const f = WS.files.find(x => x.id === el.dataset.id); if (!f || !confirm('Remove "' + f.name + '" from this account?')) return; await Store.delFile(f.id); WS.files = WS.files.filter(x => x !== f); touch(); renderModal(); },
   buildxlsx: async () => { try { await buildMasterXlsx(curBiz()); } catch (e) { console.warn(e); toast('Could not build the file: ' + e.message); } },
   buildzip: async () => { try { await buildMasterZip(curBiz()); } catch (e) { console.warn(e); toast('Could not build the zip: ' + e.message); } },
-  imptype: el => { UI.imp.type = el.dataset.v; UI.imp.under = el.dataset.v === 'contacts' ? (UI.biz || '') : ''; if (UI.imp.table){ UI.imp.map = guessMap(UI.imp.type, UI.imp.table.headers); UI.imp.step = 2; UI.imp.plan = null; } render(); },
+  imptype: el => { UI.imp.type = el.dataset.v; UI.imp.under = FLEET_TYPES[el.dataset.v] ? ((ffDefaultAcct() || {}).id || '') : el.dataset.v === 'contacts' ? (UI.biz || '') : ''; if (UI.imp.table){ UI.imp.map = guessMap(UI.imp.type, UI.imp.table.headers); UI.imp.step = 2; UI.imp.plan = null; } render(); },
   impread: () => { const t = $('#impText').value; if (!t.trim()){ toast('Paste something first'); return; } impRead(t, ''); },
-  impplan: () => { const I = UI.imp; rememberMap(I.type, I.table.headers, I.map); const recs = recordsFrom(I.type, I.table, I.map); if (!recs.length){ toast(I.type === 'accounts' ? 'Map a column to Business Name or Salesforce Account ID' : 'Map a column to Name or Email'); return; } I.recs = recs; I.plan = planImport(I.type, recs); I.step = 3; touch(); },
-  impgo: () => { const I = UI.imp; const res = applyImport(I.type, I.recs, {under: I.under}); I.result = res; I.step = 1; I.plan = null; I.table = null; I.text = ''; I.fileName = '';
+  impplan: () => { const I = UI.imp; rememberMap(I.type, I.table.headers, I.map);
+    if (FLEET_TYPES[I.type]){ const a = acc(I.under); if (!a){ toast('Choose the account these ' + I.type + ' belong to'); return; }
+      const cols = I.map.map((k, i) => k ? i : -1).filter(i => i >= 0); if (!cols.length){ toast('Match at least one column'); return; }
+      const headers = cols.map(i => FF_COL_LABEL[I.type][I.map[i]]), rows = I.table.rows.map(r => cols.map(i => String(r[i] ?? '').trim())).filter(r => r.some(Boolean));
+      I.fleetRows = {headers, rows}; I.plan = ffPlanMerge(a.id, I.type, headers, rows).ops; I.step = 3; touch(); return; } const recs = recordsFrom(I.type, I.table, I.map); if (!recs.length){ toast(I.type === 'accounts' ? 'Map a column to Business Name or Salesforce Account ID' : 'Map a column to Name or Email'); return; } I.recs = recs; I.plan = planImport(I.type, recs); I.step = 3; touch(); },
+  impgo: () => { const I = UI.imp;
+    if (FLEET_TYPES[I.type]){ const a = acc(I.under); const r = ffMergeTable(a, I.type, I.fleetRows.headers, I.fleetRows.rows); ffAddSource(a, I.fileName || 'Pasted ' + I.type); a.updated = Date.now();
+      I.result = {created: r.added, updated: r.updated, same: r.same, warnings: [], acct: a.name, acctId: a.id, what: I.type}; UI.lastAcct = a.id; UI.biz = rootOf(a).id;
+      I.step = 1; I.plan = null; I.table = null; I.text = ''; I.fileName = ''; I.fleetRows = null; touch(); toast('Imported ' + (r.added + r.updated) + ' ' + I.type + ' into ' + a.name); return; }
+    const res = applyImport(I.type, I.recs, {under: I.under}); I.result = res; I.step = 1; I.plan = null; I.table = null; I.text = ''; I.fileName = '';
     if (I.type === 'accounts'){ const last = WS.accounts[WS.accounts.length - 1]; if (!UI.biz && last) UI.biz = rootOf(last).id; } touch(); toast('Imported ' + (res.created + res.updated)); },
   impreset: () => { UI.imp = null; render(); },
   loadsample: () => { UI.menu = false; renderMenu(); loadSample(); },

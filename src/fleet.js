@@ -26,19 +26,89 @@ const FF_LABELS = {}; for (const [g, k, d, al] of FF_DEF) for (const x of al) FF
 const FF_CTX = {'city': 'city', 'state': 'state', 'state/province': 'state', 'postal code': 'zip', 'zip': 'zip', 'zip code': 'zip', 'address': 'addr1', 'address line 1': 'addr1', 'address line 2': 'addr2', 'address 2': 'addr2'};
 const FF_SPECIFIC = new Set(['bill', 'ship', 'numCards', 'emboss']);   // labels no ordinary report starts a row with
 const FF_GROUP_LABEL = {bill: 'Billing contact & address', ship: 'Card shipping', card: 'Card setup'};
-const FF_TOK = {
-  vehicles: ['company vehicle id', 'vehicle id', 'vehicle description', 'vehicle desc', 'department', 'license plate', 'card control', 'prompt option', 'acceptance option', 'vin'],
-  vehicleCore: ['company vehicle id', 'vehicle id', 'vehicle desc', 'license plate', 'vin', 'card control', 'acceptance option'],
-  drivers: ['first name', 'last name', 'department', 'driver id', 'driver'],
-  contacts: ['name', 'contact name', 'phone', 'phone number', 'email', 'email address', 'e mail'],
+/* vehicle / driver table columns: canonical key, display label, aliases (matched after ffNorm, plural 's' ignored), core = says "vehicle table" on its own */
+const FF_COLS = {
+  vehicles: [
+    ['vehicleId', 'Company Vehicle ID', ['company vehicle id', 'vehicle id', 'company vehicle #', 'vehicle #', 'vehicle number', 'vehicle no', 'vehicle name', 'unit #', 'unit number', 'unit id', 'unit no', 'asset #', 'asset id', 'asset number', 'fleet #', 'fleet number', 'fleet id', 'fleet vehicle id'], 1],
+    ['description', 'Vehicle Description', ['vehicle description', 'vehicle desc', 'vehicle descr', 'description', 'year make model', 'year/make/model', 'make model', 'make/model', 'vehicle make model', 'vehicle year make model'], 1],
+    ['department', 'Department', ['department', 'dept', 'vehicle department', 'department name', 'vehicle dept'], 0],
+    ['plate', 'License Plate', ['license plate', 'license plate #', 'license plate number', 'license plate no', 'license #', 'license number', 'plate', 'plate #', 'plate number', 'tag #', 'tag number', 'license tag', 'license tag #'], 1],
+    ['vin', 'VIN', ['vin', 'vin #', 'vin number', 'vin no', 'vehicle identification number', 'vehicle vin'], 1],
+    ['cardControl', 'Card Control', ['card control', 'card control option', 'card controls', 'card control type', 'control option', 'card restriction', 'purchase control', 'product restriction', 'product control'], 1],
+    ['prompt', 'Prompt Options', ['prompt options', 'prompt option', 'prompts', 'prompt', 'card prompt', 'prompt type', 'driver prompt'], 0],
+    ['acceptance', 'Acceptance Option', ['acceptance option', 'acceptance options', 'acceptance', 'card acceptance', 'acceptance type'], 1],
+  ],
+  drivers: [
+    ['first', 'First Name', ['first name', 'driver first name', 'first', 'given name', 'fname'], 0],
+    ['last', 'Last Name', ['last name', 'driver last name', 'last', 'surname', 'lname', 'family name'], 0],
+    ['name', 'Driver Name', ['driver name', 'driver', 'driver full name', 'full name', 'name'], 0],
+    ['department', 'Department', ['driver department', 'department', 'dept', 'driver dept', 'department name'], 0],
+    ['driverId', 'Driver ID', ['driver id', 'driver #', 'driver number', 'driver no', 'driver pin', 'employee id', 'employee #', 'employee number', 'emp id', 'emp #'], 1],
+  ],
 };
-function ffTableKind(n){
-  const ne = n.filter(Boolean); if (ne.length < 2) return null;
-  const hits = toks => ne.filter(x => toks.some(t => x === t || x.startsWith(t + ' ') || (t.length > 3 && x.startsWith(t)))).length;
-  if (hits(FF_TOK.vehicles) >= 3 && hits(FF_TOK.vehicleCore) >= 1) return 'vehicles';
-  if (ne.includes('first name') && ne.includes('last name') && hits(FF_TOK.drivers) >= Math.min(3, ne.length)) return 'drivers';
-  if (ne.length <= 5 && ne.some(x => x === 'name' || x === 'contact name') && hits(FF_TOK.contacts) >= Math.min(3, ne.length) && hits(FF_TOK.contacts) >= 2) return 'contacts';
+const FF_COL_IDX = {}, FF_COL_LABEL = {}, FF_COL_CORE = {}, FF_COL_LONG = {};
+for (const w in FF_COLS){ FF_COL_IDX[w] = {}; FF_COL_LABEL[w] = {}; FF_COL_CORE[w] = new Set(); FF_COL_LONG[w] = [];
+  for (const [k, l, al, core] of FF_COLS[w]){ FF_COL_LABEL[w][k] = l; if (core) FF_COL_CORE[w].add(k); for (const x of al){ const n = ffNorm(x); FF_COL_IDX[w][n] = FF_COL_IDX[w][n] || k; if (n.length >= 8) FF_COL_LONG[w].push([n, k]); } }
+  FF_COL_LONG[w].sort((a, b) => b[0].length - a[0].length); }
+/* which canonical column is this header? (null = unknown; kept as-is) */
+function ffColKey(which, h){
+  const n = ffNorm(h).replace(/\s*\(\d+\)$/, '').replace(/^\*+|\*+$/g, '').trim(); if (!n) return null;
+  const m = FF_COL_IDX[which]; if (m[n]) return m[n];
+  const s = n.replace(/s$/, ''); if (m[s]) return m[s];
+  for (const [a, k] of FF_COL_LONG[which]) if (n.startsWith(a + ' ')) return k;
   return null;
+}
+const FF_CONTACT_HDR = ['name', 'contact name', 'phone', 'phone number', 'email', 'email address', 'e mail'];
+/* is this row a table header? → {kind, strong} or {kind: null, near: {vehicles?: why, drivers?: why}} (near = shown in diagnostics) */
+function ffHeaderInfo(row){
+  const ne = (row || []).map(ffClean).filter(Boolean); if (ne.length < 2) return {kind: null};
+  const n = ne.map(ffNorm);
+  const vk = n.map(x => ffColKey('vehicles', x)), dk = n.map(x => ffColKey('drivers', x));
+  const vset = new Set(vk.filter(Boolean)), dset = new Set(dk.filter(Boolean));
+  const vcore = [...vset].filter(k => FF_COL_CORE.vehicles.has(k)).length;
+  const hasFL = dset.has('first') && dset.has('last');
+  const contactish = n.some(x => /^(phone|phone number|email|email address|e mail|title|job title|mobile|mobile phone|account|account name|contact id)$/.test(x));
+  const driverSpecific = dk.some((k, i) => k === 'driverId' || (k && /driver/.test(n[i])));
+  const yn = ne.some(x => /^(yes|no|y|n|true|false)$/i.test(x)), colon = ne.filter(x => /[:：]\s*$/.test(x)).length * 2 >= ne.length;
+  const labs = (w, set) => [...set].map(k => FF_COL_LABEL[w][k]).join(', ') || 'none';
+  if (!yn && !colon){
+    if (ne.length <= 5 && n.some(x => x === 'name' || x === 'contact name') && n.filter(x => FF_CONTACT_HDR.includes(x)).length >= Math.max(2, Math.min(3, ne.length)) && !driverSpecific) return {kind: 'contacts'};
+    if (hasFL && (!contactish || driverSpecific)) return {kind: 'drivers', strong: driverSpecific};
+    if (driverSpecific && dset.size >= 2 && dset.size * 2 >= ne.length) return {kind: 'drivers', strong: true};
+    if (vset.size >= 2 && vcore >= 1 && vset.size * 2 >= ne.length) return {kind: 'vehicles', strong: vset.size >= 3};
+  }
+  const near = {};
+  const why = yn ? 'has Yes/No cells, so it was read as form labels' : colon ? 'most cells end with ":", so it was read as form labels' : '';
+  if (vcore >= 1 || vset.size >= 2) near.vehicles = vset.size + ' of ' + ne.length + ' columns are known vehicle columns (' + labs('vehicles', vset) + ') — ' + (why || 'needs 2+ known incl. Vehicle ID, VIN, License Plate, Vehicle Description, Card Control or Acceptance Option, and at least half the columns known');
+  if (driverSpecific || dset.has('first') || dset.has('last')) near.drivers = dset.size + ' of ' + ne.length + ' columns are known driver columns (' + labs('drivers', dset) + ') — ' + (why || (hasFL && contactish ? 'looks like a contact list (phone/email/title) with no Driver ID / Driver column' : 'needs First Name + Last Name, or Driver ID / Driver Name plus one more known column'));
+  return {kind: null, near: Object.keys(near).length ? near : null};
+}
+const ffTableKind = row => ffHeaderInfo(row).kind;
+/* a separate vehicles / drivers list (Salesforce Fleet_Vehicles_* / Fleet_Drivers_* export or a pasted table): which one is it? */
+function ffListKind(headers, fileName){
+  const f = String(fileName || '');
+  if (/fleet[\s_-]*vehicle/i.test(f)) return 'vehicles';
+  if (/fleet[\s_-]*driver/i.test(f)) return 'drivers';
+  const h = ffHeaderInfo(headers);
+  return (h.kind === 'vehicles' || h.kind === 'drivers') && h.strong ? h.kind : null;
+}
+/* names that are really form labels / table headers (junk accounts from older parses) */
+const FF_JUNK = new Set([...Object.keys(FF_LABELS), ...Object.keys(FF_CTX), ...Object.values(FF_COL_IDX).flatMap(m => Object.keys(m).filter(k => k.includes(' '))),
+  'fleet data', 'vehicles', 'drivers', 'card shipping', 'billing', 'card setup', 'prompts', 'prompt', 'vehicle', 'yes', 'no']);
+function ffJunkName(name){ const t = ffClean(name); if (!t) return false; if (/[:：]\s*$/.test(t)) return true; return FF_JUNK.has(ffNorm(t)); }
+/* remove junk accounts already saved (run on load); children / files move up to the nearest real parent */
+let MIGRATE_NOTE = {junk: 0};
+function ffCleanJunk(ws){
+  const ids = new Set(ws.accounts.filter(a => ffJunkName(a.name) && !(!a.parentId && (ws.files || []).some(f => f.accountId === a.id))).map(a => a.id));
+  if (!ids.size) return 0;
+  const byId = id => ws.accounts.find(x => x.id === id);
+  const up = id => { let a = byId(id), g = 0; while (a && ids.has(a.id) && g++ < 200) a = byId(a.parentId); return a ? a.id : null; };
+  for (const a of ws.accounts) if (!ids.has(a.id) && a.parentId && ids.has(a.parentId)){ a.parentId = up(a.parentId); if (!a.parentId) a.billMode = 'own'; }
+  for (const f of ws.files || []) if (ids.has(f.accountId)) f.accountId = up(f.accountId);
+  for (const c of ws.contacts) c.accountIds = c.accountIds.filter(i => !ids.has(i));
+  ws.contacts = ws.contacts.filter(c => !(ffJunkName(c.name) && !c.accountIds.length));
+  ws.accounts = ws.accounts.filter(a => !ids.has(a.id));
+  MIGRATE_NOTE.junk += ids.size; return ids.size;
 }
 /* a cell is a label if it IS a known label, or reads "Label: value" in one cell */
 function ffLabelCell(cell, ctx){
@@ -50,12 +120,13 @@ function ffLabelCell(cell, ctx){
 }
 function parseFleetForm(rows){
   const R = (rows || []).map(r => (r || []).map(ffClean));
-  const out = {fields: {top: {}, bill: {}, ship: {}, card: {}}, prompts: [], tables: {}, labels: 0, specific: 0, rowsInfo: []};
+  const out = {fields: {top: {}, bill: {}, ship: {}, card: {}}, prompts: [], tables: {}, labels: 0, specific: 0, rowsInfo: [], nearMiss: []};
   const seen = new Set(); let cur = null, curKind = null, ctx = null;
   for (let r = 0; r < R.length; r++){
     const row = R[r], n = row.map(ffNorm);
     if (!row.some(Boolean)){ out.rowsInfo.push('blank'); continue; }
-    const k = ffTableKind(n);
+    const hi = ffHeaderInfo(row), k = hi.kind;
+    if (!k && hi.near) out.nearMiss.push({row: r + 1, why: hi.near});
     if (k){ const cols = n.map((x, i) => x ? i : -1).filter(i => i >= 0); cur = out.tables[k] || (out.tables[k] = {headers: cols.map(i => row[i]), cols, rows: [], headerRow: r + 1}); curKind = k; out.rowsInfo.push('header:' + k); continue; }
     // label cells in this row; each takes the next non-empty, non-label cell to its right
     // walk left→right: a label takes the next non-empty cell as its value (even if that value looks like a label,
@@ -67,7 +138,11 @@ function parseFleetForm(rows){
       for (let c = first; c < row.length; c++){
         const v = row[c]; if (!v) continue;
         if (open){
-          const l = ffLabelCell(v, ctx); if (l && /[:：]\s*$/.test(v) && !l.inline){ pairs.push([open.L, '']); open = l; continue; }
+          // the next cell is another label → the open label is empty (a known label without a colon only counts as a VALUE
+          // for the embossing option, whose real values include "Company Vehicle ID")
+          const l = ffLabelCell(v, ctx);
+          if (l && !l.inline && (/[:：]\s*$/.test(v) || open.L[1] !== 'emboss')){ pairs.push([open.L, '']); open = l; continue; }
+          if (l && l.inline != null && open.L[1] !== 'emboss'){ pairs.push([open.L, '']); open = null; pairs.push([l.L, l.inline]); continue; }
           pairs.push([open.L, v]); open = null; continue;
         }
         const l = ffLabelCell(v, cur ? null : (pairs.length && pairs[pairs.length - 1][0][0] !== 'top' ? pairs[pairs.length - 1][0][0] : ctx) || ctx);
@@ -92,7 +167,7 @@ function parseFleetForm(rows){
       const vals = cur.cols.map(c => row[c] || ''); const extraCols = row.some((v, c) => v && !cur.cols.includes(c));
       if (vals.some(Boolean)){ cur.rows.push(vals); out.rowsInfo.push('row:' + curKind + (extraCols ? '+' : '')); continue; }
     }
-    out.rowsInfo.push('other');
+    out.rowsInfo.push(hi.near ? 'near' : 'other');
   }
   out.distinct = seen.size;
   for (const t of Object.values(out.tables)) delete t.cols;
@@ -115,14 +190,15 @@ function ffApply(s, ctx){
   if (s.target && s.target !== 'new' && !s.target.startsWith('under:')) a = acc(s.target);
   if (!a && !s.target) a = ffMatch(F, s.file);
   if (!a){
-    a = newAccount({name: f.card.company || ffFileCompany(s.file) || 'Fleet data account'}); isNew = true;
+    a = newAccount({name: (!ffJunkName(f.card.company) && f.card.company) || ffFileCompany(s.file) || 'Fleet data account'}); isNew = true;
     if (s.target && s.target.startsWith('under:') && acc(s.target.slice(6))){ a.parentId = s.target.slice(6); a.billMode = 'parent'; }
   }
   ctx.touchedA.add(a.id);
   if (f.top.opp){ if (!a.oppNo) a.oppNo = f.top.opp; else if (a.oppNo !== f.top.opp) ctx.addExtra(a, 'Other Opportunity #', f.top.opp); }
-  a.billAddr = {...f.bill}; a.ship = {...f.ship}; a.card = {numCards: f.card.numCards || '', company: f.card.company || '', emboss: f.card.emboss || '', prompts: F.prompts.map(p => p.slice())};
-  const tb = k => F.tables[k] ? {headers: F.tables[k].headers.slice(), rows: F.tables[k].rows.map(r => r.slice())} : null;
-  a.fleet = {source: s.file, imported: Date.now(), vehicles: tb('vehicles'), drivers: tb('drivers')};
+  a.billAddr = {...f.bill}; a.ship = {...f.ship}; a.card = {numCards: f.card.numCards || '', company: ffJunkName(f.card.company) ? '' : f.card.company || '', emboss: f.card.emboss || '', prompts: F.prompts.map(p => p.slice())};
+  // vehicles / drivers MERGE into what the account already has (re-uploading the same file never duplicates)
+  const merged = {}; for (const k of ['vehicles', 'drivers']) if (F.tables[k]) merged[k] = ffMergeTable(a, k, F.tables[k].headers, F.tables[k].rows);
+  ffAddSource(a, s.file);
   const level = a.parentId ? 'child' : 'parent';
   const upsert = (name, email, phone, role) => {
     if (!name && !email) return;
@@ -138,7 +214,70 @@ function ffApply(s, ctx){
   if (bname && !a.billContact) a.billContact = bname;
   const ct = F.tables.contacts;
   if (ct){ const ix = h => ct.headers.findIndex(x => ffNorm(x) === h); const [ni, pi, ei] = ['name', 'phone', 'email'].map(ix); for (const r of ct.rows) upsert(r[ni] || '', ei >= 0 ? r[ei] : '', pi >= 0 ? r[pi] : '', ''); }
-  ctx.st.fleet.push({id: s.id, account: a.name, accountId: a.id, isNew, vehicles: a.fleet.vehicles ? a.fleet.vehicles.rows.length : 0, drivers: a.fleet.drivers ? a.fleet.drivers.rows.length : 0, contacts: ct ? ct.rows.length : 0});
+  ctx.st.fleet.push({id: s.id, form: true, account: a.name, accountId: a.id, isNew, vehicles: a.fleet.vehicles ? a.fleet.vehicles.rows.length : 0, drivers: a.fleet.drivers ? a.fleet.drivers.rows.length : 0, contacts: ct ? ct.rows.length : 0, merged});
+}
+function ffAddSource(a, file){
+  a.fleet = a.fleet || {source: '', imported: 0, vehicles: null, drivers: null};
+  const list = String(a.fleet.source || '').split(' | ').filter(Boolean); if (file && !list.includes(file)) list.push(file);
+  a.fleet.source = list.slice(-6).join(' | '); a.fleet.imported = Date.now();
+}
+/* same vehicle / driver? strong IDs decide (VIN, vehicle ID, plate / driver ID); else name; else the whole row */
+function ffSameRow(which, kE, rE, kN, rN){
+  const g = (k, keys, r) => { const i = keys.indexOf(k); return i >= 0 ? ffNorm(r[i]) : ''; };
+  const strong = which === 'vehicles' ? ['vin', 'vehicleId', 'plate'] : ['driverId'];
+  let hit = false;
+  for (const k of strong){ const a = g(k, kE, rE), b = g(k, kN, rN); if (a && b){ if (a !== b) return false; hit = true; } }
+  if (hit) return true;
+  if (which === 'drivers'){ const nm = (keys, r) => [g('first', keys, r), g('last', keys, r)].filter(Boolean).join(' ') || g('name', keys, r); const a = nm(kE, rE), b = nm(kN, rN); if (a || b) return a === b; }
+  if (which === 'vehicles' && strong.some(k => g(k, kE, rE) || g(k, kN, rN))) return false;
+  const common = kN.map((k, i) => [k, i]).filter(([k]) => kE.includes(k));
+  return common.length > 0 && common.some(([k, i]) => ffNorm(rN[i])) && common.every(([k, i]) => ffNorm(rE[kE.indexOf(k)]) === ffNorm(rN[i]));
+}
+/* merge rows into a.fleet[which]; columns matched by canonical key (Vehicle ID = Company Vehicle ID …), unknown columns kept as-is */
+function ffMergeTable(a, which, headers, rows){
+  a.fleet = a.fleet || {source: '', imported: 0, vehicles: null, drivers: null};
+  const t = a.fleet[which] || (a.fleet[which] = {headers: [], rows: []});
+  const key = h => ffColKey(which, h) || 'raw:' + (ffNorm(h) || h);
+  const tk = t.headers.map(key);
+  const idx = headers.map(h => { if (!ffClean(h)) return -1; const k = key(h); let i = tk.indexOf(k);
+    if (i < 0){ t.headers.push(k.startsWith('raw:') ? ffClean(h) : FF_COL_LABEL[which][k]); tk.push(k); for (const r of t.rows) r.push(''); i = tk.length - 1; } return i; });
+  const res = {added: 0, updated: 0, same: 0, ops: []}; const used = new Set();
+  const label = r => { const g = k => { const i = tk.indexOf(k); return i >= 0 ? r[i] : ''; };
+    return which === 'vehicles' ? [g('vehicleId'), g('description'), g('plate'), g('vin')].filter(Boolean).join(' · ') || r.filter(Boolean).slice(0, 3).join(' · ') : [[g('first'), g('last')].filter(Boolean).join(' ') || g('name'), g('driverId')].filter(Boolean).join(' · ') || r.filter(Boolean).slice(0, 3).join(' · '); };
+  for (const src of rows){
+    const row = new Array(tk.length).fill(''); idx.forEach((i, j) => { if (i >= 0){ const v = ffClean(src[j]); if (v) row[i] = v; } });
+    if (!row.some(Boolean)) continue;
+    let m = -1; for (let e = 0; e < t.rows.length; e++){ if (used.has(e)) continue; if (ffSameRow(which, tk, t.rows[e], tk, row)){ m = e; break; } }
+    const det = Object.fromEntries(t.headers.map((h, i) => [h, row[i]]).filter(x => x[1]));
+    if (m < 0){ t.rows.push(row); used.add(t.rows.length - 1); res.added++; res.ops.push({op: 'create', label: label(row), r: det}); continue; }
+    used.add(m); let ch = false; row.forEach((v, i) => { if (v && t.rows[m][i] !== v){ t.rows[m][i] = v; ch = true; } });
+    if (ch){ res.updated++; res.ops.push({op: 'update', label: label(t.rows[m]), r: det}); } else { res.same++; res.ops.push({op: 'same', label: label(t.rows[m]), r: det}); }
+  }
+  return res;
+}
+/* plan only (nothing saved) */
+function ffPlanMerge(accountId, which, headers, rows){ const real = WS; WS = structuredClone(real); try { return ffMergeTable(acc(accountId), which, headers, rows); } finally { WS = real; } }
+const ffDefaultAcct = () => acc(UI.lastAcct) || acc(UI.biz) || null;
+/* a separate Fleet_Vehicles / Fleet_Drivers list from the upload box */
+function ffApplyList(s, ctx){
+  let a = s.target ? acc(s.target) : null;
+  if (!a){ const f = ctx.st.fleet.find(x => x.form); a = (f && acc(f.accountId)) || ffDefaultAcct(); }
+  if (!a){ ctx.st.warnings.push(s.file + ': choose the account these ' + s.which + ' belong to'); ctx.st.fleet.push({id: s.id, list: true, which: s.which, account: ''}); return; }
+  const r = ffMergeTable(a, s.which, s.table.headers, s.table.rows); ffAddSource(a, s.file); ctx.touchedA.add(a.id);
+  ctx.st.fleet.push({id: s.id, list: true, which: s.which, account: a.name, accountId: a.id, added: r.added, updated: r.updated, same: r.same, total: a.fleet[s.which].rows.length});
+}
+function ffListCard(s, st){
+  const r = (st.fleet || []).find(x => x.id === s.id) || {};
+  const lbl = s.which === 'vehicles' ? 'Vehicles' : 'Drivers', icon = s.which === 'vehicles' ? '🚚' : '🪪';
+  const auto = (st.fleet || []).find(x => x.form); const def = ffDefaultAcct();
+  const opts = '<option value=""' + (!s.target ? ' selected' : '') + '>Auto: ' + esc(auto ? auto.account + ' (Fleet Data form in this upload)' : def ? def.name + ' (last opened)' : '— choose an account —') + '</option>'
+    + roots().flatMap(x => tree(x.id)).map(x => '<option value="' + x.a.id + '"' + (s.target === x.a.id ? ' selected' : '') + '>' + '\u00a0\u00a0'.repeat(x.depth) + (x.depth ? '└ ' : '') + esc(x.a.name) + '</option>').join('');
+  const cols = s.table.headers.map(h => { const k = ffColKey(s.which, h); return '<span class="chip' + (k ? ' own' : '') + '">' + esc(h) + (k ? ' → ' + esc(FF_COL_LABEL[s.which][k]) : ' (kept as is)') + '</span>'; }).join('');
+  return '<div class="card upsrc fflist" data-src="' + s.id + '" data-which="' + s.which + '"><div class="row"><span style="font-size:20px">' + icon + '</span><div style="min-width:0;flex:1"><b>' + esc(s.file) + '</b><div class="small muted">' + esc(s.format) + ' · <b>' + lbl + ' list</b> · ' + s.table.rows.length + ' rows</div></div>'
+    + '<button class="small danger" data-act="upremove" data-v="' + s.id + '">✕</button></div>'
+    + '<div class="row" style="gap:4px;margin-top:6px">' + cols + '</div>'
+    + '<div class="row" style="margin-top:8px"><label class="small" for="ffT_' + s.id + '"><b>Add to account</b></label><select id="ffT_' + s.id + '" data-act-change="uptarget" data-v="' + s.id + '" style="max-width:420px">' + opts + '</select>'
+    + (r.account ? '<span class="small muted">→ ' + esc(r.account) + ': ' + r.added + ' new, ' + r.updated + ' updated, ' + r.same + ' already there</span>' : '') + '</div></div>';
 }
 /* labeled pairs (Copy all, master file) */
 function ffPairs(a){
@@ -185,7 +324,7 @@ function ffInlineTable(a, which){
   const t = ffTable(a, which); const label = which === 'vehicles' ? 'Vehicles' : 'Drivers', icon = which === 'vehicles' ? '🚚' : '🪪';
   const n = t ? t.length - 1 : 0;
   const btns = t ? '<button class="small" data-act="ffcsv" data-id="' + a.id + '" data-v="' + which + '">⬇ ' + label + '.csv</button><button class="small" data-act="ffcopy" data-id="' + a.id + '" data-v="' + which + '">📋 Copy</button><button class="small" data-act="ffview" data-id="' + a.id + '" data-v="' + which + '">⤢ Full view</button>' : '';
-  if (!n) return '<div class="fftbl empty small muted">' + icon + ' ' + label + ': none in the file</div>';
+  if (!n) return '<div class="fftbl empty small muted">' + icon + ' ' + label + ': none yet <span class="small">(import a ' + (which === 'vehicles' ? 'Fleet_Vehicles' : 'Fleet_Drivers') + ' CSV or paste them under Import)</span></div>';
   return '<div class="fftbl" id="ff_' + which + '"><div class="row" style="gap:6px;margin-bottom:6px"><b>' + icon + ' ' + label + ' <span class="cnt">' + n + '</span></b><span class="spacer"></span>' + btns + '</div>'
     + '<div class="tblwrap" style="max-height:300px"><table class="t ffinline"><thead><tr>' + t[0].map(h => '<th>' + esc(h) + '</th>').join('') + '</tr></thead><tbody>'
     + t.slice(1).map(r => '<tr>' + r.map(v => '<td class="cc" data-act="copy" data-text="' + esc(v) + '" data-what="' + esc(label.toLowerCase().slice(0, -1)) + ' value">' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div></div>';
@@ -259,7 +398,7 @@ function ffSourceCard(s, st){
     + (r.account ? '<span class="small muted">→ ' + esc(r.account) + (r.isNew ? ' (new)' : '') + '</span>' : '') + '</div></div>';
 }
 /* ---- "How this file was read": structure only, every value MASKED (safe to paste to support) ---- */
-const FF_KNOWN_TEXT = new Set([...Object.keys(FF_LABELS), ...Object.keys(FF_CTX), ...FF_TOK.vehicles, ...FF_TOK.drivers, ...FF_TOK.contacts, 'card control option', 'prompt option', 'acceptance option', 'vin number']);
+const FF_KNOWN_TEXT = new Set([...Object.keys(FF_LABELS), ...Object.keys(FF_CTX), ...Object.values(FF_COL_IDX).flatMap(Object.keys), ...FF_CONTACT_HDR]);
 function ffMask(v){
   const t = ffClean(v); if (!t) return '[empty]';
   if (/^-?[\d,]*\.?\d+$/.test(t)) return '[number ' + t.replace(/\D/g, '').length + ' digits]';
@@ -278,6 +417,13 @@ function ffDiagnose(file, res, grid, form, decision){
   L.push('Sheets/tables: ' + res.sheets.length + ' (' + res.sheets.map(s => s.rows.length + ' rows × ' + Math.max(0, ...s.rows.map(r => r.length)) + ' cols').join('; ') + ')' + (res.grid ? ' · combined HTML grid ' + res.grid.length + ' rows' : ''));
   L.push('Decision: ' + decision);
   L.push('Fleet Data labels recognised: ' + form.distinct + ' distinct (' + form.specific + ' form-specific); tables: ' + (Object.entries(form.tables).map(([k, t]) => k + ' @row ' + t.headerRow + ' [' + t.headers.map(h => ffKeep(h, true) ? h : ffMask(h)).join(' | ') + '] ' + t.rows.length + ' rows').join('; ') || 'none'));
+  L.push('Table search:');
+  for (const k of ['vehicles', 'drivers']){
+    const t = form.tables[k], lbl = k[0].toUpperCase() + k.slice(1);
+    if (t){ L.push('  ' + lbl + ': FOUND, header on row ' + t.headerRow + ', ' + t.rows.length + ' data rows' + (t.rows.length ? '' : ' — header found but NO rows under it (empty in the file?)') + '; columns: ' + t.headers.map(h => { const c = ffColKey(k, h); return (ffKeep(h, true) ? '"' + ffClean(h) + '"' : ffMask(h)) + (c ? ' → ' + FF_COL_LABEL[k][c] : ' (unknown, kept as is)'); }).join(', ')); continue; }
+    const nm = (form.nearMiss || []).filter(x => x.why[k]);
+    L.push('  ' + lbl + ': NOT FOUND — ' + (nm.length ? 'closest rows: ' + nm.slice(0, 4).map(x => 'R' + x.row + ': ' + x.why[k]).join(' | ') : 'no row has any known ' + k + ' column (looked for ' + FF_COLS[k].map(c => c[1]).join(', ') + ')'));
+  }
   const f = form.fields;
   L.push('Fields: ' + [['Opportunity', f.top.opp], ...FF_DEF.filter(d => d[0] !== 'top' && d[0] !== 'prompt').map(d => [d[2], f[d[0]][d[1]]])].map(([k, v]) => k + '=' + (v == null ? '(label not found)' : ffMask(v))).join(', '));
   L.push('Prompts: ' + (form.prompts.map(p => p[0] + '=' + ffMask(p[1])).join(', ') || '(none found)'));
@@ -295,6 +441,7 @@ function ffDiagnose(file, res, grid, form, decision){
       if (!v) return null; let keep;
       if (data) keep = false;
       else if (lab){ const isLab = !!ffLabelCell(v, 'ship') && (!expectVal || /[:：]\s*$/.test(v)); if (isLab && ffLabelCell(v, 'ship').inline != null){ expectVal = false; return colName2(i) + '="' + ffClean(v).split(/[:：]/)[0] + ':" + ' + ffMask(ffLabelCell(v, 'ship').inline); } keep = isLab; expectVal = isLab; }
+      else if (info === 'near') keep = !!(ffColKey('vehicles', v) || ffColKey('drivers', v));
       else keep = ffKeep(v, hdr);
       return colName2(i) + '=' + (keep ? '"' + v + '"' : ffMask(v));
     });

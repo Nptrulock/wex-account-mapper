@@ -1,0 +1,7 @@
+Card Control,Vehicle ID,Department,Vehicle Description,License Plate,VIN Number,Prompt Options
+Fuel + Maintenance,9103,Sample Ops,Sample Ram 2500,SMPL103,1SMPLVIN000000103,Odometer
+,9104,,Sample Ford Transit,SMPL104,1SMPLVIN000000104,Odometer & Driver ID
+Fuel Only,9105,Sample Yard,Sample Nissan NV,SMPL105,1SMPLVIN000000105,Driver ID
+Fuel Only,9106,,Sample Tyt Tacoma,SMPL106,1SMPLVIN000000106,Odometer & Driver ID
+Fuel Only,9107,,Sample Frd F-150,SMPL107,1SMPLVIN000000107,Odometer & Driver ID
+Fuel Only,9108,,Sample GMC Sierra,SMPL108,1SMPLVIN000000108,Odometer
