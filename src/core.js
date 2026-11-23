@@ -1,8 +1,9 @@
 'use strict';
 /* =====================================================================
    Account Mapper — local-only, single-file app.
-   NO network access: the page's Content-Security-Policy sets
-   connect-src 'none' and default-src 'none'. All data lives in this
+   No network access except the optional, read-only Salesforce connection:
+   the page CSP sets default-src 'none' and limits connect-src to Wex's
+   Salesforce hosts. All data lives in this
    browser (IndexedDB, with localStorage fallback) and in files you export.
    ===================================================================== */
 const APP_VERSION = '1.0.0';
