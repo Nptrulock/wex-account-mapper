@@ -1,0 +1,57 @@
+<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body>
+<table width="100%"><tr><td><table><tr><td>Opportunity:</td><td>1-SMPL0601</td></tr>
+<tr><td><span style="x">Billing First Name:</span></td><td>Sample Kim</td></tr>
+<tr><td><span style="x">Billing Last Name:</span></td><td>Lowe</td></tr>
+<tr><td><span style="x">Billing Address:</span></td><td>7 Sample Ct</td></tr>
+<tr><td><span style="x">Billing Address Line 2:</span></td><td>Floor 2</td></tr>
+<tr><td><span style="x">Billing City:</span></td><td>Lansing</td></tr>
+<tr><td><span style="x">Billing State:</span></td><td>MI</td></tr>
+<tr><td><span style="x">Billing Postal Code:</span></td><td>48933</td></tr>
+<tr><td><span style="x">Billing Phone:</span></td><td>(555) 010-0601</td></tr>
+<tr><td><b><span>Billing</span><br>Email:</b></td><td>kim.lowe@example.com</td></tr>
+</table></td></tr><tr><td>&nbsp;</td></tr><tr><td><table><tr><td>Attention</td><td></td></tr>
+<tr><td><span style="x">Card Shipping Address:</span></td><td></td></tr>
+<tr><td><span style="x">Card Shipping Address Line 2:</span></td><td></td></tr>
+<tr><td><span style="x">Card Shipping City:</span></td><td></td></tr>
+<tr><td><span style="x">Card Shipping State:</span></td><td></td></tr>
+<tr><td><span style="x">Card Shipping Postal Code:</span></td><td></td></tr>
+</table></td></tr><tr><td>&nbsp;</td></tr><tr><td><table><tr><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Name</font></u></a></th><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Phone</font></u></a></th><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Email</font></u></a></th></tr>
+<tr><td>&nbsp;</td></tr>
+<tr><td>&nbsp;</td></tr>
+</table></td></tr><tr><td>&nbsp;</td></tr><tr><td><table><tr><td><span style="x">Number Of Cards:</span></td><td>15</td></tr>
+<tr><td><span style="x">Company Name:</span></td><td>Sample: Cedar Row Movers</td></tr>
+<tr><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Second Line Embossing Option:</font></u></a></th><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Company Vehicle ID</font></u></a></th></tr>
+</table></td></tr><tr><td>&nbsp;</td></tr><tr><td><table><tr><td>Department:</td><td>No</td></tr>
+<tr><td><span style="x">Vehicle Description:</span></td><td>No</td></tr>
+<tr><td><span style="x">License Plate #:</span></td><td>No</td></tr>
+<tr><td><span style="x">Company Vehicle ID:</span></td><td>No</td></tr>
+</table></td></tr><tr><td>&nbsp;</td></tr><tr><td><table><tr><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Company Vehicle ID</font></u></a></th><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Vehicle Description</font></u></a></th><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Department</font></u></a></th><th><a href="https://example.com/sample-link"><u><font color="#0000FF">License Plate #</font></u></a></th><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Card Control Option</font></u></a></th><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Prompt Option</font></u></a></th><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Acceptance Option</font></u></a></th><th><a href="https://example.com/sample-link"><u><font color="#0000FF">VIN Number</font></u></a></th></tr>
+<tr><td>SAMPLE TRUCK 1</td><td></td><td></td><td></td><td>Custom Control Sample</td><td>Odometer &amp; Driver ID</td><td></td><td></td></tr>
+<tr><td>SAMPLE TRUCK 2</td><td></td><td></td><td></td><td>Custom Control Sample</td><td>Odometer &amp; Driver ID</td><td></td><td></td></tr>
+<tr><td>SAMPLE TRUCK 3</td><td></td><td></td><td></td><td>Custom Control Sample</td><td>Odometer &amp; Driver ID</td><td></td><td></td></tr>
+<tr><td>SAMPLE VAN 1</td><td></td><td></td><td></td><td>Custom Control Sample</td><td>Odometer &amp; Driver ID</td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td>Custom Control Sample</td><td>Odometer &amp; Driver ID</td><td></td><td></td></tr>
+<tr><td>SAMPLE PICKUP 1</td><td>2022 Sample Pickup</td><td></td><td></td><td>Custom Control Sample</td><td>Odometer &amp; Driver ID</td><td></td><td>1SMPL0000000000041</td></tr>
+<tr><td>SAMPLE PICKUP 2</td><td>2023 Sample Pickup</td><td></td><td></td><td>Custom Control Sample</td><td>Odometer &amp; Driver ID</td><td></td><td>1SMPL0000000000042</td></tr>
+</table></td></tr><tr><td>&nbsp;</td></tr><tr><td><table><tr><th><a href="https://example.com/sample-link"><u><font color="#0000FF">First Name</font></u></a></th><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Last Name</font></u></a></th><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Department</font></u></a></th><th><a href="https://example.com/sample-link"><u><font color="#0000FF">Driver ID</font></u></a></th></tr>
+<tr><td>Sample D01</td><td>Driver</td><td>Delivery</td><td>4101</td></tr>
+<tr><td>Sample D02</td><td>Driver</td><td>Service</td><td>4102</td></tr>
+<tr><td>Sample D03</td><td>Driver</td><td>Delivery</td><td>4103</td></tr>
+<tr><td>Sample D04</td><td>Driver</td><td>Service</td><td>4104</td></tr>
+<tr><td>Sample D05</td><td>Driver</td><td>Delivery</td><td>4105</td></tr>
+<tr><td>Sample D06</td><td>Driver</td><td>Service</td><td>4106</td></tr>
+<tr><td>Sample D07</td><td>Driver</td><td>Delivery</td><td>4107</td></tr>
+<tr><td>Sample D08</td><td>Driver</td><td>Service</td><td>4108</td></tr>
+<tr><td>Sample D09</td><td>Driver</td><td>Delivery</td><td>4109</td></tr>
+<tr><td>Sample D10</td><td>Driver</td><td>Service</td><td>4110</td></tr>
+<tr><td>Sample D11</td><td>Driver</td><td>Delivery</td><td>4111</td></tr>
+<tr><td>Sample D12</td><td>Driver</td><td>Service</td><td>4112</td></tr>
+<tr><td>Sample D13</td><td>Driver</td><td>Delivery</td><td>4113</td></tr>
+<tr><td>Sample D14</td><td>Driver</td><td>Service</td><td>4114</td></tr>
+<tr><td>Sample D15</td><td>Driver</td><td>Delivery</td><td>4115</td></tr>
+<tr><td>Sample D16</td><td>Driver</td><td>Service</td><td>4116</td></tr>
+<tr><td>Sample D17</td><td>Driver</td><td>Delivery</td><td>4117</td></tr>
+<tr><td>Sample D18</td><td>Driver</td><td>Service</td><td>4118</td></tr>
+<tr><td>Sample D19</td><td>Driver</td><td>Delivery</td><td>4119</td></tr>
+<tr><td>Sample D20</td><td>Driver</td><td>Service</td><td>4120</td></tr>
+</table></td></tr><tr><td>&nbsp;</td></tr></table></body></html>

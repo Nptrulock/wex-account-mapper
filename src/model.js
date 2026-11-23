@@ -59,12 +59,12 @@ function bizStats(root){
 /* ---- copy text builders ---- */
 function acctPairs(a){
   const p = acc(a.parentId), h = creditHolder(a);
-  const pairs = [['Business Name', a.name], ['Salesforce Account ID', a.sfId], ['Parent Account', p ? p.name : '(top-level / parent)'], ['Parent Account ID', p ? p.sfId : ''],
-    ['Case #', a.caseNo], ['Opportunity Name', a.oppName], ['Opportunity #', a.oppNo], ['Opportunity ID', a.oppId],
-    ['Rep Name', a.repName], ['Rep Email', a.repEmail], ['Rep Phone', a.repPhone], ['Stage', stageLabel(a.stage)],
+  const pairs = [['Business Name', a.name], ['Parent Account', p ? p.name : '(top-level / parent)'],
+    ['Case #', a.caseNo], ['Opportunity #', a.oppNo], ['Opportunity ID', a.oppId],
+    ['Rep Name', a.repName], ['Rep Email', a.repEmail], ['Stage', stageLabel(a.stage)],
     ['Billing Mode', modeLabel(a)]];
   if (effMode(a) === 'own') pairs.push(['Credit Line Limit', fmtMoney(a.creditLimit)], ['Billing Cycle', a.billCycle], ['Payment Terms', a.terms], ['Billing Contact', a.billContact]);
-  else pairs.push(['Credit Line Held By', h.name + (h.sfId ? ' (' + h.sfId + ')' : '')]);
+  else pairs.push(['Credit Line Held By', h.name]);
   const linked = a.linkedIds.map(acc).filter(Boolean);
   if (linked.length) pairs.push(['Linked Accounts', linked.map(x => x.name).join('; ')]);
   pairs.push(...ffPairs(a));
@@ -78,7 +78,7 @@ const acctTSV = a => { const p = acctPairs(a); return toTSV([p.map(x => x[0]), p
 function contactPairs(c){
   const at = c.accountIds.map(acc).filter(Boolean);
   return [['Name', c.name], ['Title', c.title], ['Email', c.email], ['Phone', c.phone], ['Role', c.role],
-    ['Level', c.level === 'parent' ? 'Parent level (whole business)' : 'Child only'], ['Account(s)', at.map(x => x.name).join('; ')], ['Account ID(s)', at.map(x => x.sfId).filter(Boolean).join('; ')], ...Object.entries(c.extra || {})];
+    ['Level', c.level === 'parent' ? 'Parent level (whole business)' : 'Child only'], ['Account(s)', at.map(x => x.name).join('; ')], ...Object.entries(c.extra || {})];
 }
 const contactLabeled = c => contactPairs(c).map(([k, v]) => k + ': ' + (v ?? '')).join('\n');
 const contactTSV = c => { const p = contactPairs(c); return toTSV([p.map(x => x[0]), p.map(x => x[1])]); };

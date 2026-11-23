@@ -57,7 +57,7 @@ function bizHeader(b){
   const names = st => tree(b.id).filter(x => x.a.stage === st).map(x => shortName(x.a, b));
   return '<div class="bizhead"><div class="row"><h2>' + esc(b.name || '(unnamed)') + '</h2>' + (isSample(b) ? '<span class="badge sample">Fictional sample</span>' : '') + '<span class="spacer"></span>'
     + '<button data-act="open" data-id="' + b.id + '">Open parent</button><button data-act="copybiz" data-id="' + b.id + '">Copy business summary</button><button class="primary" data-act="buildzip" title="Master .xlsx + Master Accounts / All Vehicles / All Drivers CSVs + each account’s Vehicles and Drivers CSVs, in one .zip">⬇ Master list (one click)</button></div>'
-    + '<div class="muted small">' + (b.sfId ? 'SF Account ID ' + esc(b.sfId) + ' · ' : '') + (b.repName ? 'Rep ' + esc(b.repName) + ' · ' : '') + s.n + ' accounts in this business</div>'
+    + '<div class="muted small">' + (b.repName ? 'Rep ' + esc(b.repName) + ' · ' : '') + s.n + ' accounts in this business</div>'
     + '<div class="pipeline">' + STAGES.map(x => { const n = names(x.id); return '<div class="pipe st-' + x.id + '"><div class="row"><b>' + x.n + '. ' + x.label + '</b></div><div class="n">' + s.counts[x.id] + '</div><div class="small" title="' + esc(n.join(', ')) + '">' + esc(n.slice(0, 3).join(', ')) + (n.length > 3 ? ' +' + (n.length - 3) + ' more' : '') + '</div></div>'; }).join('') + '</div>'
     + '<div class="overview">'
     + '<div class="stat"><div class="k">Overall progress</div><div class="v">' + s.pct + '%</div><div class="stagebar">' + STAGES.map(x => '<i class="s-' + x.id + '" style="width:' + (s.counts[x.id] / s.n * 100) + '%"></i>').join('') + '</div></div>'
@@ -84,7 +84,7 @@ function nodeHtml(a, root){
   return '<div class="node st-' + a.stage + (a === root ? ' root' : '') + (dim ? ' dim' : '') + (hit ? ' hit' : '') + '" data-act="open" data-id="' + a.id + '" data-name="' + esc(a.name) + '">'
     + '<div class="node-top"><span class="lvl-tag">' + (a === root ? 'Parent' : 'Child · L' + ancestors(a).length) + '</span>' + steps(a.stage) + '</div>'
     + '<div class="node-name">' + esc(a.name || '(unnamed)') + '</div>'
-    + '<div class="node-meta">' + [a.sfId && 'SF ' + esc(a.sfId), a.caseNo && 'Case ' + esc(a.caseNo), a.oppNo && 'Opp ' + esc(a.oppNo)].filter(Boolean).join(' · ') + '</div>'
+    + '<div class="node-meta">' + [a.caseNo && 'Case ' + esc(a.caseNo), a.oppNo && 'Opp ' + esc(a.oppNo)].filter(Boolean).join(' · ') + '</div>'
     + '<div style="margin-top:6px">' + stageBadge(a.stage) + '</div>'
     + '<div class="node-chips">' + (own ? '<span class="chip own">💳 ' + (a === root ? 'Parent line ' : 'Own line ') + (fmtMoney(a.creditLimit) || '(no limit set)') + '</span>' : '<span class="chip up" title="Billed through ' + esc(h.name) + '">↑ Billed at parent</span>')
     + (pc ? '<span class="chip" style="background:#e0e7ff;color:#3730a3">👤 ' + pc + ' parent-level</span>' : '') + (cc ? '<span class="chip" style="background:#fce7f3;color:#9d174d">👤 ' + cc + ' child-only</span>' : '')
@@ -108,8 +108,8 @@ function tableRows(b){
   return list.filter(x => passes(x.a));
 }
 const TABLE_COLS = [
-  ['Account', x => x.a.name], ['Parent', x => (acc(x.a.parentId) || {}).name || '—'], ['SF Account ID', x => x.a.sfId], ['Case #', x => x.a.caseNo],
-  ['Opportunity', x => [x.a.oppName, x.a.oppNo].filter(Boolean).join(' · ')], ['Opp ID', x => x.a.oppId], ['Rep', x => x.a.repName], ['Rep Email', x => x.a.repEmail], ['Rep Phone', x => x.a.repPhone],
+  ['Account', x => x.a.name], ['Parent', x => (acc(x.a.parentId) || {}).name || '—'], ['Case #', x => x.a.caseNo],
+  ['Opportunity #', x => x.a.oppNo], ['Opp ID', x => x.a.oppId], ['Rep', x => x.a.repName], ['Rep Email', x => x.a.repEmail],
   ['Stage', x => stageLabel(x.a.stage)], ['Billing', x => modeLabel(x.a)], ['Credit Limit', x => effMode(x.a) === 'own' ? fmtMoney(x.a.creditLimit) : ''], ['Credit Line Held By', x => creditHolder(x.a).name],
   ['Contacts', x => contactsOf(x.a).direct.map(c => c.name).join('; ')]];
 function tableView(b){
@@ -169,7 +169,7 @@ function billingView(b){
   if (s.missing) h += '<div class="warnbar">⚠ ' + s.missing + ' account(s) have their own credit line but no limit entered.</div>';
   for (const {a} of holders){
     const riders = t.filter(x => x.a !== a && effMode(x.a) === 'parent' && creditHolder(x.a) === a);
-    h += '<div class="rollup"><div class="row"><b>💳 ' + esc(a.name) + '</b><span class="badge own">' + esc(a === b ? 'Parent credit line' : 'Billed at child — own line') + '</span><span class="spacer"></span><button class="small" data-act="open" data-id="' + a.id + '">Edit</button><button class="small" data-act="copy" data-text="' + esc(acctPairs(a).filter(p => /Business|Salesforce|Billing|Credit|Payment/.test(p[0])).map(p => p[0] + ': ' + p[1]).join('\n')) + '">Copy</button></div>'
+    h += '<div class="rollup"><div class="row"><b>💳 ' + esc(a.name) + '</b><span class="badge own">' + esc(a === b ? 'Parent credit line' : 'Billed at child — own line') + '</span><span class="spacer"></span><button class="small" data-act="open" data-id="' + a.id + '">Edit</button><button class="small" data-act="copy" data-text="' + esc(acctPairs(a).filter(p => /Business|Billing|Credit|Payment/.test(p[0])).map(p => p[0] + ': ' + p[1]).join('\n')) + '">Copy</button></div>'
       + '<div class="small" style="margin-top:4px">Limit <b>' + (fmtMoney(a.creditLimit) || '—') + '</b> · Cycle ' + esc(a.billCycle || '—') + ' · Terms ' + esc(a.terms || '—') + ' · Billing contact ' + esc(a.billContact || '—') + '</div>'
       + '<div class="rl">' + (riders.length ? '<span class="small muted">Also billed on this line:</span>' + riders.map(x => '<span class="chip up" data-act="open" data-id="' + x.a.id + '" style="cursor:pointer">↑ ' + esc(shortName(x.a, b)) + '</span>').join('') : '<span class="small muted">No other accounts roll up to this line.</span>') + '</div></div>';
   }
@@ -178,8 +178,8 @@ function billingView(b){
   return h;
 }
 function billingMatrix(b){
-  return [['Account', 'SF Account ID', 'Level', 'Billing Mode', 'Credit Line Held By', 'Holder SF ID', 'Credit Limit', 'Billing Cycle', 'Payment Terms', 'Billing Contact']]
-    .concat(tree(b.id).map(({a, depth}) => { const h = creditHolder(a), own = effMode(a) === 'own'; return [a.name, a.sfId, depth ? 'Child L' + depth : 'Parent', modeLabel(a), h.name, h.sfId, own ? fmtMoney(a.creditLimit) : '', own ? a.billCycle : '', own ? a.terms : '', own ? a.billContact : '']; }));
+  return [['Account', 'Level', 'Billing Mode', 'Credit Line Held By', 'Credit Limit', 'Billing Cycle', 'Payment Terms', 'Billing Contact']]
+    .concat(tree(b.id).map(({a, depth}) => { const h = creditHolder(a), own = effMode(a) === 'own'; return [a.name, depth ? 'Child L' + depth : 'Parent', modeLabel(a), h.name, own ? fmtMoney(a.creditLimit) : '', own ? a.billCycle : '', own ? a.terms : '', own ? a.billContact : '']; }));
 }
 
 /* ---------- files ---------- */
@@ -222,30 +222,30 @@ async function masterSheets(b){
   const sameHeaders = csvs.length > 0 && csvs.every(c => (c.rows[0] || []).map(h => norm(h)).join('|') === (csvs[0].rows[0] || []).map(h => norm(h)).join('|'));
   const stack = csvs.concat(t.filter(x => ffTable(x.a, 'vehicles')).map(x => ({a: x.a, f: {name: (x.a.fleet.source || 'Fleet Data') + ' — Vehicles'}, rows: ffTable(x.a, 'vehicles')})));
   for (const c of stack.slice(csvs.length)) for (const h of (c.rows[0] || [])){ const k = norm(h) || h; if (!hdrKeys.includes(k)){ hdrKeys.push(k); hdrNames.push(h); } }
-  const fleet = [['Account', 'Account SF ID', 'Source File', ...hdrNames]];
-  for (const c of stack){ const idx = (c.rows[0] || []).map(h => hdrKeys.indexOf(norm(h) || h)); for (const r of c.rows.slice(1)){ const out = new Array(hdrKeys.length).fill(''); r.forEach((v, i) => { if (idx[i] >= 0) out[idx[i]] = v; }); fleet.push([c.a.name, c.a.sfId, c.f.name, ...out]); } }
-  const summary = [[{v: 'Master file — ' + b.name, s: 2}], ['Generated', new Date().toLocaleString() + ' (Account Mapper, made locally in the browser)'], ['Salesforce Account ID', b.sfId], ['Rep', [b.repName, b.repEmail, b.repPhone].filter(Boolean).join(' · ')], [],
+  const fleet = [['Account', 'Parent Account', 'Source File', ...hdrNames]];
+  for (const c of stack){ const idx = (c.rows[0] || []).map(h => hdrKeys.indexOf(norm(h) || h)); for (const r of c.rows.slice(1)){ const out = new Array(hdrKeys.length).fill(''); r.forEach((v, i) => { if (idx[i] >= 0) out[idx[i]] = v; }); fleet.push([c.a.name, (acc(c.a.parentId) || {}).name || '', c.f.name, ...out]); } }
+  const summary = [[{v: 'Master file — ' + b.name, s: 2}], ['Generated', new Date().toLocaleString() + ' (Account Mapper, made locally in the browser)'], ['Rep', [b.repName, b.repEmail].filter(Boolean).join(' · ')], [],
     [{v: 'Where the business stands', s: 4}], [{v: 'Stage', s: 1}, {v: 'Accounts', s: 1}, {v: 'Share', s: 1}],
     ...STAGES.map(x => [x.label, s.counts[x.id], Math.round(s.counts[x.id] / s.n * 100) + '%']), ['Overall progress', s.pct + '%'], [],
     [{v: 'Billing', s: 4}], ['Total credit exposure', {v: s.exposure, s: 3, t: 'n'}], ['Own credit lines', s.own], ['Billed at parent (roll up)', s.up], [],
-    [{v: 'Hierarchy', s: 4}], ['Level', 'Account', 'Salesforce Account ID', 'Stage', 'Billing', 'Credit Line Held By', 'Credit Limit', 'Case #', 'Opportunity', 'Rep', 'Contacts', 'Files'].map(v => ({v, s: 1})),
-    ...t.map(({a, depth}) => [depth ? 'Child L' + depth : 'Parent', '   '.repeat(depth) + (depth ? '└ ' : '') + a.name, {v: a.sfId, t: 's'}, stageLabel(a.stage), modeLabel(a), creditHolder(a).name, effMode(a) === 'own' && parseMoney(a.creditLimit) != null ? {v: parseMoney(a.creditLimit), s: 3, t: 'n'} : '', {v: a.caseNo, t: 's'}, [a.oppName, a.oppNo].filter(Boolean).join(' · '), a.repName, contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length]), [],
+    [{v: 'Hierarchy', s: 4}], ['Level', 'Account', 'Stage', 'Billing', 'Credit Line Held By', 'Credit Limit', 'Case #', 'Opportunity #', 'Rep', 'Contacts', 'Files'].map(v => ({v, s: 1})),
+    ...t.map(({a, depth}) => [depth ? 'Child L' + depth : 'Parent', '   '.repeat(depth) + (depth ? '└ ' : '') + a.name, stageLabel(a.stage), modeLabel(a), creditHolder(a).name, effMode(a) === 'own' && parseMoney(a.creditLimit) != null ? {v: parseMoney(a.creditLimit), s: 3, t: 'n'} : '', {v: a.caseNo, t: 's'}, {v: a.oppNo, t: 's'}, a.repName, contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length]), [],
     [{v: 'Fleet data', s: 4}], ['CSV files combined', csvs.length], ['Wex Fleet Data forms', t.filter(x => x.a.fleet).length], ['Vehicles (Fleet Data forms)', t.reduce((n, x) => n + (ffTable(x.a, 'vehicles') || [0]).length - 1, 0)], ['Drivers (Fleet Data forms)', t.reduce((n, x) => n + (ffTable(x.a, 'drivers') || [0]).length - 1, 0)], ['Headers', csvs.length ? (sameHeaders ? 'All files share the same columns — stacked with an Account column' : 'Columns differed — combined using every column found (blank where a file lacks it)') : 'No CSV files uploaded']];
   const exKeys = [...new Set(t.flatMap(x => Object.keys(x.a.extra || {})))];
   const ffc = ffAccountCols(t.map(x => x.a));
-  const accounts = [['Level', 'Account', 'Parent Account', 'Parent SF ID', ...ACCOUNT_FIELDS.filter(f => f.k !== 'name').map(f => f.label), 'Credit Line Held By', 'Linked Accounts', 'Contacts', 'Files', ...ffc.headers, 'Salesforce Stage', ...exKeys]]
+  const accounts = [['Level', 'Account', 'Parent Account', ...SHOWN_FIELDS().filter(f => f.k !== 'name').map(f => f.label), 'Credit Line Held By', 'Linked Accounts', 'Contacts', 'Files', ...ffc.headers, 'Salesforce Stage', ...exKeys]]
     .concat(t.map(({a, depth}) => { const p = acc(a.parentId); const own = effMode(a) === 'own';
-      return [depth ? 'Child L' + depth : 'Parent', a.name, p ? p.name : '', p ? {v: p.sfId, t: 's'} : '', ...ACCOUNT_FIELDS.filter(f => f.k !== 'name').map(f => {
+      return [depth ? 'Child L' + depth : 'Parent', a.name, p ? p.name : '', ...SHOWN_FIELDS().filter(f => f.k !== 'name').map(f => {
         if (f.k === 'stage') return stageLabel(a.stage); if (f.k === 'billMode') return modeLabel(a);
         if (f.k === 'creditLimit') return own && parseMoney(a.creditLimit) != null ? {v: parseMoney(a.creditLimit), s: 3, t: 'n'} : '';
         if (['billCycle', 'terms', 'billContact'].includes(f.k) && !own) return '';
         return {v: a[f.k], t: 's'}; }), creditHolder(a).name, a.linkedIds.map(acc).filter(Boolean).map(x => x.name).join('; '), contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length, ...ffc.row(a), a.sfStage || '', ...exKeys.map(k => ({v: (a.extra || {})[k] || '', t: 's'}))]; }));
   const ids = new Set(t.map(x => x.a.id));
   const cKeys = [...new Set(WS.contacts.filter(c => c.accountIds.some(id => ids.has(id))).flatMap(c => Object.keys(c.extra || {})))];
-  const contacts = [['Name', 'Title', 'Email', 'Phone', 'Role', 'Level', 'Attached To', 'Attached SF ID(s)', 'Applies To', ...cKeys]]
+  const contacts = [['Name', 'Title', 'Email', 'Phone', 'Role', 'Level', 'Attached To', 'Applies To', ...cKeys]]
     .concat(WS.contacts.filter(c => c.accountIds.some(id => ids.has(id))).sort((x, y) => (x.level === y.level ? byName(x, y) : x.level === 'parent' ? -1 : 1))
-      .map(c => { const at = c.accountIds.map(acc).filter(Boolean); return [c.name, c.title, c.email, {v: c.phone, t: 's'}, c.role, c.level === 'parent' ? 'Parent level (whole business)' : 'Child only', at.map(x => x.name).join('; '), at.map(x => x.sfId).filter(Boolean).join('; '), appliesTo(c).map(x => x.name).join('; '), ...cKeys.map(k => ({v: (c.extra || {})[k] || '', t: 's'}))]; }));
-  const billing = billingMatrix(b).map((r, i) => i && parseMoney(r[6]) != null ? r.map((v, j) => j === 6 ? {v: parseMoney(v), s: 3, t: 'n'} : j === 1 || j === 5 ? {v, t: 's'} : v) : r);
+      .map(c => { const at = c.accountIds.map(acc).filter(Boolean); return [c.name, c.title, c.email, {v: c.phone, t: 's'}, c.role, c.level === 'parent' ? 'Parent level (whole business)' : 'Child only', at.map(x => x.name).join('; '), appliesTo(c).map(x => x.name).join('; '), ...cKeys.map(k => ({v: (c.extra || {})[k] || '', t: 's'}))]; }));
+  const billing = billingMatrix(b).map((r, i) => i && parseMoney(r[4]) != null ? r.map((v, j) => j === 4 ? {v: parseMoney(v), s: 3, t: 'n'} : v) : r);
   const sheets = [{name: 'Summary', rows: summary, header: -1, widths: [26, 44, 24, 22, 30, 30, 14, 12, 28, 18, 30, 8]}, {name: 'Accounts', rows: accounts}, {name: 'Contacts', rows: contacts}, {name: 'Billing', rows: billing}];
   const veh = ffAll(b, 'vehicles'), drv = ffAll(b, 'drivers');
   if (csvs.length || veh.n) sheets.push({name: 'All Fleet Data', rows: fleet, fleet: true});

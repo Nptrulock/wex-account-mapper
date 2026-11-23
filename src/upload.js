@@ -216,16 +216,20 @@ async function upAddFiles(fileList){
   const U = UI.up = UI.up || {sources: [], errors: []};
   for (const f of fileList){
     try {
-      const {format, sheets} = await readSpreadsheetFile(f);
-      let added = 0;
-      for (const sh of sheets){
-        const form = parseFleetForm(sh.rows);
-        if (isFleetForm(form)){ U.sources.push({id: uid('src'), kind: 'fleet', type: 'fleet', file: f.name, size: f.size, mime: f.type || '', format, sheet: sh.name, sheets: sheets.length, form, target: '', blob: f}); added++; continue; }
+      const res = await readSpreadsheetFile(f); const {format, sheets} = res;
+      let added = 0; U.diags = U.diags || [];
+      // Wex Fleet Data form? Read every sheet/table as one grid; this wins over generic report detection.
+      const grid = ffGrid(res), form = parseFleetForm(grid), fleet = isFleetForm(form);
+      const decisions = [];
+      if (fleet){ U.sources.push({id: uid('src'), kind: 'fleet', type: 'fleet', file: f.name, size: f.size, mime: f.type || '', format, sheet: '', sheets: sheets.length, form, target: '', blob: f}); added++; decisions.push('Wex Fleet Data form'); }
+      else for (const sh of sheets){
         const table = locateTable(sh.rows); if (!table || !table.rows.length) continue;
         const type = detectType(table.headers, table.title + ' ' + f.name);
         U.sources.push({id: uid('src'), file: f.name, size: f.size, format, sheet: sh.name, sheets: sheets.length, table, type, map: upGuess(type, table.headers), open: false});
-        added++;
+        added++; decisions.push((UP_TYPES[type] || type) + ' report (header row ' + table.headerRow + ', ' + table.rows.length + ' rows)');
       }
+      const decision = decisions.length ? decisions.join('; ') : 'not recognised (no header row or form labels found)';
+      U.diags = U.diags.filter(d => d.file !== f.name).concat([{file: f.name, decision, text: ffDiagnose(f, res, grid, form, decision + (fleet ? '' : ' — Fleet Data form NOT detected: ' + form.distinct + ' labels (' + form.specific + ' form-specific), tables: ' + (Object.keys(form.tables).join(', ') || 'none')))}]);
       if (!added) U.errors.push(f.name + ': no table with a header row was found');
     } catch (e) { console.warn(e); U.errors.push(f.name + ': ' + e.message); }
   }
@@ -257,6 +261,7 @@ function uploadView(){
       + (st.warnings.length ? '<div class="warnbar">' + st.warnings.slice(0, 8).map(esc).join('<br>') + '</div>' : '')
       + '<div class="row"><button data-act="upclear">Clear</button><span class="spacer"></span><button class="primary" data-act="upgo" id="upGo">Import everything</button></div></div>';
   }
+  h += ffDiagPanel(U);
   if (U.result) h += '<div class="okbar" id="upResult">✓ ' + esc(U.result) + ' <button class="small" data-act="tab" data-tab="chart">View chart</button></div>';
   return h;
 }

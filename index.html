@@ -252,6 +252,16 @@ body.dragging::after{content:'Drop Salesforce exports to read them (stays in thi
 details.card>summary{cursor:pointer}
 .ffsrc{border-left:4px solid #2f5d8a}
 .ffsec h4 .spacer{flex:1}
+details.ffempty{padding:10px 14px}
+details.ffempty>summary{cursor:pointer;list-style:none}
+details.ffempty>summary::before{content:'▸ ';color:#64748b}
+details.ffempty[open]>summary::before{content:'▾ '}
+.fftbl{margin:8px 0 12px}
+.fftbl .cnt{display:inline-block;min-width:22px;padding:1px 7px;border-radius:999px;background:#dbeafe;color:#1e40af;font-size:12px;margin-left:4px}
+.fftbl.empty{padding:6px 0}
+table.ffinline td,table.ffinline th{font-size:12px;padding:4px 8px;white-space:nowrap}
+.diag{border-top:1px solid #e2e8f0;padding-top:8px;margin-top:8px}
+.diagpre{max-height:260px;overflow:auto;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:11px;white-space:pre-wrap}
 </style>
 </head>
 <body>
@@ -288,7 +298,7 @@ details.card>summary{cursor:pointer}
    connect-src 'none' and default-src 'none'. All data lives in this
    browser (IndexedDB, with localStorage fallback) and in files you export.
    ===================================================================== */
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const WS_FORMAT = 'account-mapper-workspace';
 
 const STAGES = [
@@ -298,16 +308,17 @@ const STAGES = [
 ];
 const STAGE = Object.fromEntries(STAGES.map(s=>[s.id,s]));
 
+const SHOWN_FIELDS = () => ACCOUNT_FIELDS.filter(f => !f.hidden);
 const ACCOUNT_FIELDS = [
   {k:'name',        label:'Business Name'},
-  {k:'sfId',        label:'Salesforce Account ID'},
+  {k:'sfId',        label:'Salesforce Account ID', hidden:true},   // kept for linking uploads; not shown or exported (Noah: not needed)
   {k:'caseNo',      label:'Case #'},
-  {k:'oppName',     label:'Opportunity Name'},
+  {k:'oppName',     label:'Opportunity Name', hidden:true},
   {k:'oppNo',       label:'Opportunity #'},
   {k:'oppId',       label:'Opportunity ID'},
   {k:'repName',     label:'Rep Name'},
   {k:'repEmail',    label:'Rep Email'},
-  {k:'repPhone',    label:'Rep Phone'},
+  {k:'repPhone',    label:'Rep Phone', hidden:true},
   {k:'stage',       label:'Stage'},
   {k:'billMode',    label:'Billing Mode'},
   {k:'creditLimit', label:'Credit Line Limit'},
@@ -685,12 +696,12 @@ function bizStats(root){
 /* ---- copy text builders ---- */
 function acctPairs(a){
   const p = acc(a.parentId), h = creditHolder(a);
-  const pairs = [['Business Name', a.name], ['Salesforce Account ID', a.sfId], ['Parent Account', p ? p.name : '(top-level / parent)'], ['Parent Account ID', p ? p.sfId : ''],
-    ['Case #', a.caseNo], ['Opportunity Name', a.oppName], ['Opportunity #', a.oppNo], ['Opportunity ID', a.oppId],
-    ['Rep Name', a.repName], ['Rep Email', a.repEmail], ['Rep Phone', a.repPhone], ['Stage', stageLabel(a.stage)],
+  const pairs = [['Business Name', a.name], ['Parent Account', p ? p.name : '(top-level / parent)'],
+    ['Case #', a.caseNo], ['Opportunity #', a.oppNo], ['Opportunity ID', a.oppId],
+    ['Rep Name', a.repName], ['Rep Email', a.repEmail], ['Stage', stageLabel(a.stage)],
     ['Billing Mode', modeLabel(a)]];
   if (effMode(a) === 'own') pairs.push(['Credit Line Limit', fmtMoney(a.creditLimit)], ['Billing Cycle', a.billCycle], ['Payment Terms', a.terms], ['Billing Contact', a.billContact]);
-  else pairs.push(['Credit Line Held By', h.name + (h.sfId ? ' (' + h.sfId + ')' : '')]);
+  else pairs.push(['Credit Line Held By', h.name]);
   const linked = a.linkedIds.map(acc).filter(Boolean);
   if (linked.length) pairs.push(['Linked Accounts', linked.map(x => x.name).join('; ')]);
   pairs.push(...ffPairs(a));
@@ -704,7 +715,7 @@ const acctTSV = a => { const p = acctPairs(a); return toTSV([p.map(x => x[0]), p
 function contactPairs(c){
   const at = c.accountIds.map(acc).filter(Boolean);
   return [['Name', c.name], ['Title', c.title], ['Email', c.email], ['Phone', c.phone], ['Role', c.role],
-    ['Level', c.level === 'parent' ? 'Parent level (whole business)' : 'Child only'], ['Account(s)', at.map(x => x.name).join('; ')], ['Account ID(s)', at.map(x => x.sfId).filter(Boolean).join('; ')], ...Object.entries(c.extra || {})];
+    ['Level', c.level === 'parent' ? 'Parent level (whole business)' : 'Child only'], ['Account(s)', at.map(x => x.name).join('; ')], ...Object.entries(c.extra || {})];
 }
 const contactLabeled = c => contactPairs(c).map(([k, v]) => k + ': ' + (v ?? '')).join('\n');
 const contactTSV = c => { const p = contactPairs(c); return toTSV([p.map(x => x[0]), p.map(x => x[1])]); };
@@ -875,7 +886,7 @@ function bizHeader(b){
   const names = st => tree(b.id).filter(x => x.a.stage === st).map(x => shortName(x.a, b));
   return '<div class="bizhead"><div class="row"><h2>' + esc(b.name || '(unnamed)') + '</h2>' + (isSample(b) ? '<span class="badge sample">Fictional sample</span>' : '') + '<span class="spacer"></span>'
     + '<button data-act="open" data-id="' + b.id + '">Open parent</button><button data-act="copybiz" data-id="' + b.id + '">Copy business summary</button><button class="primary" data-act="buildzip" title="Master .xlsx + Master Accounts / All Vehicles / All Drivers CSVs + each account’s Vehicles and Drivers CSVs, in one .zip">⬇ Master list (one click)</button></div>'
-    + '<div class="muted small">' + (b.sfId ? 'SF Account ID ' + esc(b.sfId) + ' · ' : '') + (b.repName ? 'Rep ' + esc(b.repName) + ' · ' : '') + s.n + ' accounts in this business</div>'
+    + '<div class="muted small">' + (b.repName ? 'Rep ' + esc(b.repName) + ' · ' : '') + s.n + ' accounts in this business</div>'
     + '<div class="pipeline">' + STAGES.map(x => { const n = names(x.id); return '<div class="pipe st-' + x.id + '"><div class="row"><b>' + x.n + '. ' + x.label + '</b></div><div class="n">' + s.counts[x.id] + '</div><div class="small" title="' + esc(n.join(', ')) + '">' + esc(n.slice(0, 3).join(', ')) + (n.length > 3 ? ' +' + (n.length - 3) + ' more' : '') + '</div></div>'; }).join('') + '</div>'
     + '<div class="overview">'
     + '<div class="stat"><div class="k">Overall progress</div><div class="v">' + s.pct + '%</div><div class="stagebar">' + STAGES.map(x => '<i class="s-' + x.id + '" style="width:' + (s.counts[x.id] / s.n * 100) + '%"></i>').join('') + '</div></div>'
@@ -902,7 +913,7 @@ function nodeHtml(a, root){
   return '<div class="node st-' + a.stage + (a === root ? ' root' : '') + (dim ? ' dim' : '') + (hit ? ' hit' : '') + '" data-act="open" data-id="' + a.id + '" data-name="' + esc(a.name) + '">'
     + '<div class="node-top"><span class="lvl-tag">' + (a === root ? 'Parent' : 'Child · L' + ancestors(a).length) + '</span>' + steps(a.stage) + '</div>'
     + '<div class="node-name">' + esc(a.name || '(unnamed)') + '</div>'
-    + '<div class="node-meta">' + [a.sfId && 'SF ' + esc(a.sfId), a.caseNo && 'Case ' + esc(a.caseNo), a.oppNo && 'Opp ' + esc(a.oppNo)].filter(Boolean).join(' · ') + '</div>'
+    + '<div class="node-meta">' + [a.caseNo && 'Case ' + esc(a.caseNo), a.oppNo && 'Opp ' + esc(a.oppNo)].filter(Boolean).join(' · ') + '</div>'
     + '<div style="margin-top:6px">' + stageBadge(a.stage) + '</div>'
     + '<div class="node-chips">' + (own ? '<span class="chip own">💳 ' + (a === root ? 'Parent line ' : 'Own line ') + (fmtMoney(a.creditLimit) || '(no limit set)') + '</span>' : '<span class="chip up" title="Billed through ' + esc(h.name) + '">↑ Billed at parent</span>')
     + (pc ? '<span class="chip" style="background:#e0e7ff;color:#3730a3">👤 ' + pc + ' parent-level</span>' : '') + (cc ? '<span class="chip" style="background:#fce7f3;color:#9d174d">👤 ' + cc + ' child-only</span>' : '')
@@ -926,8 +937,8 @@ function tableRows(b){
   return list.filter(x => passes(x.a));
 }
 const TABLE_COLS = [
-  ['Account', x => x.a.name], ['Parent', x => (acc(x.a.parentId) || {}).name || '—'], ['SF Account ID', x => x.a.sfId], ['Case #', x => x.a.caseNo],
-  ['Opportunity', x => [x.a.oppName, x.a.oppNo].filter(Boolean).join(' · ')], ['Opp ID', x => x.a.oppId], ['Rep', x => x.a.repName], ['Rep Email', x => x.a.repEmail], ['Rep Phone', x => x.a.repPhone],
+  ['Account', x => x.a.name], ['Parent', x => (acc(x.a.parentId) || {}).name || '—'], ['Case #', x => x.a.caseNo],
+  ['Opportunity #', x => x.a.oppNo], ['Opp ID', x => x.a.oppId], ['Rep', x => x.a.repName], ['Rep Email', x => x.a.repEmail],
   ['Stage', x => stageLabel(x.a.stage)], ['Billing', x => modeLabel(x.a)], ['Credit Limit', x => effMode(x.a) === 'own' ? fmtMoney(x.a.creditLimit) : ''], ['Credit Line Held By', x => creditHolder(x.a).name],
   ['Contacts', x => contactsOf(x.a).direct.map(c => c.name).join('; ')]];
 function tableView(b){
@@ -987,7 +998,7 @@ function billingView(b){
   if (s.missing) h += '<div class="warnbar">⚠ ' + s.missing + ' account(s) have their own credit line but no limit entered.</div>';
   for (const {a} of holders){
     const riders = t.filter(x => x.a !== a && effMode(x.a) === 'parent' && creditHolder(x.a) === a);
-    h += '<div class="rollup"><div class="row"><b>💳 ' + esc(a.name) + '</b><span class="badge own">' + esc(a === b ? 'Parent credit line' : 'Billed at child — own line') + '</span><span class="spacer"></span><button class="small" data-act="open" data-id="' + a.id + '">Edit</button><button class="small" data-act="copy" data-text="' + esc(acctPairs(a).filter(p => /Business|Salesforce|Billing|Credit|Payment/.test(p[0])).map(p => p[0] + ': ' + p[1]).join('\n')) + '">Copy</button></div>'
+    h += '<div class="rollup"><div class="row"><b>💳 ' + esc(a.name) + '</b><span class="badge own">' + esc(a === b ? 'Parent credit line' : 'Billed at child — own line') + '</span><span class="spacer"></span><button class="small" data-act="open" data-id="' + a.id + '">Edit</button><button class="small" data-act="copy" data-text="' + esc(acctPairs(a).filter(p => /Business|Billing|Credit|Payment/.test(p[0])).map(p => p[0] + ': ' + p[1]).join('\n')) + '">Copy</button></div>'
       + '<div class="small" style="margin-top:4px">Limit <b>' + (fmtMoney(a.creditLimit) || '—') + '</b> · Cycle ' + esc(a.billCycle || '—') + ' · Terms ' + esc(a.terms || '—') + ' · Billing contact ' + esc(a.billContact || '—') + '</div>'
       + '<div class="rl">' + (riders.length ? '<span class="small muted">Also billed on this line:</span>' + riders.map(x => '<span class="chip up" data-act="open" data-id="' + x.a.id + '" style="cursor:pointer">↑ ' + esc(shortName(x.a, b)) + '</span>').join('') : '<span class="small muted">No other accounts roll up to this line.</span>') + '</div></div>';
   }
@@ -996,8 +1007,8 @@ function billingView(b){
   return h;
 }
 function billingMatrix(b){
-  return [['Account', 'SF Account ID', 'Level', 'Billing Mode', 'Credit Line Held By', 'Holder SF ID', 'Credit Limit', 'Billing Cycle', 'Payment Terms', 'Billing Contact']]
-    .concat(tree(b.id).map(({a, depth}) => { const h = creditHolder(a), own = effMode(a) === 'own'; return [a.name, a.sfId, depth ? 'Child L' + depth : 'Parent', modeLabel(a), h.name, h.sfId, own ? fmtMoney(a.creditLimit) : '', own ? a.billCycle : '', own ? a.terms : '', own ? a.billContact : '']; }));
+  return [['Account', 'Level', 'Billing Mode', 'Credit Line Held By', 'Credit Limit', 'Billing Cycle', 'Payment Terms', 'Billing Contact']]
+    .concat(tree(b.id).map(({a, depth}) => { const h = creditHolder(a), own = effMode(a) === 'own'; return [a.name, depth ? 'Child L' + depth : 'Parent', modeLabel(a), h.name, own ? fmtMoney(a.creditLimit) : '', own ? a.billCycle : '', own ? a.terms : '', own ? a.billContact : '']; }));
 }
 
 /* ---------- files ---------- */
@@ -1040,30 +1051,30 @@ async function masterSheets(b){
   const sameHeaders = csvs.length > 0 && csvs.every(c => (c.rows[0] || []).map(h => norm(h)).join('|') === (csvs[0].rows[0] || []).map(h => norm(h)).join('|'));
   const stack = csvs.concat(t.filter(x => ffTable(x.a, 'vehicles')).map(x => ({a: x.a, f: {name: (x.a.fleet.source || 'Fleet Data') + ' — Vehicles'}, rows: ffTable(x.a, 'vehicles')})));
   for (const c of stack.slice(csvs.length)) for (const h of (c.rows[0] || [])){ const k = norm(h) || h; if (!hdrKeys.includes(k)){ hdrKeys.push(k); hdrNames.push(h); } }
-  const fleet = [['Account', 'Account SF ID', 'Source File', ...hdrNames]];
-  for (const c of stack){ const idx = (c.rows[0] || []).map(h => hdrKeys.indexOf(norm(h) || h)); for (const r of c.rows.slice(1)){ const out = new Array(hdrKeys.length).fill(''); r.forEach((v, i) => { if (idx[i] >= 0) out[idx[i]] = v; }); fleet.push([c.a.name, c.a.sfId, c.f.name, ...out]); } }
-  const summary = [[{v: 'Master file — ' + b.name, s: 2}], ['Generated', new Date().toLocaleString() + ' (Account Mapper, made locally in the browser)'], ['Salesforce Account ID', b.sfId], ['Rep', [b.repName, b.repEmail, b.repPhone].filter(Boolean).join(' · ')], [],
+  const fleet = [['Account', 'Parent Account', 'Source File', ...hdrNames]];
+  for (const c of stack){ const idx = (c.rows[0] || []).map(h => hdrKeys.indexOf(norm(h) || h)); for (const r of c.rows.slice(1)){ const out = new Array(hdrKeys.length).fill(''); r.forEach((v, i) => { if (idx[i] >= 0) out[idx[i]] = v; }); fleet.push([c.a.name, (acc(c.a.parentId) || {}).name || '', c.f.name, ...out]); } }
+  const summary = [[{v: 'Master file — ' + b.name, s: 2}], ['Generated', new Date().toLocaleString() + ' (Account Mapper, made locally in the browser)'], ['Rep', [b.repName, b.repEmail].filter(Boolean).join(' · ')], [],
     [{v: 'Where the business stands', s: 4}], [{v: 'Stage', s: 1}, {v: 'Accounts', s: 1}, {v: 'Share', s: 1}],
     ...STAGES.map(x => [x.label, s.counts[x.id], Math.round(s.counts[x.id] / s.n * 100) + '%']), ['Overall progress', s.pct + '%'], [],
     [{v: 'Billing', s: 4}], ['Total credit exposure', {v: s.exposure, s: 3, t: 'n'}], ['Own credit lines', s.own], ['Billed at parent (roll up)', s.up], [],
-    [{v: 'Hierarchy', s: 4}], ['Level', 'Account', 'Salesforce Account ID', 'Stage', 'Billing', 'Credit Line Held By', 'Credit Limit', 'Case #', 'Opportunity', 'Rep', 'Contacts', 'Files'].map(v => ({v, s: 1})),
-    ...t.map(({a, depth}) => [depth ? 'Child L' + depth : 'Parent', '   '.repeat(depth) + (depth ? '└ ' : '') + a.name, {v: a.sfId, t: 's'}, stageLabel(a.stage), modeLabel(a), creditHolder(a).name, effMode(a) === 'own' && parseMoney(a.creditLimit) != null ? {v: parseMoney(a.creditLimit), s: 3, t: 'n'} : '', {v: a.caseNo, t: 's'}, [a.oppName, a.oppNo].filter(Boolean).join(' · '), a.repName, contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length]), [],
+    [{v: 'Hierarchy', s: 4}], ['Level', 'Account', 'Stage', 'Billing', 'Credit Line Held By', 'Credit Limit', 'Case #', 'Opportunity #', 'Rep', 'Contacts', 'Files'].map(v => ({v, s: 1})),
+    ...t.map(({a, depth}) => [depth ? 'Child L' + depth : 'Parent', '   '.repeat(depth) + (depth ? '└ ' : '') + a.name, stageLabel(a.stage), modeLabel(a), creditHolder(a).name, effMode(a) === 'own' && parseMoney(a.creditLimit) != null ? {v: parseMoney(a.creditLimit), s: 3, t: 'n'} : '', {v: a.caseNo, t: 's'}, {v: a.oppNo, t: 's'}, a.repName, contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length]), [],
     [{v: 'Fleet data', s: 4}], ['CSV files combined', csvs.length], ['Wex Fleet Data forms', t.filter(x => x.a.fleet).length], ['Vehicles (Fleet Data forms)', t.reduce((n, x) => n + (ffTable(x.a, 'vehicles') || [0]).length - 1, 0)], ['Drivers (Fleet Data forms)', t.reduce((n, x) => n + (ffTable(x.a, 'drivers') || [0]).length - 1, 0)], ['Headers', csvs.length ? (sameHeaders ? 'All files share the same columns — stacked with an Account column' : 'Columns differed — combined using every column found (blank where a file lacks it)') : 'No CSV files uploaded']];
   const exKeys = [...new Set(t.flatMap(x => Object.keys(x.a.extra || {})))];
   const ffc = ffAccountCols(t.map(x => x.a));
-  const accounts = [['Level', 'Account', 'Parent Account', 'Parent SF ID', ...ACCOUNT_FIELDS.filter(f => f.k !== 'name').map(f => f.label), 'Credit Line Held By', 'Linked Accounts', 'Contacts', 'Files', ...ffc.headers, 'Salesforce Stage', ...exKeys]]
+  const accounts = [['Level', 'Account', 'Parent Account', ...SHOWN_FIELDS().filter(f => f.k !== 'name').map(f => f.label), 'Credit Line Held By', 'Linked Accounts', 'Contacts', 'Files', ...ffc.headers, 'Salesforce Stage', ...exKeys]]
     .concat(t.map(({a, depth}) => { const p = acc(a.parentId); const own = effMode(a) === 'own';
-      return [depth ? 'Child L' + depth : 'Parent', a.name, p ? p.name : '', p ? {v: p.sfId, t: 's'} : '', ...ACCOUNT_FIELDS.filter(f => f.k !== 'name').map(f => {
+      return [depth ? 'Child L' + depth : 'Parent', a.name, p ? p.name : '', ...SHOWN_FIELDS().filter(f => f.k !== 'name').map(f => {
         if (f.k === 'stage') return stageLabel(a.stage); if (f.k === 'billMode') return modeLabel(a);
         if (f.k === 'creditLimit') return own && parseMoney(a.creditLimit) != null ? {v: parseMoney(a.creditLimit), s: 3, t: 'n'} : '';
         if (['billCycle', 'terms', 'billContact'].includes(f.k) && !own) return '';
         return {v: a[f.k], t: 's'}; }), creditHolder(a).name, a.linkedIds.map(acc).filter(Boolean).map(x => x.name).join('; '), contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length, ...ffc.row(a), a.sfStage || '', ...exKeys.map(k => ({v: (a.extra || {})[k] || '', t: 's'}))]; }));
   const ids = new Set(t.map(x => x.a.id));
   const cKeys = [...new Set(WS.contacts.filter(c => c.accountIds.some(id => ids.has(id))).flatMap(c => Object.keys(c.extra || {})))];
-  const contacts = [['Name', 'Title', 'Email', 'Phone', 'Role', 'Level', 'Attached To', 'Attached SF ID(s)', 'Applies To', ...cKeys]]
+  const contacts = [['Name', 'Title', 'Email', 'Phone', 'Role', 'Level', 'Attached To', 'Applies To', ...cKeys]]
     .concat(WS.contacts.filter(c => c.accountIds.some(id => ids.has(id))).sort((x, y) => (x.level === y.level ? byName(x, y) : x.level === 'parent' ? -1 : 1))
-      .map(c => { const at = c.accountIds.map(acc).filter(Boolean); return [c.name, c.title, c.email, {v: c.phone, t: 's'}, c.role, c.level === 'parent' ? 'Parent level (whole business)' : 'Child only', at.map(x => x.name).join('; '), at.map(x => x.sfId).filter(Boolean).join('; '), appliesTo(c).map(x => x.name).join('; '), ...cKeys.map(k => ({v: (c.extra || {})[k] || '', t: 's'}))]; }));
-  const billing = billingMatrix(b).map((r, i) => i && parseMoney(r[6]) != null ? r.map((v, j) => j === 6 ? {v: parseMoney(v), s: 3, t: 'n'} : j === 1 || j === 5 ? {v, t: 's'} : v) : r);
+      .map(c => { const at = c.accountIds.map(acc).filter(Boolean); return [c.name, c.title, c.email, {v: c.phone, t: 's'}, c.role, c.level === 'parent' ? 'Parent level (whole business)' : 'Child only', at.map(x => x.name).join('; '), appliesTo(c).map(x => x.name).join('; '), ...cKeys.map(k => ({v: (c.extra || {})[k] || '', t: 's'}))]; }));
+  const billing = billingMatrix(b).map((r, i) => i && parseMoney(r[4]) != null ? r.map((v, j) => j === 4 ? {v: parseMoney(v), s: 3, t: 'n'} : v) : r);
   const sheets = [{name: 'Summary', rows: summary, header: -1, widths: [26, 44, 24, 22, 30, 30, 14, 12, 28, 18, 30, 8]}, {name: 'Accounts', rows: accounts}, {name: 'Contacts', rows: contacts}, {name: 'Billing', rows: billing}];
   const veh = ffAll(b, 'vehicles'), drv = ffAll(b, 'drivers');
   if (csvs.length || veh.n) sheets.push({name: 'All Fleet Data', rows: fleet, fleet: true});
@@ -1184,7 +1195,7 @@ function serialToText(n, code, d1904){
   return s;
 }
 const numText = n => Number.isInteger(n) ? String(n) : String(Math.round(n * 1e6) / 1e6);
-const cleanCell = v => String(v ?? '').replace(/\u00a0/g, ' ').replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, ' ').trim();
+const cleanCell = v => String(v ?? '').replace(/[\u200b-\u200d\u2060\ufeff\u00ad]/g, '').replace(/[\u00a0\u2007\u202f\u3000]/g, ' ').replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, ' ').trim();
 function decodeText(u8){
   if (u8[0] === 0xEF && u8[1] === 0xBB && u8[2] === 0xBF) return new TextDecoder('utf-8').decode(u8.subarray(3));
   if (u8[0] === 0xFF && u8[1] === 0xFE) return new TextDecoder('utf-16le').decode(u8.subarray(2));
@@ -1306,7 +1317,7 @@ function readBiff(u8){
     for (i++; i < recs.length; i++){
       const r = recs[i], o = r.off; if (r.type === 0x000A) break;
       if (r.type === 0x00FD) set(dv.getUint16(o, true), dv.getUint16(o + 2, true), sst[dv.getUint32(o + 6, true)] ?? '');
-      else if (r.type === 0x0204) set(dv.getUint16(o, true), dv.getUint16(o + 2, true), ustr(o + 6, 2));
+      else if (r.type === 0x0204 || r.type === 0x00D6) set(dv.getUint16(o, true), dv.getUint16(o + 2, true), ustr(o + 6, 2));
       else if (r.type === 0x0203) set(dv.getUint16(o, true), dv.getUint16(o + 2, true), num(dv.getFloat64(o + 6, true), dv.getUint16(o + 4, true)));
       else if (r.type === 0x027E) set(dv.getUint16(o, true), dv.getUint16(o + 2, true), num(rk(o + 6), dv.getUint16(o + 4, true)));
       else if (r.type === 0x00BD){ const row = dv.getUint16(o, true), c0 = dv.getUint16(o + 2, true); const n = (r.len - 6) / 6; for (let k = 0; k < n; k++) set(row, c0 + k, num(rk(o + 4 + k * 6 + 2), dv.getUint16(o + 4 + k * 6, true))); }
@@ -1368,6 +1379,37 @@ function readHtmlTables(text){
   }).filter(s => s.rows.length);
 }
 
+/* Every table row in document order as ONE grid (Fleet Data forms are often one <table> per block, sometimes nested
+   in a layout table). A cell that holds a nested table contributes only its own text; the nested rows follow it. */
+function readHtmlGrid(text){
+  const doc = new DOMParser().parseFromString(text, 'text/html');
+  doc.querySelectorAll('br').forEach(b => b.replaceWith(' '));
+  const rows = []; let lastTable = null;
+  for (const tr of doc.querySelectorAll('tr')){
+    const table = tr.closest('table'); if (lastTable && table !== lastTable && !table.contains(lastTable) && !lastTable.contains(table)) rows.push([]);
+    lastTable = table;
+    const row = [];
+    for (const c of Array.from(tr.children).filter(c => /^(TD|TH)$/.test(c.tagName))){
+      let v;
+      if (c.querySelector('table')){ const k = c.cloneNode(true); k.querySelectorAll('table').forEach(t => t.remove()); v = cleanCell(k.textContent); } else v = cleanCell(c.textContent);
+      const cs = Math.max(1, Math.min(50, +c.getAttribute('colspan') || 1)); row.push(v); for (let i = 1; i < cs; i++) row.push('');
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+/* Excel "single file web page" (.mht saved as .xls): pull out the HTML part */
+function mhtmlToHtml(text){
+  const m = text.match(/boundary="?([^"\r\n;]+)"?/i); if (!m) return null;
+  for (const part of text.split('--' + m[1])){
+    const hi = part.search(/\r?\n\r?\n/); if (hi < 0) continue; const head = part.slice(0, hi), body = part.slice(hi).replace(/^\r?\n\r?\n/, '');
+    if (!/content-type:\s*text\/html/i.test(head)) continue;
+    if (/quoted-printable/i.test(head)){ const bytes = []; const t = body.replace(/=\r?\n/g, ''); for (let i = 0; i < t.length; i++){ if (t[i] === '=' && /^[0-9A-F]{2}$/i.test(t.substr(i + 1, 2))){ bytes.push(parseInt(t.substr(i + 1, 2), 16)); i += 2; } else bytes.push(t.charCodeAt(i) & 255); } return new TextDecoder('utf-8').decode(new Uint8Array(bytes)); }
+    if (/base64/i.test(head)){ try { return new TextDecoder('utf-8').decode(Uint8Array.from(atob(body.replace(/\s+/g, '')), c => c.charCodeAt(0))); } catch (e) { return null; } }
+    return body;
+  }
+  return null;
+}
 /* ---- dispatcher ---- */
 async function readSpreadsheetFile(file){
   const u8 = new Uint8Array(await file.arrayBuffer());
@@ -1375,7 +1417,8 @@ async function readSpreadsheetFile(file){
   if (u8[0] === 0x50 && u8[1] === 0x4B) return {format: 'Excel workbook (.xlsx)', sheets: readXlsx(u8)};
   const text = decodeText(u8); const head = text.slice(0, 4000).replace(/^\uFEFF/, '').trimStart();
   if (/^<\?xml/i.test(head) && /urn:schemas-microsoft-com:office:spreadsheet/i.test(text.slice(0, 20000)) || /^<Workbook/i.test(head)) return {format: 'Excel 2003 XML spreadsheet' + (/\.xls$/i.test(file.name) ? ' (named .xls)' : ''), sheets: readSpreadsheetML(text)};
-  if (/^</.test(head) && /<table/i.test(text)) return {format: 'HTML table' + (/\.xls$/i.test(file.name) ? ' (Salesforce “Excel .xls” export)' : ''), sheets: readHtmlTables(text)};
+  if (/^MIME-Version:/i.test(head)){ const h = mhtmlToHtml(text); if (h && /<table/i.test(h)) return {format: 'Excel web archive (MHTML)' + (/\.xls$/i.test(file.name) ? ' (named .xls)' : ''), sheets: readHtmlTables(h), grid: readHtmlGrid(h)}; }
+  if ((/^</.test(head) || /<html|<table/i.test(head)) && /<table[\s>]/i.test(text)) return {format: 'HTML table' + (/\.xls$/i.test(file.name) ? ' (Salesforce “Excel .xls” export)' : ''), sheets: readHtmlTables(text), grid: readHtmlGrid(text)};
   const rows = parseCSV(text);
   return {format: (detectDelim(text) === '\t' ? 'Tab-separated text' : 'CSV') + (/\.xls$/i.test(file.name) ? ' (named .xls)' : ''), sheets: [{name: file.name.replace(/\.[^.]+$/, ''), rows}]};
 }
@@ -1581,9 +1624,9 @@ function acctModal(a){
   const fl = filesOf(a.id);
   return '<div class="mh"><span class="badge st-' + a.stage + '">' + esc(STAGE[a.stage].short) + '</span><h3>' + esc(a.name || '(unnamed)') + '</h3><button class="small" data-act="copyacct" data-id="' + a.id + '">Copy all</button><button class="small" data-act="copytsv" data-id="' + a.id + '">Copy row</button><button data-act="close" aria-label="Close">✕</button></div><div class="mb">'
     + '<div class="sec"><h4>' + (isRoot(a) ? '🏢 Parent account' : '📍 Child account of ' + esc(acc(a.parentId).name)) + '</h4>'
-    + fieldRow('Business name', 'name', a.name) + fieldRow('Salesforce Account ID', 'sfId', a.sfId) + fieldRow('Case #', 'caseNo', a.caseNo)
-    + fieldRow('Opportunity name', 'oppName', a.oppName) + fieldRow('Opportunity #', 'oppNo', a.oppNo) + fieldRow('Opportunity ID', 'oppId', a.oppId)
-    + fieldRow('Rep name', 'repName', a.repName) + fieldRow('Rep email', 'repEmail', a.repEmail, 'email') + fieldRow('Rep phone', 'repPhone', a.repPhone, 'tel') + '</div>'
+    + fieldRow('Business name', 'name', a.name) + fieldRow('Case #', 'caseNo', a.caseNo)
+    + fieldRow('Opportunity #', 'oppNo', a.oppNo) + fieldRow('Opportunity ID', 'oppId', a.oppId)
+    + fieldRow('Rep name', 'repName', a.repName) + fieldRow('Rep email', 'repEmail', a.repEmail, 'email') + '</div>'
     + '<div class="sec"><h4>Stage</h4><div class="stepper">' + STAGES.map(s => '<button class="st-' + s.id + (s.id === a.stage ? ' on' : s.n < STAGE[a.stage].n ? ' done' : '') + '" data-act="setstage" data-v="' + s.id + '">' + s.n + '. ' + s.label + '</button>').join('') + '</div></div>'
     + '<div class="sec"><h4>Billing / credit line</h4>'
     + (isRoot(a) ? '<div class="small muted" style="margin-bottom:8px">This is the parent. Children set to “Billed at parent” roll up to this line.</div>'
@@ -1738,7 +1781,7 @@ const ACT = {
   copyfield: el => { const i = $(el.dataset.sel); copy(i ? i.value : '', el.dataset.what); },
   copyacct: el => copy(acctLabeled(acc(el.dataset.id)), 'account'),
   copytsv: el => copy(acctTSV(acc(el.dataset.id)), 'row (tab-separated)'),
-  copybiz: el => { const b = acc(el.dataset.id); const s = bizStats(b); copy([b.name + ' — business summary', 'Accounts: ' + s.n + ' (' + STAGES.map(x => x.label + ' ' + s.counts[x.id]).join(', ') + ')', 'Credit exposure: ' + (fmtMoney(s.exposure) || '$0') + ' across ' + s.own + ' own line(s); ' + s.up + ' billed at parent', '', ...tree(b.id).map(({a, depth}) => '  '.repeat(depth) + (depth ? '└ ' : '') + a.name + (a.sfId ? ' [' + a.sfId + ']' : '') + ' — ' + stageLabel(a.stage) + ' — ' + modeLabel(a) + (effMode(a) === 'own' && a.creditLimit ? ' ' + fmtMoney(a.creditLimit) : ''))].join('\n'), 'business summary'); },
+  copybiz: el => { const b = acc(el.dataset.id); const s = bizStats(b); copy([b.name + ' — business summary', 'Accounts: ' + s.n + ' (' + STAGES.map(x => x.label + ' ' + s.counts[x.id]).join(', ') + ')', 'Credit exposure: ' + (fmtMoney(s.exposure) || '$0') + ' across ' + s.own + ' own line(s); ' + s.up + ' billed at parent', '', ...tree(b.id).map(({a, depth}) => '  '.repeat(depth) + (depth ? '└ ' : '') + a.name + ' — ' + stageLabel(a.stage) + ' — ' + modeLabel(a) + (effMode(a) === 'own' && a.creditLimit ? ' ' + fmtMoney(a.creditLimit) : ''))].join('\n'), 'business summary'); },
   copytable: () => copy(toTSV(tableMatrix(curBiz())), 'table'),
   csvtable: () => download(new Blob(['\uFEFF' + toCSV(tableMatrix(curBiz()))], {type: 'text/csv'}), safeFile(curBiz().name) + '_accounts_' + today() + '.csv'),
   copycontact: el => copy(contactLabeled(con(el.dataset.id)), 'contact'),
@@ -2060,16 +2103,20 @@ async function upAddFiles(fileList){
   const U = UI.up = UI.up || {sources: [], errors: []};
   for (const f of fileList){
     try {
-      const {format, sheets} = await readSpreadsheetFile(f);
-      let added = 0;
-      for (const sh of sheets){
-        const form = parseFleetForm(sh.rows);
-        if (isFleetForm(form)){ U.sources.push({id: uid('src'), kind: 'fleet', type: 'fleet', file: f.name, size: f.size, mime: f.type || '', format, sheet: sh.name, sheets: sheets.length, form, target: '', blob: f}); added++; continue; }
+      const res = await readSpreadsheetFile(f); const {format, sheets} = res;
+      let added = 0; U.diags = U.diags || [];
+      // Wex Fleet Data form? Read every sheet/table as one grid; this wins over generic report detection.
+      const grid = ffGrid(res), form = parseFleetForm(grid), fleet = isFleetForm(form);
+      const decisions = [];
+      if (fleet){ U.sources.push({id: uid('src'), kind: 'fleet', type: 'fleet', file: f.name, size: f.size, mime: f.type || '', format, sheet: '', sheets: sheets.length, form, target: '', blob: f}); added++; decisions.push('Wex Fleet Data form'); }
+      else for (const sh of sheets){
         const table = locateTable(sh.rows); if (!table || !table.rows.length) continue;
         const type = detectType(table.headers, table.title + ' ' + f.name);
         U.sources.push({id: uid('src'), file: f.name, size: f.size, format, sheet: sh.name, sheets: sheets.length, table, type, map: upGuess(type, table.headers), open: false});
-        added++;
+        added++; decisions.push((UP_TYPES[type] || type) + ' report (header row ' + table.headerRow + ', ' + table.rows.length + ' rows)');
       }
+      const decision = decisions.length ? decisions.join('; ') : 'not recognised (no header row or form labels found)';
+      U.diags = U.diags.filter(d => d.file !== f.name).concat([{file: f.name, decision, text: ffDiagnose(f, res, grid, form, decision + (fleet ? '' : ' — Fleet Data form NOT detected: ' + form.distinct + ' labels (' + form.specific + ' form-specific), tables: ' + (Object.keys(form.tables).join(', ') || 'none')))}]);
       if (!added) U.errors.push(f.name + ': no table with a header row was found');
     } catch (e) { console.warn(e); U.errors.push(f.name + ': ' + e.message); }
   }
@@ -2101,6 +2148,7 @@ function uploadView(){
       + (st.warnings.length ? '<div class="warnbar">' + st.warnings.slice(0, 8).map(esc).join('<br>') + '</div>' : '')
       + '<div class="row"><button data-act="upclear">Clear</button><span class="spacer"></span><button class="primary" data-act="upgo" id="upGo">Import everything</button></div></div>';
   }
+  h += ffDiagPanel(U);
   if (U.result) h += '<div class="okbar" id="upResult">✓ ' + esc(U.result) + ' <button class="small" data-act="tab" data-tab="chart">View chart</button></div>';
   return h;
 }
@@ -2156,7 +2204,8 @@ document.addEventListener('toggle', ev => { if (ev.target && ev.target.id === 'p
    opportunity, billing contact/address, card shipping, card setup and prompt flags, plus three
    tables (Name|Phone|Email contacts, vehicles, drivers). Parsed by finding labels and table
    headers (case / colon / whitespace-insensitive), never by fixed row numbers. */
-const ffNorm = s => String(s ?? '').replace(/\u00a0/g, ' ').toLowerCase().replace(/\s*[:：]\s*$/, '').replace(/\s*:\s*/g, ' ').replace(/\s+/g, ' ').trim();
+const ffClean = v => String(v ?? '').replace(/[\u200b-\u200f\u2060\ufeff\u00ad]/g, '').replace(/[\u00a0\u2007\u202f\u3000]/g, ' ').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/\s+/g, ' ').trim();
+const ffNorm = s => ffClean(s).toLowerCase().replace(/[:：]/g, ' ').replace(/[^a-z0-9#&/ ]+/g, ' ').replace(/\s+/g, ' ').trim();
 const FF_DEF = [
   ['top', 'opp', 'Opportunity', ['opportunity', 'opportunity #', 'opportunity number', 'opportunity id']],
   ['bill', 'first', 'Billing First Name', ['billing first name']], ['bill', 'last', 'Billing Last Name', ['billing last name']],
@@ -2173,32 +2222,86 @@ const FF_DEF = [
   ['prompt', 'Department', 'Department', ['department']], ['prompt', 'Vehicle Description', 'Vehicle Description', ['vehicle description']],
   ['prompt', 'License Plate #', 'License Plate #', ['license plate #', 'license plate', 'license plate number', 'license plate no']], ['prompt', 'Company Vehicle ID', 'Company Vehicle ID', ['company vehicle id', 'vehicle id']],
 ];
-const FF_LABELS = {}; for (const [g, k, d, al] of FF_DEF) for (const x of al) FF_LABELS[x] = [g, k, d];
+const FF_LABELS = {}; for (const [g, k, d, al] of FF_DEF) for (const x of al) FF_LABELS[ffNorm(x)] = [g, k, d];
+/* bare labels ("City:", "Postal Code:") belong to the block above them (billing or card shipping) */
+const FF_CTX = {'city': 'city', 'state': 'state', 'state/province': 'state', 'postal code': 'zip', 'zip': 'zip', 'zip code': 'zip', 'address': 'addr1', 'address line 1': 'addr1', 'address line 2': 'addr2', 'address 2': 'addr2'};
+const FF_SPECIFIC = new Set(['bill', 'ship', 'numCards', 'emboss']);   // labels no ordinary report starts a row with
 const FF_GROUP_LABEL = {bill: 'Billing contact & address', ship: 'Card shipping', card: 'Card setup'};
+const FF_TOK = {
+  vehicles: ['company vehicle id', 'vehicle id', 'vehicle description', 'vehicle desc', 'department', 'license plate', 'card control', 'prompt option', 'acceptance option', 'vin'],
+  vehicleCore: ['company vehicle id', 'vehicle id', 'vehicle desc', 'license plate', 'vin', 'card control', 'acceptance option'],
+  drivers: ['first name', 'last name', 'department', 'driver id', 'driver'],
+  contacts: ['name', 'contact name', 'phone', 'phone number', 'email', 'email address', 'e mail'],
+};
 function ffTableKind(n){
-  const ne = n.filter(Boolean), has = p => n.includes(p), starts = p => n.some(x => x.startsWith(p));
-  if (ne.length >= 3 && (starts('company vehicle id') || starts('vehicle id')) && (starts('vehicle desc') || starts('vin') || starts('license plate'))) return 'vehicles';
-  if (ne.length >= 2 && has('first name') && has('last name')) return 'drivers';
-  if (ne.length >= 2 && ne.length <= 5 && has('name') && (has('phone') || has('email'))) return 'contacts';
+  const ne = n.filter(Boolean); if (ne.length < 2) return null;
+  const hits = toks => ne.filter(x => toks.some(t => x === t || x.startsWith(t + ' ') || (t.length > 3 && x.startsWith(t)))).length;
+  if (hits(FF_TOK.vehicles) >= 3 && hits(FF_TOK.vehicleCore) >= 1) return 'vehicles';
+  if (ne.includes('first name') && ne.includes('last name') && hits(FF_TOK.drivers) >= Math.min(3, ne.length)) return 'drivers';
+  if (ne.length <= 5 && ne.some(x => x === 'name' || x === 'contact name') && hits(FF_TOK.contacts) >= Math.min(3, ne.length) && hits(FF_TOK.contacts) >= 2) return 'contacts';
+  return null;
+}
+/* a cell is a label if it IS a known label, or reads "Label: value" in one cell */
+function ffLabelCell(cell, ctx){
+  const look = n => FF_LABELS[n] || (ctx && FF_CTX[n] ? [ctx, FF_CTX[n], FF_DEF.find(d => d[0] === ctx && d[1] === FF_CTX[n])[2]] : null);
+  const n = ffNorm(cell); if (!n) return null;
+  if (look(n)) return {L: look(n), inline: null};
+  const m = ffClean(cell).match(/^([^:：]{2,60})[:：]\s*(.+)$/); if (m && look(ffNorm(m[1]))) return {L: look(ffNorm(m[1])), inline: m[2].trim()};
   return null;
 }
 function parseFleetForm(rows){
-  const R = (rows || []).map(r => (r || []).map(c => String(c ?? '').replace(/\u00a0/g, ' ').trim()));
-  const out = {fields: {top: {}, bill: {}, ship: {}, card: {}}, prompts: [], tables: {}, labels: 0};
-  let cur = null;
+  const R = (rows || []).map(r => (r || []).map(ffClean));
+  const out = {fields: {top: {}, bill: {}, ship: {}, card: {}}, prompts: [], tables: {}, labels: 0, specific: 0, rowsInfo: []};
+  const seen = new Set(); let cur = null, curKind = null, ctx = null;
   for (let r = 0; r < R.length; r++){
     const row = R[r], n = row.map(ffNorm);
+    if (!row.some(Boolean)){ out.rowsInfo.push('blank'); continue; }
     const k = ffTableKind(n);
-    if (k){ const cols = n.map((x, i) => x ? i : -1).filter(i => i >= 0); cur = out.tables[k] || (out.tables[k] = {headers: cols.map(i => row[i]), cols, rows: [], headerRow: r + 1}); continue; }
-    const i = row.findIndex(Boolean); if (i < 0) continue;
-    const L = FF_LABELS[n[i]], rest = row.slice(i + 1).filter(Boolean);
-    if (L && rest.length <= 1){ cur = null; out.labels++; const [g, key, disp] = L; if (g === 'prompt'){ if (!out.prompts.some(p => p[0] === disp)) out.prompts.push([disp, rest[0] || '']); } else if (!(key in out.fields[g])) out.fields[g][key] = rest[0] || ''; continue; }
-    if (cur){ if (FOOTER_RE.test(row[i]) && rest.length === 0) continue; const vals = cur.cols.map(c => row[c] || ''); if (vals.some(Boolean)) cur.rows.push(vals); }
+    if (k){ const cols = n.map((x, i) => x ? i : -1).filter(i => i >= 0); cur = out.tables[k] || (out.tables[k] = {headers: cols.map(i => row[i]), cols, rows: [], headerRow: r + 1}); curKind = k; out.rowsInfo.push('header:' + k); continue; }
+    // label cells in this row; each takes the next non-empty, non-label cell to its right
+    // walk left→right: a label takes the next non-empty cell as its value (even if that value looks like a label,
+    // e.g. embossing option "Company Vehicle ID"), unless that cell is itself a "Label:" with a colon (side-by-side pairs).
+    const first = row.findIndex(Boolean);
+    let pairs = [], open = null;
+    const l0 = row[first] && ffLabelCell(row[first], cur ? null : ctx);
+    if (l0){
+      for (let c = first; c < row.length; c++){
+        const v = row[c]; if (!v) continue;
+        if (open){
+          const l = ffLabelCell(v, ctx); if (l && /[:：]\s*$/.test(v) && !l.inline){ pairs.push([open.L, '']); open = l; continue; }
+          pairs.push([open.L, v]); open = null; continue;
+        }
+        const l = ffLabelCell(v, cur ? null : (pairs.length && pairs[pairs.length - 1][0][0] !== 'top' ? pairs[pairs.length - 1][0][0] : ctx) || ctx);
+        if (!l) continue;
+        if (l.inline != null) pairs.push([l.L, l.inline]); else open = l;
+      }
+      if (open) pairs.push([open.L, '']);
+      if (pairs.length >= 3 && pairs.every(p => !p[1])) pairs = [];   // a report header row, not a form
+    }
+    if (pairs.length){
+      cur = null; curKind = null; out.rowsInfo.push('label');
+      for (const [[g, key, disp], v] of pairs){
+        if (g === 'bill' || g === 'ship') ctx = g; else if (g !== 'top') ctx = null;
+        out.labels++; const id = g + '.' + key; if (!seen.has(id)){ seen.add(id); if (FF_SPECIFIC.has(g) || FF_SPECIFIC.has(key)) out.specific++; }
+        if (g === 'prompt'){ if (!out.prompts.some(p => p[0] === disp)) out.prompts.push([disp, v]); }
+        else if (!out.fields[g][key]) out.fields[g][key] = v;
+      }
+      continue;
+    }
+    if (cur){
+      const i = first; if (FOOTER_RE.test(row[i]) && row.filter(Boolean).length === 1){ out.rowsInfo.push('footer'); continue; }
+      const vals = cur.cols.map(c => row[c] || ''); const extraCols = row.some((v, c) => v && !cur.cols.includes(c));
+      if (vals.some(Boolean)){ cur.rows.push(vals); out.rowsInfo.push('row:' + curKind + (extraCols ? '+' : '')); continue; }
+    }
+    out.rowsInfo.push('other');
   }
+  out.distinct = seen.size;
   for (const t of Object.values(out.tables)) delete t.cols;
   return out;
 }
-function isFleetForm(form){ const f = form.fields; return form.labels >= 5 && ('numCards' in f.card || 'opp' in f.top || 'addr1' in f.ship || form.tables.vehicles || form.tables.drivers); }
+/* wins over generic report detection when ≥3 Fleet Data labels are present and at least one is form-specific (or a vehicle/driver table exists) */
+function isFleetForm(form){ return form.distinct >= 3 && (form.specific >= 1 || !!form.tables.vehicles || !!form.tables.drivers); }
+const ffGrid = res => res.grid && res.grid.length ? res.grid : res.sheets.flatMap(s => [...s.rows, []]);
 const ffKey = s => norm(String(s || '').replace(/\.[a-z0-9]{2,5}$/i, '').replace(/[_\s-]*fleet[_\s-]*data.*$/i, '')).replace(/[^a-z0-9]+/g, ' ').replace(/\b(inc|llc|co|corp|corporation|company|ltd|the)\b/g, ' ').replace(/\s+/g, ' ').trim();
 const ffFileCompany = file => String(file || '').replace(/\.[a-z0-9]{2,5}$/i, '').replace(/[_\s-]*fleet[_\s-]*data.*$/i, '').replace(/_/g, ' ').trim();
 /* default target: same Opportunity # → file name (<Company>_FleetData) → Company Name on the form */
@@ -2255,8 +2358,8 @@ function ffAll(b, which){
   const list = tree(b.id).map(x => x.a).filter(a => ffTable(a, which));
   const keys = [], names = [];
   for (const a of list) for (const h of a.fleet[which].headers){ const k = ffNorm(h) || h; if (!keys.includes(k)){ keys.push(k); names.push(h); } }
-  const rows = [['Account', 'Account ID', 'Parent Account', 'Parent Account ID', 'Source File', ...names]];
-  for (const a of list){ const p = acc(a.parentId); const idx = a.fleet[which].headers.map(h => keys.indexOf(ffNorm(h) || h)); for (const r of a.fleet[which].rows){ const o = new Array(keys.length).fill(''); r.forEach((v, i) => { if (idx[i] >= 0) o[idx[i]] = v; }); rows.push([a.name, a.sfId || '', p ? p.name : '', p ? p.sfId || '' : '', a.fleet.source || '', ...o]); } }
+  const rows = [['Account', 'Parent Account', 'Source File', ...names]];
+  for (const a of list){ const p = acc(a.parentId); const idx = a.fleet[which].headers.map(h => keys.indexOf(ffNorm(h) || h)); for (const r of a.fleet[which].rows){ const o = new Array(keys.length).fill(''); r.forEach((v, i) => { if (idx[i] >= 0) o[idx[i]] = v; }); rows.push([a.name, p ? p.name : '', a.fleet.source || '', ...o]); } }
   return {rows, n: list.length};
 }
 const FF_ACC_COLS = [...FF_DEF.filter(d => d[0] === 'bill' || d[0] === 'ship').map(d => [d[2], a => ((d[0] === 'bill' ? a.billAddr : a.ship) || {})[d[1]] || '']),
@@ -2274,21 +2377,37 @@ function ffRow(a, path, label, val){
   return '<div class="f"><label for="' + id + '">' + esc(label) + '</label><input id="' + id + '" data-ff="' + esc(path) + '" value="' + esc(val || '') + '" autocomplete="off"><button class="cp" data-act="copyfield" data-sel="#' + id + '" data-what="' + esc(label) + '">📋</button></div>';
 }
 const ffAddr = o => [o.attention && 'Attn: ' + o.attention, [o.first, o.last].filter(Boolean).join(' '), o.addr1, o.addr2, [[o.city, o.state].filter(Boolean).join(', '), o.zip].filter(Boolean).join(' ')].filter(Boolean).join('\n');
+const ffEmpty = o => !o || Object.values(o).every(v => !String(v ?? '').trim());
+function ffSec(title, empty, body, extraHead = '', id = ''){
+  if (empty) return '<details class="sec ffsec ffempty"' + (id ? ' id="' + id + '"' : '') + '><summary><b>' + title + '</b> <span class="small muted">— empty in the file (open to fill in)</span></summary><div style="margin-top:8px">' + body + '</div></details>';
+  return '<div class="sec ffsec"' + (id ? ' id="' + id + '"' : '') + '><h4>' + title + ' <span class="spacer"></span>' + extraHead + '</h4>' + body + '</div>';
+}
+function ffInlineTable(a, which){
+  const t = ffTable(a, which); const label = which === 'vehicles' ? 'Vehicles' : 'Drivers', icon = which === 'vehicles' ? '🚚' : '🪪';
+  const n = t ? t.length - 1 : 0;
+  const btns = t ? '<button class="small" data-act="ffcsv" data-id="' + a.id + '" data-v="' + which + '">⬇ ' + label + '.csv</button><button class="small" data-act="ffcopy" data-id="' + a.id + '" data-v="' + which + '">📋 Copy</button><button class="small" data-act="ffview" data-id="' + a.id + '" data-v="' + which + '">⤢ Full view</button>' : '';
+  if (!n) return '<div class="fftbl empty small muted">' + icon + ' ' + label + ': none in the file</div>';
+  return '<div class="fftbl" id="ff_' + which + '"><div class="row" style="gap:6px;margin-bottom:6px"><b>' + icon + ' ' + label + ' <span class="cnt">' + n + '</span></b><span class="spacer"></span>' + btns + '</div>'
+    + '<div class="tblwrap" style="max-height:300px"><table class="t ffinline"><thead><tr>' + t[0].map(h => '<th>' + esc(h) + '</th>').join('') + '</tr></thead><tbody>'
+    + t.slice(1).map(r => '<tr>' + r.map(v => '<td class="cc" data-act="copy" data-text="' + esc(v) + '" data-what="' + esc(label.toLowerCase().slice(0, -1)) + ' value">' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div></div>';
+}
 function ffSections(a){
   if (!ffHas(a)) return '';
   let h = '';
-  for (const g of ['bill', 'ship']){
-    const key = g === 'bill' ? 'billAddr' : 'ship'; const o = a[key]; if (!o) continue;
-    h += '<div class="sec ffsec"><h4>' + (g === 'bill' ? '🧾 Billing contact & address' : '📦 Card shipping') + ' <span class="spacer"></span><button class="small" data-act="copy" data-text="' + esc(ffAddr(o)) + '" data-what="' + (g === 'bill' ? 'billing address' : 'shipping address') + '">📋 Copy address</button></h4>'
-      + FF_DEF.filter(d => d[0] === g).map(d => ffRow(a, key + '.' + d[1], d[2], o[d[1]])).join('') + '</div>';
-  }
-  if (a.card){
-    h += '<div class="sec ffsec"><h4>💳 Card setup</h4>' + ffRow(a, 'card.numCards', 'Number Of Cards', a.card.numCards) + ffRow(a, 'card.company', 'Company Name (card)', a.card.company) + ffRow(a, 'card.emboss', 'Second Line Embossing Option', a.card.emboss)
-      + (a.card.prompts || []).map((p, i) => ffRow(a, 'card.prompts.' + i, 'Prompt: ' + p[0], p[1])).join('') + '</div>';
-  }
   if (a.fleet){
     const nv = a.fleet.vehicles ? a.fleet.vehicles.rows.length : 0, nd = a.fleet.drivers ? a.fleet.drivers.rows.length : 0;
-    h += '<div class="sec ffsec" id="ffFleet"><h4>🚚 Fleet data</h4><div class="small" style="margin-bottom:8px"><b>' + nv + '</b> vehicle' + (nv === 1 ? '' : 's') + ' · <b>' + nd + '</b> driver' + (nd === 1 ? '' : 's') + ' · from <span class="muted">' + esc(a.fleet.source || '') + '</span></div>' + ffButtons(a) + '</div>';
+    h += '<div class="sec ffsec" id="ffFleet"><h4>🚚 Fleet data <span class="spacer"></span><span class="small muted" style="text-transform:none;letter-spacing:0">' + nv + ' vehicle' + (nv === 1 ? '' : 's') + ' · ' + nd + ' driver' + (nd === 1 ? '' : 's') + '</span></h4>'
+      + ffInlineTable(a, 'vehicles') + ffInlineTable(a, 'drivers') + '<div class="small muted" style="margin-top:6px">From ' + esc(a.fleet.source || '') + '</div></div>';
+  }
+  for (const g of ['bill', 'ship']){
+    const key = g === 'bill' ? 'billAddr' : 'ship'; const o = a[key]; if (!o) continue;
+    const body = FF_DEF.filter(d => d[0] === g).map(d => ffRow(a, key + '.' + d[1], d[2], o[d[1]])).join('');
+    h += ffSec(g === 'bill' ? '🧾 Billing contact & address' : '📦 Card shipping', ffEmpty(o), body, '<button class="small" data-act="copy" data-text="' + esc(ffAddr(o)) + '" data-what="' + (g === 'bill' ? 'billing address' : 'shipping address') + '">📋 Copy address</button>', 'ffsec_' + g);
+  }
+  if (a.card){
+    const body = ffRow(a, 'card.numCards', 'Number Of Cards', a.card.numCards) + ffRow(a, 'card.company', 'Company Name (card)', a.card.company) + ffRow(a, 'card.emboss', 'Second Line Embossing Option', a.card.emboss)
+      + (a.card.prompts || []).map((p, i) => ffRow(a, 'card.prompts.' + i, 'Prompt: ' + p[0], p[1])).join('');
+    h += ffSec('💳 Card setup', !a.card.numCards && !a.card.company && !a.card.emboss && !(a.card.prompts || []).some(p => p[1]), body, '', 'ffsec_card');
   }
   return h;
 }
@@ -2339,6 +2458,58 @@ function ffSourceCard(s, st){
     + '<span class="chip own">🚚 ' + nv + ' vehicles</span><span class="chip own">🪪 ' + nd + ' drivers</span><span class="chip">👤 ' + (nc + (bname ? 1 : 0)) + ' contacts</span></div>'
     + '<div class="row" style="margin-top:8px"><label class="small" for="ffT_' + s.id + '"><b>Attach to</b></label><select id="ffT_' + s.id + '" data-act-change="uptarget" data-v="' + s.id + '" style="max-width:420px">' + opts + '</select>'
     + (r.account ? '<span class="small muted">→ ' + esc(r.account) + (r.isNew ? ' (new)' : '') + '</span>' : '') + '</div></div>';
+}
+/* ---- "How this file was read": structure only, every value MASKED (safe to paste to support) ---- */
+const FF_KNOWN_TEXT = new Set([...Object.keys(FF_LABELS), ...Object.keys(FF_CTX), ...FF_TOK.vehicles, ...FF_TOK.drivers, ...FF_TOK.contacts, 'card control option', 'prompt option', 'acceptance option', 'vin number']);
+function ffMask(v){
+  const t = ffClean(v); if (!t) return '[empty]';
+  if (/^-?[\d,]*\.?\d+$/.test(t)) return '[number ' + t.replace(/\D/g, '').length + ' digits]';
+  if (/^\d{1,4}[\/\-.]\d{1,2}[\/\-.]\d{1,4}/.test(t)) return '[date]';
+  if (/@/.test(t)) return '[email]';
+  if (/^(yes|no|true|false|y|n)$/i.test(t)) return '[yes/no]';
+  return '[text ' + t.length + ']';
+}
+const ffKeep = (v, inHeader) => { const n = ffNorm(v); if (!n) return false; if (FF_KNOWN_TEXT.has(n) || (FF_LABELS[n])) return true; if (inHeader && ffClean(v).length <= 40 && !/[@\d]/.test(v)) return true; return /[:：]\s*$/.test(ffClean(v)) && ffClean(v).length <= 40 && !/[@\d]/.test(v); };
+const colName2 = i => { let s = ''; i++; while (i > 0){ const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
+function ffDiagnose(file, res, grid, form, decision){
+  const L = [];
+  const fname = String(file.name || ''); const ext = (fname.match(/\.[a-z0-9]+$/i) || [''])[0]; const fd = /fleet\s*_?data/i.test(fname);
+  L.push('Account Mapper ' + APP_VERSION + ' — file structure (values masked)');
+  L.push('File: [name ' + fname.length + ' chars]' + (fd ? ' …FleetData' : '') + ext + ' · ' + file.size + ' bytes · ' + res.format);
+  L.push('Sheets/tables: ' + res.sheets.length + ' (' + res.sheets.map(s => s.rows.length + ' rows × ' + Math.max(0, ...s.rows.map(r => r.length)) + ' cols').join('; ') + ')' + (res.grid ? ' · combined HTML grid ' + res.grid.length + ' rows' : ''));
+  L.push('Decision: ' + decision);
+  L.push('Fleet Data labels recognised: ' + form.distinct + ' distinct (' + form.specific + ' form-specific); tables: ' + (Object.entries(form.tables).map(([k, t]) => k + ' @row ' + t.headerRow + ' [' + t.headers.map(h => ffKeep(h, true) ? h : ffMask(h)).join(' | ') + '] ' + t.rows.length + ' rows').join('; ') || 'none'));
+  const f = form.fields;
+  L.push('Fields: ' + [['Opportunity', f.top.opp], ...FF_DEF.filter(d => d[0] !== 'top' && d[0] !== 'prompt').map(d => [d[2], f[d[0]][d[1]]])].map(([k, v]) => k + '=' + (v == null ? '(label not found)' : ffMask(v))).join(', '));
+  L.push('Prompts: ' + (form.prompts.map(p => p[0] + '=' + ffMask(p[1])).join(', ') || '(none found)'));
+  L.push('', 'Grid (first 150 rows; known labels/headers shown, everything else masked):');
+  let blank = 0, tableRun = 0;
+  for (let r = 0; r < Math.min(grid.length, 150); r++){
+    const row = (grid[r] || []).map(ffClean); const info = form.rowsInfo[r] || '';
+    if (!row.some(Boolean)){ blank++; continue; }
+    if (blank){ L.push('  (' + blank + ' blank row' + (blank > 1 ? 's' : '') + ')'); blank = 0; }
+    if (info.startsWith('row:')){ tableRun++; if (tableRun > 4){ if (tableRun === 5) L.push('  … more ' + info.slice(4).replace('+', '') + ' rows …'); continue; } } else tableRun = 0;
+    const hdr = info.startsWith('header'), lab = info === 'label', data = info.startsWith('row:');
+    // label rows: label cells shown, the cell after each label (its value) masked; data rows: everything masked
+    let expectVal = false;
+    const shown = row.map((v, i) => {
+      if (!v) return null; let keep;
+      if (data) keep = false;
+      else if (lab){ const isLab = !!ffLabelCell(v, 'ship') && (!expectVal || /[:：]\s*$/.test(v)); if (isLab && ffLabelCell(v, 'ship').inline != null){ expectVal = false; return colName2(i) + '="' + ffClean(v).split(/[:：]/)[0] + ':" + ' + ffMask(ffLabelCell(v, 'ship').inline); } keep = isLab; expectVal = isLab; }
+      else keep = ffKeep(v, hdr);
+      return colName2(i) + '=' + (keep ? '"' + v + '"' : ffMask(v));
+    });
+    L.push('  R' + (r + 1) + ' [' + (info || '?') + ']: ' + shown.filter(Boolean).join('  '));
+  }
+  if (blank) L.push('  (' + blank + ' blank rows)');
+  if (grid.length > 150) L.push('  … ' + (grid.length - 150) + ' more rows');
+  return L.join('\n');
+}
+Object.assign(ACT, { upcopydiag: el => { const d = (UI.up.diags || [])[+el.dataset.v]; if (d) copy(d.text, 'file structure (values masked)'); } });
+function ffDiagPanel(U){
+  if (!U.diags || !U.diags.length) return '';
+  return '<details class="card" id="diagPanel"><summary><b>How these files were read</b> <span class="small muted">— structure only, values masked; copy it if something didn’t come through</span></summary>'
+    + U.diags.map((d, i) => '<div class="diag"><div class="row"><b>' + esc(d.file) + '</b><span class="small muted">' + esc(d.decision) + '</span><span class="spacer"></span><button class="small" data-act="upcopydiag" data-v="' + i + '">📋 Copy structure</button></div><pre class="diagpre">' + esc(d.text) + '</pre></div>').join('') + '</details>';
 }
 
 </script>

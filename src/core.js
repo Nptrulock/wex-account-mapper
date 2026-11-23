@@ -5,7 +5,7 @@
    connect-src 'none' and default-src 'none'. All data lives in this
    browser (IndexedDB, with localStorage fallback) and in files you export.
    ===================================================================== */
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const WS_FORMAT = 'account-mapper-workspace';
 
 const STAGES = [
@@ -15,16 +15,17 @@ const STAGES = [
 ];
 const STAGE = Object.fromEntries(STAGES.map(s=>[s.id,s]));
 
+const SHOWN_FIELDS = () => ACCOUNT_FIELDS.filter(f => !f.hidden);
 const ACCOUNT_FIELDS = [
   {k:'name',        label:'Business Name'},
-  {k:'sfId',        label:'Salesforce Account ID'},
+  {k:'sfId',        label:'Salesforce Account ID', hidden:true},   // kept for linking uploads; not shown or exported (Noah: not needed)
   {k:'caseNo',      label:'Case #'},
-  {k:'oppName',     label:'Opportunity Name'},
+  {k:'oppName',     label:'Opportunity Name', hidden:true},
   {k:'oppNo',       label:'Opportunity #'},
   {k:'oppId',       label:'Opportunity ID'},
   {k:'repName',     label:'Rep Name'},
   {k:'repEmail',    label:'Rep Email'},
-  {k:'repPhone',    label:'Rep Phone'},
+  {k:'repPhone',    label:'Rep Phone', hidden:true},
   {k:'stage',       label:'Stage'},
   {k:'billMode',    label:'Billing Mode'},
   {k:'creditLimit', label:'Credit Line Limit'},

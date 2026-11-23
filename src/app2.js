@@ -24,9 +24,9 @@ function acctModal(a){
   const fl = filesOf(a.id);
   return '<div class="mh"><span class="badge st-' + a.stage + '">' + esc(STAGE[a.stage].short) + '</span><h3>' + esc(a.name || '(unnamed)') + '</h3><button class="small" data-act="copyacct" data-id="' + a.id + '">Copy all</button><button class="small" data-act="copytsv" data-id="' + a.id + '">Copy row</button><button data-act="close" aria-label="Close">✕</button></div><div class="mb">'
     + '<div class="sec"><h4>' + (isRoot(a) ? '🏢 Parent account' : '📍 Child account of ' + esc(acc(a.parentId).name)) + '</h4>'
-    + fieldRow('Business name', 'name', a.name) + fieldRow('Salesforce Account ID', 'sfId', a.sfId) + fieldRow('Case #', 'caseNo', a.caseNo)
-    + fieldRow('Opportunity name', 'oppName', a.oppName) + fieldRow('Opportunity #', 'oppNo', a.oppNo) + fieldRow('Opportunity ID', 'oppId', a.oppId)
-    + fieldRow('Rep name', 'repName', a.repName) + fieldRow('Rep email', 'repEmail', a.repEmail, 'email') + fieldRow('Rep phone', 'repPhone', a.repPhone, 'tel') + '</div>'
+    + fieldRow('Business name', 'name', a.name) + fieldRow('Case #', 'caseNo', a.caseNo)
+    + fieldRow('Opportunity #', 'oppNo', a.oppNo) + fieldRow('Opportunity ID', 'oppId', a.oppId)
+    + fieldRow('Rep name', 'repName', a.repName) + fieldRow('Rep email', 'repEmail', a.repEmail, 'email') + '</div>'
     + '<div class="sec"><h4>Stage</h4><div class="stepper">' + STAGES.map(s => '<button class="st-' + s.id + (s.id === a.stage ? ' on' : s.n < STAGE[a.stage].n ? ' done' : '') + '" data-act="setstage" data-v="' + s.id + '">' + s.n + '. ' + s.label + '</button>').join('') + '</div></div>'
     + '<div class="sec"><h4>Billing / credit line</h4>'
     + (isRoot(a) ? '<div class="small muted" style="margin-bottom:8px">This is the parent. Children set to “Billed at parent” roll up to this line.</div>'
@@ -181,7 +181,7 @@ const ACT = {
   copyfield: el => { const i = $(el.dataset.sel); copy(i ? i.value : '', el.dataset.what); },
   copyacct: el => copy(acctLabeled(acc(el.dataset.id)), 'account'),
   copytsv: el => copy(acctTSV(acc(el.dataset.id)), 'row (tab-separated)'),
-  copybiz: el => { const b = acc(el.dataset.id); const s = bizStats(b); copy([b.name + ' — business summary', 'Accounts: ' + s.n + ' (' + STAGES.map(x => x.label + ' ' + s.counts[x.id]).join(', ') + ')', 'Credit exposure: ' + (fmtMoney(s.exposure) || '$0') + ' across ' + s.own + ' own line(s); ' + s.up + ' billed at parent', '', ...tree(b.id).map(({a, depth}) => '  '.repeat(depth) + (depth ? '└ ' : '') + a.name + (a.sfId ? ' [' + a.sfId + ']' : '') + ' — ' + stageLabel(a.stage) + ' — ' + modeLabel(a) + (effMode(a) === 'own' && a.creditLimit ? ' ' + fmtMoney(a.creditLimit) : ''))].join('\n'), 'business summary'); },
+  copybiz: el => { const b = acc(el.dataset.id); const s = bizStats(b); copy([b.name + ' — business summary', 'Accounts: ' + s.n + ' (' + STAGES.map(x => x.label + ' ' + s.counts[x.id]).join(', ') + ')', 'Credit exposure: ' + (fmtMoney(s.exposure) || '$0') + ' across ' + s.own + ' own line(s); ' + s.up + ' billed at parent', '', ...tree(b.id).map(({a, depth}) => '  '.repeat(depth) + (depth ? '└ ' : '') + a.name + ' — ' + stageLabel(a.stage) + ' — ' + modeLabel(a) + (effMode(a) === 'own' && a.creditLimit ? ' ' + fmtMoney(a.creditLimit) : ''))].join('\n'), 'business summary'); },
   copytable: () => copy(toTSV(tableMatrix(curBiz())), 'table'),
   csvtable: () => download(new Blob(['\uFEFF' + toCSV(tableMatrix(curBiz()))], {type: 'text/csv'}), safeFile(curBiz().name) + '_accounts_' + today() + '.csv'),
   copycontact: el => copy(contactLabeled(con(el.dataset.id)), 'contact'),

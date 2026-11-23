@@ -57,6 +57,14 @@ The card-order export is a one-sheet **form**, not a report. Drop it with the ot
 - **What it fills:** Opportunity # · billing contact (a contact with role *Billing*, plus the account's billing contact) · **Billing contact & address**, **Card shipping**, **Card setup** (cards, company name, embossing, prompts) sections on the account — every field editable with 📋 copy and *Copy address* · contacts from the Name/Phone/Email table at that account's level · **Vehicles** and **Drivers** tables (view, copy, counts on the chart). The original file is kept as an attachment. Re-uploading updates in place.
 - **Downloads:** each account has **⬇ Vehicles.csv** and **⬇ Drivers.csv** (`<Account> - Vehicles.csv`, `<Account> - Drivers.csv`) in the account panel and on *Files & master file*. **⬇ Master list (one click)** (business header) builds one `.zip` with the master `.xlsx` (Summary, Accounts with billing/shipping/card/prompt columns, Contacts, Billing, All Fleet Data, All Vehicles, All Drivers, one tab per account's Vehicles/Drivers), `Master Accounts.csv`, `All Vehicles.csv`, `All Drivers.csv` (with Account / Account ID / Parent Account / Parent Account ID / Source File columns), every account's own CSVs and the original files.
 
+### If a Fleet Data file doesn't come through
+The upload preview has **How these files were read** → **📋 Copy structure**. It copies only the layout: recognised labels and table headers, each value replaced by its type and length (`[text 12]`, `[number 5 digits]`, `[email]`, `[yes/no]`, `[empty]`), row numbers and counts, and what the app decided. No customer values and no file name are included, so it is safe to paste to whoever maintains the app.
+
+Files are read as **one grid**: every table of an HTML `.xls` in document order (one table per block, nested layout tables and MHTML web archives included) and every sheet of an XML / Excel 97 file. Labels are matched ignoring case, colons, punctuation, non-breaking / zero-width spaces and HTML formatting; the value is the next filled cell to the right (any column); `Label: value` in one cell and side-by-side pairs work; bare `City:` / `State:` / `Postal Code:` belong to the block above. Vehicle rows with an empty first column are kept.
+
+## Fields not shown
+Salesforce Account ID, Opportunity Name and Rep phone are no longer shown, copied or exported (Opportunity # stays). Account IDs from uploads are still used behind the scenes to link parent/child accounts across files.
+
 ## Development
 - Source in `src/` (`app.css`, `core.js`, `readers.js`, `model.js`, `app.js`, `lock.js`, `app2.js`, `upload.js`, `fleet.js`, `shell.html`, `sw.js`). `python3 tools/build.py` inlines everything into `index.html` and stamps the service-worker cache version.
 - The XLSX/ZIP writers and the XLS/XLSX/CSV readers (inflate, OLE/CFB, BIFF8, SpreadsheetML, HTML) are hand-written (no third-party libraries).

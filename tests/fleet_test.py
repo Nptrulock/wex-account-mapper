@@ -110,15 +110,15 @@ with sync_playwright() as p:
     rec('files tab: per-account vehicle/driver buttons', pg.locator(f'#main [data-act=ffcsv][data-id="{fy["id"]}"][data-v=vehicles]').count() == 1)
     shot(pg, '05-files-tab')
     name, path = dl(pg, '#main [data-act=ffall][data-v=vehicles]', 'allveh.csv'); rows = readcsv(path)
-    rec('All Vehicles.csv: Account / Account ID / Parent columns, 12+5 rows', name == 'All Vehicles.csv' and rows[0][:5] == ['Account', 'Account ID', 'Parent Account', 'Parent Account ID', 'Source File'] and len(rows) == 18 and any(r[0].endswith('Flint Yard') and r[2] == 'Sample: Northwind Freight' and r[3] == '001SMPL00000201AAA' for r in rows), (name, len(rows), rows[0][:6]))
+    rec('All Vehicles.csv: Account / Parent columns (no SF ID), 12+5 rows', name == 'All Vehicles.csv' and rows[0][:3] == ['Account', 'Parent Account', 'Source File'] and len(rows) == 18 and any(r[0].endswith('Flint Yard') and r[1] == 'Sample: Northwind Freight' for r in rows), (name, len(rows), rows[0][:6]))
     name, path = dl(pg, '#main [data-act=ffall][data-v=drivers]', 'alldrv.csv'); rows = readcsv(path)
-    rec('All Drivers.csv: 40+8 rows', name == 'All Drivers.csv' and len(rows) == 49 and rows[0][5:] == ['First Name', 'Last Name', 'Department', 'Driver ID'], (len(rows), rows[0]))
+    rec('All Drivers.csv: 40+8 rows', name == 'All Drivers.csv' and len(rows) == 49 and rows[0][3:] == ['First Name', 'Last Name', 'Department', 'Driver ID'], (len(rows), rows[0]))
     name, path = dl(pg, '#main [data-act=ffall][data-v=accounts]', 'macc.csv'); rows = readcsv(path)
     rec('Master Accounts.csv: billing/shipping/card/prompt columns', name == 'Master Accounts.csv' and all(h in rows[0] for h in ('Billing Postal Code', 'Card Shipping Address', 'Number Of Cards', 'Prompt: Department', 'Vehicles', 'Drivers')) and len(rows) == 7, (len(rows)))
     name, path = dl(pg, '#btnXlsx', 'fleet-master.xlsx'); wb = openpyxl.load_workbook(path); sn = wb.sheetnames
     rec('master xlsx tabs: All Fleet Data, All Vehicles, All Drivers, <Account> - Vehicles/Drivers', all(x in sn for x in ('All Fleet Data', 'All Vehicles', 'All Drivers')) and sum(n.endswith('- Vehicles') for n in sn) == 2 and sum(n.endswith('- Drivers') for n in sn) == 2 and all(len(n) <= 31 for n in sn), sn)
     dv = [r for r in wb['All Drivers'].iter_rows(min_row=2, values_only=True)]
-    rec('xlsx All Drivers keeps Driver ID as text', dv[0][8] == '000101', dv[0])
+    rec('xlsx All Drivers keeps Driver ID as text', dv[0][6] == '000101', dv[0])
     rec('xlsx All Fleet Data stacks vehicles', wb['All Fleet Data'].max_row - 1 == 17, wb['All Fleet Data'].max_row)
     ah = [c.value for c in wb['Accounts'][1]]; rec('xlsx Accounts has card/shipping/prompt columns', 'Card Shipping City' in ah and 'Prompt: License Plate #' in ah)
     name, path = dl(pg, '.bizhead [data-act=buildzip]', 'master-list.zip'); z = zipfile.ZipFile(path); zn = z.namelist()

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">
+<Worksheet ss:Name="Block 1"><Table>
+<Row ss:Index="1"><Cell ss:Index="1"><Data ss:Type="String">Opportunity:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">1-SMPL0601</Data></Cell></Row>
+<Row ss:Index="2"><Cell ss:Index="1"><Data ss:Type="String">Billing First Name:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Sample Kim</Data></Cell></Row>
+<Row ss:Index="3"><Cell ss:Index="1"><Data ss:Type="String">Billing Last Name:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Lowe</Data></Cell></Row>
+<Row ss:Index="4"><Cell ss:Index="1"><Data ss:Type="String">Billing Address:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">7 Sample Ct</Data></Cell></Row>
+<Row ss:Index="5"><Cell ss:Index="1"><Data ss:Type="String">Billing Address Line 2:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Floor 2</Data></Cell></Row>
+<Row ss:Index="6"><Cell ss:Index="1"><Data ss:Type="String">Billing City:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Lansing</Data></Cell></Row>
+<Row ss:Index="7"><Cell ss:Index="1"><Data ss:Type="String">Billing State:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">MI</Data></Cell></Row>
+<Row ss:Index="8"><Cell ss:Index="1"><Data ss:Type="String">Billing Postal Code:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">48933</Data></Cell></Row>
+<Row ss:Index="9"><Cell ss:Index="1"><Data ss:Type="String">Billing Phone:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">(555) 010-0601</Data></Cell></Row>
+<Row ss:Index="10"><Cell ss:Index="1"><Data ss:Type="String">Billing Email:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">kim.lowe@example.com</Data></Cell></Row>
+</Table></Worksheet>
+<Worksheet ss:Name="Block 2"><Table>
+<Row ss:Index="1"><Cell ss:Index="1"><Data ss:Type="String">Attention</Data></Cell></Row>
+<Row ss:Index="2"><Cell ss:Index="1"><Data ss:Type="String">Card Shipping Address:</Data></Cell></Row>
+<Row ss:Index="3"><Cell ss:Index="1"><Data ss:Type="String">Card Shipping Address Line 2:</Data></Cell></Row>
+<Row ss:Index="4"><Cell ss:Index="1"><Data ss:Type="String">Card Shipping City:</Data></Cell></Row>
+<Row ss:Index="5"><Cell ss:Index="1"><Data ss:Type="String">Card Shipping State:</Data></Cell></Row>
+<Row ss:Index="6"><Cell ss:Index="1"><Data ss:Type="String">Card Shipping Postal Code:</Data></Cell></Row>
+</Table></Worksheet>
+<Worksheet ss:Name="Block 3"><Table>
+<Row ss:Index="1"><Cell ss:Index="1"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Name</html:Font></html:U></Data></Cell><Cell ss:Index="2"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Phone</html:Font></html:U></Data></Cell><Cell ss:Index="3"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Email</html:Font></html:U></Data></Cell></Row>
+</Table></Worksheet>
+<Worksheet ss:Name="Block 4"><Table>
+<Row ss:Index="1"><Cell ss:Index="1"><Data ss:Type="String">Number Of Cards:</Data></Cell><Cell ss:Index="2"><Data ss:Type="Number">15</Data></Cell></Row>
+<Row ss:Index="2"><Cell ss:Index="1"><Data ss:Type="String">Company Name:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Sample: Cedar Row Movers</Data></Cell></Row>
+<Row ss:Index="3"><Cell ss:Index="1"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Second Line Embossing Option:</html:Font></html:U></Data></Cell><Cell ss:Index="2"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Company Vehicle ID</html:Font></html:U></Data></Cell></Row>
+</Table></Worksheet>
+<Worksheet ss:Name="Block 5"><Table>
+<Row ss:Index="1"><Cell ss:Index="1"><Data ss:Type="String">Department:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">No</Data></Cell></Row>
+<Row ss:Index="2"><Cell ss:Index="1"><Data ss:Type="String">Vehicle Description:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">No</Data></Cell></Row>
+<Row ss:Index="3"><Cell ss:Index="1"><Data ss:Type="String">License Plate #:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">No</Data></Cell></Row>
+<Row ss:Index="4"><Cell ss:Index="1"><Data ss:Type="String">Company Vehicle ID:</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">No</Data></Cell></Row>
+</Table></Worksheet>
+<Worksheet ss:Name="Block 6"><Table>
+<Row ss:Index="1"><Cell ss:Index="1"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Company Vehicle ID</html:Font></html:U></Data></Cell><Cell ss:Index="2"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Vehicle Description</html:Font></html:U></Data></Cell><Cell ss:Index="3"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Department</html:Font></html:U></Data></Cell><Cell ss:Index="4"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">License Plate #</html:Font></html:U></Data></Cell><Cell ss:Index="5"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Card Control Option</html:Font></html:U></Data></Cell><Cell ss:Index="6"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Prompt Option</html:Font></html:U></Data></Cell><Cell ss:Index="7"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Acceptance Option</html:Font></html:U></Data></Cell><Cell ss:Index="8"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">VIN Number</html:Font></html:U></Data></Cell></Row>
+<Row ss:Index="2"><Cell ss:Index="1"><Data ss:Type="String">SAMPLE TRUCK 1</Data></Cell><Cell ss:Index="5"><Data ss:Type="String">Custom Control Sample</Data></Cell><Cell ss:Index="6"><Data ss:Type="String">Odometer &amp; Driver ID</Data></Cell></Row>
+<Row ss:Index="3"><Cell ss:Index="1"><Data ss:Type="String">SAMPLE TRUCK 2</Data></Cell><Cell ss:Index="5"><Data ss:Type="String">Custom Control Sample</Data></Cell><Cell ss:Index="6"><Data ss:Type="String">Odometer &amp; Driver ID</Data></Cell></Row>
+<Row ss:Index="4"><Cell ss:Index="1"><Data ss:Type="String">SAMPLE TRUCK 3</Data></Cell><Cell ss:Index="5"><Data ss:Type="String">Custom Control Sample</Data></Cell><Cell ss:Index="6"><Data ss:Type="String">Odometer &amp; Driver ID</Data></Cell></Row>
+<Row ss:Index="5"><Cell ss:Index="1"><Data ss:Type="String">SAMPLE VAN 1</Data></Cell><Cell ss:Index="5"><Data ss:Type="String">Custom Control Sample</Data></Cell><Cell ss:Index="6"><Data ss:Type="String">Odometer &amp; Driver ID</Data></Cell></Row>
+<Row ss:Index="6"><Cell ss:Index="5"><Data ss:Type="String">Custom Control Sample</Data></Cell><Cell ss:Index="6"><Data ss:Type="String">Odometer &amp; Driver ID</Data></Cell></Row>
+<Row ss:Index="7"><Cell ss:Index="1"><Data ss:Type="String">SAMPLE PICKUP 1</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">2022 Sample Pickup</Data></Cell><Cell ss:Index="5"><Data ss:Type="String">Custom Control Sample</Data></Cell><Cell ss:Index="6"><Data ss:Type="String">Odometer &amp; Driver ID</Data></Cell><Cell ss:Index="8"><Data ss:Type="String">1SMPL0000000000041</Data></Cell></Row>
+<Row ss:Index="8"><Cell ss:Index="1"><Data ss:Type="String">SAMPLE PICKUP 2</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">2023 Sample Pickup</Data></Cell><Cell ss:Index="5"><Data ss:Type="String">Custom Control Sample</Data></Cell><Cell ss:Index="6"><Data ss:Type="String">Odometer &amp; Driver ID</Data></Cell><Cell ss:Index="8"><Data ss:Type="String">1SMPL0000000000042</Data></Cell></Row>
+</Table></Worksheet>
+<Worksheet ss:Name="Block 7"><Table>
+<Row ss:Index="1"><Cell ss:Index="1"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">First Name</html:Font></html:U></Data></Cell><Cell ss:Index="2"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Last Name</html:Font></html:U></Data></Cell><Cell ss:Index="3"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Department</html:Font></html:U></Data></Cell><Cell ss:Index="4"><Data ss:Type="String"><html:U><html:Font html:Color="#0000FF">Driver ID</html:Font></html:U></Data></Cell></Row>
+<Row ss:Index="2"><Cell ss:Index="1"><Data ss:Type="String">Sample D01</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Delivery</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4101</Data></Cell></Row>
+<Row ss:Index="3"><Cell ss:Index="1"><Data ss:Type="String">Sample D02</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Service</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4102</Data></Cell></Row>
+<Row ss:Index="4"><Cell ss:Index="1"><Data ss:Type="String">Sample D03</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Delivery</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4103</Data></Cell></Row>
+<Row ss:Index="5"><Cell ss:Index="1"><Data ss:Type="String">Sample D04</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Service</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4104</Data></Cell></Row>
+<Row ss:Index="6"><Cell ss:Index="1"><Data ss:Type="String">Sample D05</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Delivery</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4105</Data></Cell></Row>
+<Row ss:Index="7"><Cell ss:Index="1"><Data ss:Type="String">Sample D06</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Service</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4106</Data></Cell></Row>
+<Row ss:Index="8"><Cell ss:Index="1"><Data ss:Type="String">Sample D07</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Delivery</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4107</Data></Cell></Row>
+<Row ss:Index="9"><Cell ss:Index="1"><Data ss:Type="String">Sample D08</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Service</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4108</Data></Cell></Row>
+<Row ss:Index="10"><Cell ss:Index="1"><Data ss:Type="String">Sample D09</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Delivery</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4109</Data></Cell></Row>
+<Row ss:Index="11"><Cell ss:Index="1"><Data ss:Type="String">Sample D10</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Service</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4110</Data></Cell></Row>
+<Row ss:Index="12"><Cell ss:Index="1"><Data ss:Type="String">Sample D11</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Delivery</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4111</Data></Cell></Row>
+<Row ss:Index="13"><Cell ss:Index="1"><Data ss:Type="String">Sample D12</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Service</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4112</Data></Cell></Row>
+<Row ss:Index="14"><Cell ss:Index="1"><Data ss:Type="String">Sample D13</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Delivery</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4113</Data></Cell></Row>
+<Row ss:Index="15"><Cell ss:Index="1"><Data ss:Type="String">Sample D14</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Service</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4114</Data></Cell></Row>
+<Row ss:Index="16"><Cell ss:Index="1"><Data ss:Type="String">Sample D15</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Delivery</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4115</Data></Cell></Row>
+<Row ss:Index="17"><Cell ss:Index="1"><Data ss:Type="String">Sample D16</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Service</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4116</Data></Cell></Row>
+<Row ss:Index="18"><Cell ss:Index="1"><Data ss:Type="String">Sample D17</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Delivery</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4117</Data></Cell></Row>
+<Row ss:Index="19"><Cell ss:Index="1"><Data ss:Type="String">Sample D18</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Service</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4118</Data></Cell></Row>
+<Row ss:Index="20"><Cell ss:Index="1"><Data ss:Type="String">Sample D19</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Delivery</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4119</Data></Cell></Row>
+<Row ss:Index="21"><Cell ss:Index="1"><Data ss:Type="String">Sample D20</Data></Cell><Cell ss:Index="2"><Data ss:Type="String">Driver</Data></Cell><Cell ss:Index="3"><Data ss:Type="String">Service</Data></Cell><Cell ss:Index="4"><Data ss:Type="Number">4120</Data></Cell></Row>
+</Table></Worksheet>
+</Workbook>

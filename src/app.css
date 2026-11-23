@@ -238,3 +238,13 @@ body.dragging::after{content:'Drop Salesforce exports to read them (stays in thi
 details.card>summary{cursor:pointer}
 .ffsrc{border-left:4px solid #2f5d8a}
 .ffsec h4 .spacer{flex:1}
+details.ffempty{padding:10px 14px}
+details.ffempty>summary{cursor:pointer;list-style:none}
+details.ffempty>summary::before{content:'▸ ';color:#64748b}
+details.ffempty[open]>summary::before{content:'▾ '}
+.fftbl{margin:8px 0 12px}
+.fftbl .cnt{display:inline-block;min-width:22px;padding:1px 7px;border-radius:999px;background:#dbeafe;color:#1e40af;font-size:12px;margin-left:4px}
+.fftbl.empty{padding:6px 0}
+table.ffinline td,table.ffinline th{font-size:12px;padding:4px 8px;white-space:nowrap}
+.diag{border-top:1px solid #e2e8f0;padding-top:8px;margin-top:8px}
+.diagpre{max-height:260px;overflow:auto;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:11px;white-space:pre-wrap}

@@ -75,7 +75,7 @@ function serialToText(n, code, d1904){
   return s;
 }
 const numText = n => Number.isInteger(n) ? String(n) : String(Math.round(n * 1e6) / 1e6);
-const cleanCell = v => String(v ?? '').replace(/\u00a0/g, ' ').replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, ' ').trim();
+const cleanCell = v => String(v ?? '').replace(/[\u200b-\u200d\u2060\ufeff\u00ad]/g, '').replace(/[\u00a0\u2007\u202f\u3000]/g, ' ').replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, ' ').trim();
 function decodeText(u8){
   if (u8[0] === 0xEF && u8[1] === 0xBB && u8[2] === 0xBF) return new TextDecoder('utf-8').decode(u8.subarray(3));
   if (u8[0] === 0xFF && u8[1] === 0xFE) return new TextDecoder('utf-16le').decode(u8.subarray(2));
@@ -197,7 +197,7 @@ function readBiff(u8){
     for (i++; i < recs.length; i++){
       const r = recs[i], o = r.off; if (r.type === 0x000A) break;
       if (r.type === 0x00FD) set(dv.getUint16(o, true), dv.getUint16(o + 2, true), sst[dv.getUint32(o + 6, true)] ?? '');
-      else if (r.type === 0x0204) set(dv.getUint16(o, true), dv.getUint16(o + 2, true), ustr(o + 6, 2));
+      else if (r.type === 0x0204 || r.type === 0x00D6) set(dv.getUint16(o, true), dv.getUint16(o + 2, true), ustr(o + 6, 2));
       else if (r.type === 0x0203) set(dv.getUint16(o, true), dv.getUint16(o + 2, true), num(dv.getFloat64(o + 6, true), dv.getUint16(o + 4, true)));
       else if (r.type === 0x027E) set(dv.getUint16(o, true), dv.getUint16(o + 2, true), num(rk(o + 6), dv.getUint16(o + 4, true)));
       else if (r.type === 0x00BD){ const row = dv.getUint16(o, true), c0 = dv.getUint16(o + 2, true); const n = (r.len - 6) / 6; for (let k = 0; k < n; k++) set(row, c0 + k, num(rk(o + 4 + k * 6 + 2), dv.getUint16(o + 4 + k * 6, true))); }
@@ -259,6 +259,37 @@ function readHtmlTables(text){
   }).filter(s => s.rows.length);
 }
 
+/* Every table row in document order as ONE grid (Fleet Data forms are often one <table> per block, sometimes nested
+   in a layout table). A cell that holds a nested table contributes only its own text; the nested rows follow it. */
+function readHtmlGrid(text){
+  const doc = new DOMParser().parseFromString(text, 'text/html');
+  doc.querySelectorAll('br').forEach(b => b.replaceWith(' '));
+  const rows = []; let lastTable = null;
+  for (const tr of doc.querySelectorAll('tr')){
+    const table = tr.closest('table'); if (lastTable && table !== lastTable && !table.contains(lastTable) && !lastTable.contains(table)) rows.push([]);
+    lastTable = table;
+    const row = [];
+    for (const c of Array.from(tr.children).filter(c => /^(TD|TH)$/.test(c.tagName))){
+      let v;
+      if (c.querySelector('table')){ const k = c.cloneNode(true); k.querySelectorAll('table').forEach(t => t.remove()); v = cleanCell(k.textContent); } else v = cleanCell(c.textContent);
+      const cs = Math.max(1, Math.min(50, +c.getAttribute('colspan') || 1)); row.push(v); for (let i = 1; i < cs; i++) row.push('');
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+/* Excel "single file web page" (.mht saved as .xls): pull out the HTML part */
+function mhtmlToHtml(text){
+  const m = text.match(/boundary="?([^"\r\n;]+)"?/i); if (!m) return null;
+  for (const part of text.split('--' + m[1])){
+    const hi = part.search(/\r?\n\r?\n/); if (hi < 0) continue; const head = part.slice(0, hi), body = part.slice(hi).replace(/^\r?\n\r?\n/, '');
+    if (!/content-type:\s*text\/html/i.test(head)) continue;
+    if (/quoted-printable/i.test(head)){ const bytes = []; const t = body.replace(/=\r?\n/g, ''); for (let i = 0; i < t.length; i++){ if (t[i] === '=' && /^[0-9A-F]{2}$/i.test(t.substr(i + 1, 2))){ bytes.push(parseInt(t.substr(i + 1, 2), 16)); i += 2; } else bytes.push(t.charCodeAt(i) & 255); } return new TextDecoder('utf-8').decode(new Uint8Array(bytes)); }
+    if (/base64/i.test(head)){ try { return new TextDecoder('utf-8').decode(Uint8Array.from(atob(body.replace(/\s+/g, '')), c => c.charCodeAt(0))); } catch (e) { return null; } }
+    return body;
+  }
+  return null;
+}
 /* ---- dispatcher ---- */
 async function readSpreadsheetFile(file){
   const u8 = new Uint8Array(await file.arrayBuffer());
@@ -266,7 +297,8 @@ async function readSpreadsheetFile(file){
   if (u8[0] === 0x50 && u8[1] === 0x4B) return {format: 'Excel workbook (.xlsx)', sheets: readXlsx(u8)};
   const text = decodeText(u8); const head = text.slice(0, 4000).replace(/^\uFEFF/, '').trimStart();
   if (/^<\?xml/i.test(head) && /urn:schemas-microsoft-com:office:spreadsheet/i.test(text.slice(0, 20000)) || /^<Workbook/i.test(head)) return {format: 'Excel 2003 XML spreadsheet' + (/\.xls$/i.test(file.name) ? ' (named .xls)' : ''), sheets: readSpreadsheetML(text)};
-  if (/^</.test(head) && /<table/i.test(text)) return {format: 'HTML table' + (/\.xls$/i.test(file.name) ? ' (Salesforce “Excel .xls” export)' : ''), sheets: readHtmlTables(text)};
+  if (/^MIME-Version:/i.test(head)){ const h = mhtmlToHtml(text); if (h && /<table/i.test(h)) return {format: 'Excel web archive (MHTML)' + (/\.xls$/i.test(file.name) ? ' (named .xls)' : ''), sheets: readHtmlTables(h), grid: readHtmlGrid(h)}; }
+  if ((/^</.test(head) || /<html|<table/i.test(head)) && /<table[\s>]/i.test(text)) return {format: 'HTML table' + (/\.xls$/i.test(file.name) ? ' (Salesforce “Excel .xls” export)' : ''), sheets: readHtmlTables(text), grid: readHtmlGrid(text)};
   const rows = parseCSV(text);
   return {format: (detectDelim(text) === '\t' ? 'Tab-separated text' : 'CSV') + (/\.xls$/i.test(file.name) ? ' (named .xls)' : ''), sheets: [{name: file.name.replace(/\.[^.]+$/, ''), rows}]};
 }

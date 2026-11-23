@@ -1,0 +1,302 @@
+{
+ "plain": {
+  "opp": "1-SMPL0601",
+  "bill": {
+   "first": "Sample Kim",
+   "last": "Lowe",
+   "addr1": "7 Sample Ct",
+   "addr2": "Floor 2",
+   "city": "Lansing",
+   "state": "MI",
+   "zip": "48933",
+   "phone": "(555) 010-0601",
+   "email": "kim.lowe@example.com"
+  },
+  "card": {
+   "numCards": "15",
+   "company": "Sample: Cedar Row Movers",
+   "emboss": "Company Vehicle ID"
+  },
+  "prompts": [
+   [
+    "Department",
+    "No"
+   ],
+   [
+    "Vehicle Description",
+    "No"
+   ],
+   [
+    "License Plate #",
+    "No"
+   ],
+   [
+    "Company Vehicle ID",
+    "No"
+   ]
+  ],
+  "vehicles": 7,
+  "drivers": 20,
+  "contacts": 0,
+  "driverId0": "4101",
+  "vehBlankA": true,
+  "ship": {
+   "attention": "",
+   "addr1": "",
+   "addr2": "",
+   "city": "",
+   "state": "",
+   "zip": ""
+  }
+ },
+ "offset_nbsp_bare": {
+  "opp": "1-SMPL0601",
+  "bill": {
+   "first": "Sample Kim",
+   "last": "Lowe",
+   "addr1": "7 Sample Ct",
+   "addr2": "Floor 2",
+   "city": "Lansing",
+   "state": "MI",
+   "zip": "48933",
+   "phone": "(555) 010-0601",
+   "email": "kim.lowe@example.com"
+  },
+  "card": {
+   "numCards": "15",
+   "company": "Sample: Cedar Row Movers",
+   "emboss": "Company Vehicle ID"
+  },
+  "prompts": [
+   [
+    "Department",
+    "No"
+   ],
+   [
+    "Vehicle Description",
+    "No"
+   ],
+   [
+    "License Plate #",
+    "No"
+   ],
+   [
+    "Company Vehicle ID",
+    "No"
+   ]
+  ],
+  "vehicles": 7,
+  "drivers": 20,
+  "contacts": 0,
+  "driverId0": "4101",
+  "vehBlankA": true,
+  "ship": {
+   "attention": "",
+   "addr1": "",
+   "addr2": "",
+   "city": "",
+   "state": "",
+   "zip": ""
+  }
+ },
+ "multitable": {
+  "opp": "1-SMPL0601",
+  "bill": {
+   "first": "Sample Kim",
+   "last": "Lowe",
+   "addr1": "7 Sample Ct",
+   "addr2": "Floor 2",
+   "city": "Lansing",
+   "state": "MI",
+   "zip": "48933",
+   "phone": "(555) 010-0601",
+   "email": "kim.lowe@example.com"
+  },
+  "card": {
+   "numCards": "15",
+   "company": "Sample: Cedar Row Movers",
+   "emboss": "Company Vehicle ID"
+  },
+  "prompts": [
+   [
+    "Department",
+    "No"
+   ],
+   [
+    "Vehicle Description",
+    "No"
+   ],
+   [
+    "License Plate #",
+    "No"
+   ],
+   [
+    "Company Vehicle ID",
+    "No"
+   ]
+  ],
+  "vehicles": 7,
+  "drivers": 20,
+  "contacts": 0,
+  "driverId0": "4101",
+  "vehBlankA": true,
+  "ship": {
+   "attention": "",
+   "addr1": "",
+   "addr2": "",
+   "city": "",
+   "state": "",
+   "zip": ""
+  }
+ },
+ "inline_sidebyside": {
+  "opp": "1-SMPL0601",
+  "bill": {
+   "first": "Sample Kim",
+   "last": "Lowe",
+   "addr1": "7 Sample Ct",
+   "addr2": "Floor 2",
+   "city": "Lansing",
+   "state": "MI",
+   "zip": "48933",
+   "phone": "(555) 010-0601",
+   "email": "kim.lowe@example.com"
+  },
+  "card": {
+   "numCards": "15",
+   "company": "Sample: Cedar Row Movers",
+   "emboss": "Company Vehicle ID"
+  },
+  "prompts": [
+   [
+    "Department",
+    "No"
+   ],
+   [
+    "Vehicle Description",
+    "No"
+   ],
+   [
+    "License Plate #",
+    "No"
+   ],
+   [
+    "Company Vehicle ID",
+    "No"
+   ]
+  ],
+  "vehicles": 7,
+  "drivers": 20,
+  "contacts": 0,
+  "driverId0": "4101",
+  "vehBlankA": true,
+  "ship": {
+   "attention": "Sample Dock Desk",
+   "addr1": "40 Sample Ln",
+   "addr2": "Bay 4",
+   "city": "Grand Ledge",
+   "state": "MI",
+   "zip": "48837"
+  }
+ },
+ "mhtml": {
+  "opp": "1-SMPL0601",
+  "bill": {
+   "first": "Sample Kim",
+   "last": "Lowe",
+   "addr1": "7 Sample Ct",
+   "addr2": "Floor 2",
+   "city": "Lansing",
+   "state": "MI",
+   "zip": "48933",
+   "phone": "(555) 010-0601",
+   "email": "kim.lowe@example.com"
+  },
+  "card": {
+   "numCards": "15",
+   "company": "Sample: Cedar Row Movers",
+   "emboss": "Company Vehicle ID"
+  },
+  "prompts": [
+   [
+    "Department",
+    "No"
+   ],
+   [
+    "Vehicle Description",
+    "No"
+   ],
+   [
+    "License Plate #",
+    "No"
+   ],
+   [
+    "Company Vehicle ID",
+    "No"
+   ]
+  ],
+  "vehicles": 7,
+  "drivers": 20,
+  "contacts": 0,
+  "driverId0": "4101",
+  "vehBlankA": true,
+  "ship": {
+   "attention": "",
+   "addr1": "",
+   "addr2": "",
+   "city": "",
+   "state": "",
+   "zip": ""
+  }
+ },
+ "nested": {
+  "opp": "1-SMPL0601",
+  "bill": {
+   "first": "Sample Kim",
+   "last": "Lowe",
+   "addr1": "7 Sample Ct",
+   "addr2": "Floor 2",
+   "city": "Lansing",
+   "state": "MI",
+   "zip": "48933",
+   "phone": "(555) 010-0601",
+   "email": "kim.lowe@example.com"
+  },
+  "card": {
+   "numCards": "15",
+   "company": "Sample: Cedar Row Movers",
+   "emboss": "Company Vehicle ID"
+  },
+  "prompts": [
+   [
+    "Department",
+    "No"
+   ],
+   [
+    "Vehicle Description",
+    "No"
+   ],
+   [
+    "License Plate #",
+    "No"
+   ],
+   [
+    "Company Vehicle ID",
+    "No"
+   ]
+  ],
+  "vehicles": 7,
+  "drivers": 20,
+  "contacts": 0,
+  "driverId0": "4101",
+  "vehBlankA": true,
+  "ship": {
+   "attention": "",
+   "addr1": "",
+   "addr2": "",
+   "city": "",
+   "state": "",
+   "zip": ""
+  }
+ }
+}
