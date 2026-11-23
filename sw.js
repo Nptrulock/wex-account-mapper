@@ -1,6 +1,6 @@
 /* Offline cache for the app code only. Never caches or sends user data —
    all data lives in the page's IndexedDB and never goes over the network. */
-const CACHE = 'account-mapper-ba59aee2c2';
+const CACHE = 'account-mapper-e43974d795';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

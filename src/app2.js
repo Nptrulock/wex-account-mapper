@@ -69,7 +69,7 @@ async function previewFile(id){
 function importView(){
   const I = UI.imp || (UI.imp = {step: 1, type: 'accounts', text: '', under: UI.biz || ''});
   const rs = roots();
-  let h = '<div class="card"><h3>Paste or import from Salesforce</h3><div class="small muted">Nothing leaves this browser. Paste rows copied from a Salesforce list view/report (with the header row), labeled lines like <span class="kbd">Account Name: …</span>, or choose a report export (.csv). You map the columns once — the mapping is remembered.</div></div>';
+  let h = sfCard() + '<div class="card"><h3>Paste or import from Salesforce</h3><div class="small muted">Nothing leaves this browser. Paste rows copied from a Salesforce list view/report (with the header row), labeled lines like <span class="kbd">Account Name: …</span>, or choose a report export (.csv). You map the columns once — the mapping is remembered.</div></div>';
   h += '<div class="card"><div class="row"><b>1.</b> What are you importing?<div class="seg"><button class="' + (I.type === 'accounts' ? 'on' : '') + '" data-act="imptype" data-v="accounts">Accounts</button><button class="' + (I.type === 'contacts' ? 'on' : '') + '" data-act="imptype" data-v="contacts">Contacts</button></div></div>'
     + '<textarea id="impText" rows="8" style="margin-top:10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px" placeholder="Paste here (Ctrl/⌘+V)…">' + esc(I.text) + '</textarea>'
     + '<div class="row" style="margin-top:8px"><button class="primary" data-act="impread">Read pasted data</button><span class="muted">or</span><label class="btnlike"><input type="file" id="impFile" accept=".csv,.tsv,.txt,text/csv" class="hidden"><span class="button" role="button">Choose Salesforce report CSV…</span></label>' + (I.fileName ? '<span class="small muted">' + esc(I.fileName) + '</span>' : '') + '</div></div>';
@@ -207,7 +207,10 @@ const ACT = {
   importws: () => { UI.menu = false; renderMenu(); $('#fileWs').click(); },
   menu: () => { UI.menu = !UI.menu; renderMenu(); },
   clearall: async () => { UI.menu = false; renderMenu(); if (!confirm('Erase ALL accounts, contacts and files from this browser?\n\nExport a workspace file first if you want a backup.')) return; await Store.clearAll(); WS = blankWs(); UI.biz = null; UI.imp = null; touch(); toast('Everything erased from this browser'); },
-  about: () => { UI.menu = false; renderMenu(); UI.modal = {kind: 'preview', html: '<div class="mh"><h3>About Account Mapper</h3><button data-act="close">✕</button></div><div class="mb"><p><b>🔒 Your data stays in this browser. Nothing is uploaded.</b></p><p>The page has a strict Content-Security-Policy that blocks all network requests from the app (no analytics, no fonts, no CDNs). Accounts, contacts and files are saved in this browser\'s storage on this device only. Clearing site data erases them, so export a workspace file as a backup.</p><p>To hand a business to another rep, use <b>Export workspace</b> and send the .json file through an approved, internal channel. They use <b>Open workspace file</b>.</p><p class="small muted">Version ' + APP_VERSION + ' · storage: ' + (Store.mode === 'idb' ? 'IndexedDB' : 'localStorage (limited)') + '</p></div>'}; renderModal(); },
+  sfconnect: () => SF.connect(),
+  sfdisconnect: () => SF.disconnect(),
+  sfpull: async el => { if (SF.busy) return; SF.busy = true; el.disabled = true; el.textContent = 'Pulling…'; try { SF.status = await SF.pullBusiness($('#sfRef').value); } catch (e) { SF.status = 'Could not pull from Salesforce: ' + e.message; } SF.busy = false; render(); },
+  about: () => { UI.menu = false; renderMenu(); UI.modal = {kind: 'preview', html: '<div class="mh"><h3>About Account Mapper</h3><button data-act="close">✕</button></div><div class="mb"><p><b>🔒 Your data stays in this browser. Nothing is uploaded.</b></p><p>The page has a strict Content-Security-Policy that blocks all network requests from the app (no analytics, no fonts, no CDNs). Accounts, contacts and files are saved in this browser\'s storage on this device only. Clearing site data erases them, so export a workspace file as a backup.</p><p>Optional Salesforce connection (Paste / import tab): read-only, signs in on Salesforce\'s own page with OAuth + PKCE, and can only talk to Salesforce addresses. It downloads records into this browser; it never writes to Salesforce or sends data anywhere else.</p><p>To hand a business to another rep, use <b>Export workspace</b> and send the .json file through an approved, internal channel. They use <b>Open workspace file</b>.</p><p class="small muted">Version ' + APP_VERSION + ' · storage: ' + (Store.mode === 'idb' ? 'IndexedDB' : 'localStorage (limited)') + '</p></div>'}; renderModal(); },
 };
 function backOrClose(){ const back = UI.backTo; UI.backTo = null; if (back && acc(back)) openModal('acct', back); else { UI.modal = null; renderModal(); } }
 function renderMenu(){ $('#menuPop').classList.toggle('hidden', !UI.menu); }
@@ -227,6 +230,7 @@ let bgTimer = null;
 document.addEventListener('input', ev => {
   const t = ev.target;
   if (t.id === 'q' || t.id === 'q2'){ UI.q = t.value; const id = t.id, pos = t.selectionStart; render(); const n = $('#' + id); if (n){ n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} } return; }
+  if (t.dataset.sf){ const c = SF.cfg(); c[t.dataset.sf] = t.dataset.sf === 'instanceUrl' ? SF.cleanUrl(t.value) : t.value.trim(); SF.saveCfg(c); const b = $('[data-act=sfconnect]'); if (b) b.disabled = !c.clientId; return; }
   if (t.id === 'impText' && UI.imp){ UI.imp.text = t.value; return; }
   if (t.dataset.f && UI.modal && UI.modal.kind === 'acct'){ const a = acc(UI.modal.id); a[t.dataset.f] = t.value; a.updated = Date.now(); if (t.dataset.f === 'name') $('.mh h3').textContent = t.value || '(unnamed)'; touch(false); clearTimeout(bgTimer); bgTimer = setTimeout(render, 300); }
   if (t.dataset.cf && UI.modal && UI.modal.kind === 'contact'){ const c = con(UI.modal.id); c[t.dataset.cf] = t.value; touch(false); clearTimeout(bgTimer); bgTimer = setTimeout(render, 300); }
@@ -250,6 +254,7 @@ document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && UI.modal
 async function boot(){
   await Store.open();
   try { WS = migrate(await Store.getWs()); } catch (e) { WS = blankWs(); }
+  try { await SF.handleRedirect(); } catch (e) { console.warn(e); }
   if (Store.mode !== 'idb') $('#storeWarn').classList.remove('hidden');
   setSave(WS.accounts.length ? 'Saved in this browser ✓' : 'Nothing saved yet');
   render();
