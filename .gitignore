@@ -1,0 +1,5 @@
+test-out/
+test-data/
+shots/
+tools/e2e.py
+__pycache__/

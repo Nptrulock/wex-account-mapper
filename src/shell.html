@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1e3a5f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Account Mapper">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Account Mapper — local, private</title>
+<style>/*__CSS__*/</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo">AM</div><h1>Account Mapper</h1>
+  <span class="lock" title="All data is stored only in this browser">🔒 Local only</span>
+  <span class="save" id="saveState"></span>
+  <span class="spacer"></span>
+  <button data-act="exportws" title="Save everything to a .json file">⬇ Export workspace</button>
+  <button data-act="importws" title="Open a workspace .json file">⬆ Open workspace file</button>
+  <div class="menu"><button data-act="menu" aria-label="More">☰</button>
+    <div class="menu-pop hidden" id="menuPop">
+      <button data-act="loadsample">Load sample (fictional demo data)</button>
+      <button data-act="about">About & privacy</button>
+      <button data-act="clearall" style="color:#b91c1c">Erase everything in this browser…</button>
+    </div></div>
+</header>
+<div class="privacy" id="privacyNote">🔒 <b>Your data stays in this browser. Nothing is uploaded.</b> <span>Share a business with another rep by exporting the workspace file.</span></div>
+<div class="warnbar hidden" id="storeWarn" style="margin:8px 16px 0">This browser blocked full local storage, so uploaded files are kept only until you close the tab. Export your workspace before leaving.</div>
+<div class="layout"><aside id="side"></aside><main><div class="mobile-biz" id="mobileBiz"></div><div id="main"></div></main></div>
+<div id="modal" class="modal hidden"><div class="modal-card" id="modalCard"></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="fileWs" accept=".json,application/json" class="hidden">
+<script>
+/*__JS__*/
+</script>
+</body>
+</html>

@@ -1,0 +1,1287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1e3a5f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Account Mapper">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Account Mapper — local, private</title>
+<style>:root{
+  --bg:#f4f6f8;--panel:#fff;--ink:#1f2937;--muted:#6b7280;--line:#cbd5e1;--border:#e2e8f0;
+  --brand:#1e3a5f;--brand2:#2f5d8a;--accent:#c2410c;
+  --st-app:#d97706;--st-app-bg:#fef3c7;--st-impl:#2563eb;--st-impl-bg:#dbeafe;--st-mc:#059669;--st-mc-bg:#d1fae5;
+  --own:#7c3aed;--own-bg:#ede9fe;--up:#475569;--up-bg:#f1f5f9;
+  --radius:10px;--shadow:0 1px 2px rgba(15,23,42,.06),0 2px 8px rgba(15,23,42,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--bg);-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--border);background:#fff;border-radius:8px;padding:7px 12px;min-height:34px}
+button:hover{background:#f8fafc;border-color:#cbd5e1}
+button.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+button.primary:hover{background:var(--brand2)}
+button.ghost{background:transparent;border-color:transparent}
+button.small{padding:3px 8px;min-height:26px;font-size:12px}
+button.danger{color:#b91c1c;border-color:#fecaca}
+button.cp{padding:2px 6px;min-height:26px;font-size:12px;color:var(--muted);background:#fff}
+button.cp:hover{color:var(--brand)}
+input[type=text],input[type=email],input[type=tel],input[type=search],input:not([type]),select,textarea{border:1px solid var(--border);border-radius:8px;padding:7px 9px;background:#fff;min-height:34px;width:100%}
+textarea{min-height:70px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid #93c5fd;outline-offset:0;border-color:#93c5fd}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+
+/* header */
+.top{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--brand);color:#fff;position:sticky;top:0;z-index:20;flex-wrap:wrap}
+.top h1{font-size:17px;margin:0;font-weight:650;letter-spacing:.2px}
+.top .logo{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f59e0b,#c2410c);display:grid;place-items:center;font-weight:800;color:#fff;font-size:14px}
+.top .lock{font-size:12px;background:rgba(255,255,255,.14);padding:3px 9px;border-radius:999px}
+.top .save{font-size:12px;opacity:.85}
+.top button{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.25)}
+.top button:hover{background:rgba(255,255,255,.2)}
+.menu{position:relative}
+.menu-pop{position:absolute;right:0;top:40px;background:#fff;color:var(--ink);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);min-width:230px;padding:6px;z-index:30}
+.menu-pop button{display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--ink)}
+.menu-pop button:hover{background:#f1f5f9}
+
+.layout{display:grid;grid-template-columns:270px 1fr;min-height:calc(100vh - 52px)}
+aside{border-right:1px solid var(--border);background:#fff;padding:12px;overflow:auto;max-height:calc(100vh - 52px);position:sticky;top:52px}
+main{padding:16px 20px 60px;min-width:0}
+.side-h{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 4px 6px;font-weight:650}
+.biz{display:block;width:100%;text-align:left;border:1px solid transparent;border-radius:9px;padding:8px 10px;margin-bottom:4px;background:transparent}
+.biz:hover{background:#f8fafc}
+.biz.sel{background:#eff6ff;border-color:#bfdbfe}
+.biz .bn{font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.biz .bm{font-size:12px;color:var(--muted)}
+.stagebar{display:flex;height:6px;border-radius:4px;overflow:hidden;background:#e5e7eb;margin-top:5px}
+.stagebar i{display:block;height:100%}
+.stagebar .s-app{background:var(--st-app)}.stagebar .s-impl{background:var(--st-impl)}.stagebar .s-mc{background:var(--st-mc)}
+.mobile-biz{display:none}
+
+/* business header */
+.bizhead{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);margin-bottom:12px}
+.bizhead h2{margin:0 0 4px;font-size:20px}
+.overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:10px}
+.stat{border:1px solid var(--border);border-radius:9px;padding:9px 11px;background:#fbfcfd}
+.stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stat .v{font-size:19px;font-weight:700;margin-top:2px}
+.stat .d{font-size:12px;color:var(--muted)}
+.pipeline{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.pipe{flex:1;min-width:150px;border-radius:9px;padding:8px 10px;border:1px solid}
+.pipe .n{font-size:20px;font-weight:700}
+.pipe.st-app{background:var(--st-app-bg);border-color:#fcd34d;color:#78350f}
+.pipe.st-impl{background:var(--st-impl-bg);border-color:#93c5fd;color:#1e3a8a}
+.pipe.st-mc{background:var(--st-mc-bg);border-color:#6ee7b7;color:#064e3b}
+
+/* tabs/toolbar */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin:6px 0 12px;overflow-x:auto}
+.tab{border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;padding:9px 12px;color:var(--muted);font-weight:600;white-space:nowrap}
+.tab.on{color:var(--brand);border-bottom-color:var(--brand)}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.toolbar input[type=search]{max-width:280px}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;background:#fff}
+.seg button{border:0;border-radius:0;border-right:1px solid var(--border);background:#fff;font-size:13px}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--brand);color:#fff}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:650;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.badge.st-app{background:var(--st-app-bg);color:#92400e}
+.badge.st-impl{background:var(--st-impl-bg);color:#1e40af}
+.badge.st-mc{background:var(--st-mc-bg);color:#065f46}
+.badge.lvl-parent{background:#e0e7ff;color:#3730a3}
+.badge.lvl-child{background:#fce7f3;color:#9d174d}
+.badge.lvl-inh{background:#f1f5f9;color:#475569;border:1px dashed #94a3b8}
+.badge.own{background:var(--own-bg);color:var(--own)}
+.badge.up{background:var(--up-bg);color:var(--up)}
+.badge.sample{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+.steps{display:inline-flex;gap:3px;vertical-align:middle}
+.steps i{width:16px;height:5px;border-radius:3px;background:#e5e7eb;display:block}
+.st-app .steps i.on{background:var(--st-app)}.st-impl .steps i.on{background:var(--st-impl)}.st-mc .steps i.on{background:var(--st-mc)}
+
+/* org chart */
+.chartwrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:auto;box-shadow:var(--shadow);-webkit-overflow-scrolling:touch}
+.tree{display:inline-block;min-width:100%;padding:18px 10px 26px;text-align:center}
+.tree ul{display:flex;justify-content:center;margin:0;padding:22px 0 0;position:relative}
+.tree li{list-style:none;position:relative;padding:22px 7px 0;display:flex;flex-direction:column;align-items:center}
+.tree li::before,.tree li::after{content:'';position:absolute;top:0;right:50%;border-top:2px solid var(--line);width:50%;height:22px}
+.tree li::after{right:auto;left:50%;border-left:2px solid var(--line)}
+.tree li:only-child::before,.tree li:only-child::after{display:none}
+.tree li:only-child{padding-top:0}
+.tree li:first-child::before,.tree li:last-child::after{border:0 none}
+.tree li:last-child::before{border-right:2px solid var(--line);border-radius:0 7px 0 0}
+.tree li:first-child::after{border-radius:7px 0 0 0}
+.tree ul ul::before{content:'';position:absolute;top:0;left:50%;border-left:2px solid var(--line);height:22px}
+.tree>ul{padding-top:0}
+.node{width:232px;text-align:left;background:#fff;border:1px solid var(--border);border-top:5px solid #94a3b8;border-radius:10px;padding:9px 10px;box-shadow:var(--shadow);cursor:pointer;position:relative}
+.node:hover{box-shadow:0 0 0 2px #bfdbfe,var(--shadow)}
+.node.st-app{border-top-color:var(--st-app)}.node.st-impl{border-top-color:var(--st-impl)}.node.st-mc{border-top-color:var(--st-mc)}
+.node.root{width:260px;border-width:2px;border-top-width:6px}
+.node.dim{opacity:.35}
+.node.hit{box-shadow:0 0 0 3px #fde047,var(--shadow)}
+.node-top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.node-name{font-weight:650;margin:6px 0 2px;line-height:1.25;word-break:break-word}
+.node-meta{font-size:11.5px;color:var(--muted);word-break:break-all}
+.node-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.chip{font-size:11px;background:#f1f5f9;color:#334155;border-radius:6px;padding:2px 6px;white-space:nowrap}
+.chip.own{background:var(--own-bg);color:var(--own);font-weight:600}
+.chip.up{background:var(--up-bg);color:var(--up)}
+.chip.link{background:#ecfeff;color:#155e75;border:1px dashed #67e8f9}
+.node-actions{display:flex;gap:4px;margin-top:8px}
+.node-actions button{flex:1}
+.lvl-tag{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
+/* outline */
+.outline{padding:12px 14px}
+.outline ul{list-style:none;margin:0;padding-left:26px;position:relative}
+.outline>ul{padding-left:0}
+.outline li{position:relative;padding:5px 0}
+.outline ul ul li::before{content:'';position:absolute;left:-16px;top:0;bottom:50%;width:14px;border-left:2px solid var(--line);border-bottom:2px solid var(--line);border-bottom-left-radius:6px}
+.outline ul ul li:not(:last-child)::after{content:'';position:absolute;left:-16px;top:50%;bottom:0;border-left:2px solid var(--line)}
+.outline .node{width:auto;max-width:720px;display:grid;grid-template-columns:1fr auto;gap:4px 10px}
+.outline .node .node-actions{grid-column:2;grid-row:1/span 3;flex-direction:column;margin:0}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:8px 2px}
+.legend span{display:inline-flex;gap:5px;align-items:center}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+/* tables */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:12px}
+.card h3{margin:0 0 10px;font-size:15px}
+.tblwrap{overflow:auto;border:1px solid var(--border);border-radius:var(--radius);background:#fff;-webkit-overflow-scrolling:touch}
+table.t{border-collapse:collapse;width:100%;font-size:13px}
+table.t th{position:sticky;top:0;background:#f8fafc;text-align:left;font-weight:650;color:#334155;border-bottom:1px solid var(--border);padding:8px;white-space:nowrap;z-index:1}
+table.t td{border-bottom:1px solid #f1f5f9;padding:7px 8px;vertical-align:top}
+table.t tr:hover td{background:#fafcff}
+td.cc{cursor:copy}
+td.cc:hover{background:#eff6ff!important}
+.indent{display:inline-block}
+.matrix td.c{text-align:center;font-size:15px}
+.dot-direct{color:#3730a3}.dot-inh{color:#94a3b8}.dot-child{color:#9d174d}
+
+/* contacts */
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.contact{border:1px solid var(--border);border-radius:10px;padding:10px;background:#fff;border-left:5px solid #a5b4fc}
+.contact.lvl-child{border-left-color:#f9a8d4}
+.contact.inh{border-left-style:dashed;background:#fbfcfd}
+.contact .cn{font-weight:650}
+.contact .cl{font-size:12.5px;color:#334155;display:flex;align-items:center;gap:4px;justify-content:space-between}
+.group-h{display:flex;align-items:center;gap:8px;margin:14px 0 8px;font-weight:650}
+
+/* billing */
+.rollup{border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#fff;border-left:5px solid var(--own)}
+.rollup .rl{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:50;display:flex;justify-content:flex-end}
+.modal-card{background:#fff;width:min(640px,100%);height:100%;overflow:auto;padding:0 0 40px;box-shadow:-10px 0 30px rgba(0,0,0,.15);-webkit-overflow-scrolling:touch}
+.modal.center{justify-content:center;align-items:center}
+.modal.center .modal-card{height:auto;max-height:90vh;border-radius:12px;width:min(900px,96vw)}
+.mh{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;gap:8px;align-items:center;z-index:2}
+.mh h3{margin:0;font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mb{padding:12px 16px}
+.sec{border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px}
+.sec>h4{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#475569;display:flex;align-items:center;gap:8px}
+.f{display:grid;grid-template-columns:150px 1fr auto;gap:6px;align-items:center;margin-bottom:6px}
+.f label{font-size:12.5px;color:#475569}
+.stepper{display:flex;gap:0;margin:4px 0}
+.stepper button{flex:1;border-radius:0;border-right-width:0;font-size:12.5px;padding:8px 6px}
+.stepper button:first-child{border-radius:8px 0 0 8px}
+.stepper button:last-child{border-radius:0 8px 8px 0;border-right-width:1px}
+.stepper button.on.st-app,.stepper button.done.st-app{background:var(--st-app);color:#fff;border-color:var(--st-app)}
+.stepper button.on.st-impl,.stepper button.done.st-impl{background:var(--st-impl);color:#fff;border-color:var(--st-impl)}
+.stepper button.on.st-mc{background:var(--st-mc);color:#fff;border-color:var(--st-mc)}
+.stepper button.done{opacity:.55}
+.radio-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.radio-cards label{border:1px solid var(--border);border-radius:9px;padding:9px;cursor:pointer;display:flex;gap:8px;align-items:flex-start}
+.radio-cards label.on{border-color:var(--brand2);background:#eff6ff}
+.filelist .fi{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9}
+.filelist .fi .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.checklist{max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:6px}
+.checklist label{display:flex;gap:8px;padding:4px;align-items:center}
+
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#111827;color:#fff;padding:9px 14px;border-radius:9px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:80;max-width:90vw}
+#toast.show{opacity:1}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty h2{color:var(--ink)}
+.warnbar{background:#fef3c7;border:1px solid #fcd34d;color:#78350f;padding:8px 12px;border-radius:9px;margin-bottom:10px;font-size:13px}
+.okbar{background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46;padding:8px 12px;border-radius:9px;margin-bottom:10px;font-size:13px}
+.maptbl select{min-width:190px}
+.kbd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px}
+pre.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:8px;white-space:pre-wrap;max-height:200px;overflow:auto}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  aside{display:none}
+  .mobile-biz{display:flex;gap:8px;margin-bottom:10px}
+  main{padding:12px}
+  .f{grid-template-columns:1fr auto}
+  .f label{grid-column:1/-1}
+  .radio-cards{grid-template-columns:1fr}
+}
+@media print{.top,aside,.tabs,.toolbar,.node-actions{display:none!important}.layout{display:block}}
+.btnlike{display:inline-block}
+.btnlike .button{display:inline-flex;align-items:center;cursor:pointer;border:1px solid var(--border);background:#fff;border-radius:8px;padding:7px 12px;min-height:34px}
+.btnlike .button:hover{background:#f8fafc}
+.privacy{background:#ecfdf5;color:#065f46;border-bottom:1px solid #a7f3d0;padding:6px 16px;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo">AM</div><h1>Account Mapper</h1>
+  <span class="lock" title="All data is stored only in this browser">🔒 Local only</span>
+  <span class="save" id="saveState"></span>
+  <span class="spacer"></span>
+  <button data-act="exportws" title="Save everything to a .json file">⬇ Export workspace</button>
+  <button data-act="importws" title="Open a workspace .json file">⬆ Open workspace file</button>
+  <div class="menu"><button data-act="menu" aria-label="More">☰</button>
+    <div class="menu-pop hidden" id="menuPop">
+      <button data-act="loadsample">Load sample (fictional demo data)</button>
+      <button data-act="about">About & privacy</button>
+      <button data-act="clearall" style="color:#b91c1c">Erase everything in this browser…</button>
+    </div></div>
+</header>
+<div class="privacy" id="privacyNote">🔒 <b>Your data stays in this browser. Nothing is uploaded.</b> <span>Share a business with another rep by exporting the workspace file.</span></div>
+<div class="warnbar hidden" id="storeWarn" style="margin:8px 16px 0">This browser blocked full local storage, so uploaded files are kept only until you close the tab. Export your workspace before leaving.</div>
+<div class="layout"><aside id="side"></aside><main><div class="mobile-biz" id="mobileBiz"></div><div id="main"></div></main></div>
+<div id="modal" class="modal hidden"><div class="modal-card" id="modalCard"></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="fileWs" accept=".json,application/json" class="hidden">
+<script>
+'use strict';
+/* =====================================================================
+   Account Mapper — local-only, single-file app.
+   NO network access: the page's Content-Security-Policy sets
+   connect-src 'none' and default-src 'none'. All data lives in this
+   browser (IndexedDB, with localStorage fallback) and in files you export.
+   ===================================================================== */
+const APP_VERSION = '1.0.0';
+const WS_FORMAT = 'account-mapper-workspace';
+
+const STAGES = [
+  {id:'app',  label:'Application Follow-up', short:'App Follow-up', n:1},
+  {id:'impl', label:'Implementation Call',   short:'Impl. Call',   n:2},
+  {id:'mc',   label:'Monitor & Control',     short:'Monitor & Control', n:3},
+];
+const STAGE = Object.fromEntries(STAGES.map(s=>[s.id,s]));
+
+const ACCOUNT_FIELDS = [
+  {k:'name',        label:'Business Name'},
+  {k:'sfId',        label:'Salesforce Account ID'},
+  {k:'caseNo',      label:'Case #'},
+  {k:'oppName',     label:'Opportunity Name'},
+  {k:'oppNo',       label:'Opportunity #'},
+  {k:'oppId',       label:'Opportunity ID'},
+  {k:'repName',     label:'Rep Name'},
+  {k:'repEmail',    label:'Rep Email'},
+  {k:'repPhone',    label:'Rep Phone'},
+  {k:'stage',       label:'Stage'},
+  {k:'billMode',    label:'Billing Mode'},
+  {k:'creditLimit', label:'Credit Line Limit'},
+  {k:'billCycle',   label:'Billing Cycle'},
+  {k:'terms',       label:'Payment Terms'},
+  {k:'billContact', label:'Billing Contact'},
+  {k:'notes',       label:'Notes'},
+];
+const CONTACT_FIELDS = [
+  {k:'name',  label:'Name'},
+  {k:'title', label:'Title'},
+  {k:'email', label:'Email'},
+  {k:'phone', label:'Phone'},
+  {k:'role',  label:'Role'},
+];
+const BILL_CYCLES = ['','Weekly','Bi-weekly','Semi-monthly','Monthly','Daily'];
+
+/* ---------- small utils ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const norm = s => String(s ?? '').trim().toLowerCase().replace(/[\s_\-]+/g, ' ').replace(/[^a-z0-9#& ]/g, '').trim();
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const safeFile = s => String(s || 'file').replace(/^sample:\s*/i, 'Sample ').replace(/[^\w.\- ]+/g, '').trim().replace(/\s+/g, '_').slice(0, 60) || 'file';
+function parseMoney(v){ if (v == null || v === '') return null; const n = Number(String(v).replace(/[$,\s]/g, '')); return isFinite(n) ? n : null; }
+function fmtMoney(v){ const n = parseMoney(v); if (n == null) return ''; return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 2}); }
+function fmtBytes(n){ if (n < 1024) return n + ' B'; if (n < 1048576) return (n/1024).toFixed(1) + ' KB'; return (n/1048576).toFixed(1) + ' MB'; }
+function parseStage(v){
+  const s = norm(v); if (!s) return null;
+  if (/monitor|control|m&c|^mc$|live|complete/.test(s)) return 'mc';
+  if (/impl/.test(s)) return 'impl';
+  if (/app|follow|new|pending|prospect/.test(s)) return 'app';
+  return null;
+}
+function parseBillMode(v){
+  const s = norm(v); if (!s) return null;
+  if (/own|child|self|individual|separate|location/.test(s)) return 'own';
+  if (/parent|roll|master|corporate|hq/.test(s)) return 'parent';
+  return null;
+}
+function ab2b64(buf){ const b = new Uint8Array(buf); let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); }
+function b642ab(b64){ const s = atob(b64); const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b.buffer; }
+
+/* ---------- CSV ---------- */
+function detectDelim(text){
+  const line = text.split(/\r?\n/).find(l => l.trim()) || '';
+  let inQ = false; const c = {',':0,'\t':0,';':0,'|':0};
+  for (const ch of line){ if (ch === '"') inQ = !inQ; else if (!inQ && ch in c) c[ch]++; }
+  if (c['\t'] > 0) return '\t';
+  let best = ',', bn = 0; for (const k in c) if (c[k] > bn){ bn = c[k]; best = k; }
+  return best;
+}
+function parseCSV(text, delim){
+  text = String(text || '').replace(/^\uFEFF/, '');
+  delim = delim || detectDelim(text);
+  const rows = []; let row = [], f = '', i = 0, q = false; const n = text.length;
+  while (i < n){
+    const ch = text[i];
+    if (q){
+      if (ch === '"'){ if (text[i+1] === '"'){ f += '"'; i += 2; continue; } q = false; i++; continue; }
+      f += ch; i++; continue;
+    }
+    if (ch === '"' && f === ''){ q = true; i++; continue; }
+    if (ch === delim){ row.push(f); f = ''; i++; continue; }
+    if (ch === '\r'){ i++; continue; }
+    if (ch === '\n'){ row.push(f); rows.push(row); row = []; f = ''; i++; continue; }
+    f += ch; i++;
+  }
+  if (f !== '' || row.length){ row.push(f); rows.push(row); }
+  return rows.filter(r => r.some(c => String(c).trim() !== ''));
+}
+function csvCell(v){ const s = String(v ?? ''); return /[",\r\n]/.test(s) || /^\s|\s$/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function toCSV(rows){ return rows.map(r => r.map(csvCell).join(',')).join('\r\n'); }
+function tsvCell(v){ return String(v ?? '').replace(/[\t\r\n]+/g, ' '); }
+function toTSV(rows){ return rows.map(r => r.map(tsvCell).join('\t')).join('\n'); }
+/* Salesforce report exports add footer lines (totals, "Generated By", copyright). Drop them. */
+function cleanReportRows(rows){
+  if (!rows.length) return rows;
+  const w = rows[0].length;
+  let out = rows.slice();
+  while (out.length > 1){
+    const r = out[out.length - 1]; const filled = r.filter(c => String(c).trim()).length;
+    const txt = r.join(' ');
+    if (/copyright|salesforce\.com|confidential information|generated by|^\s*total\b|grand total/i.test(txt) || (w > 2 && filled <= 1)) out.pop(); else break;
+  }
+  return out;
+}
+
+/* ---------- ZIP (store, no compression) ---------- */
+const CRC_TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8){ let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+const enc = new TextEncoder();
+function makeZip(files){
+  const d = new Date();
+  const dosTime = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const dosDate = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  const parts = [], central = []; let offset = 0;
+  for (const f of files){
+    const name = enc.encode(f.name);
+    const data = typeof f.data === 'string' ? enc.encode(f.data) : new Uint8Array(f.data);
+    const crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), name, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+    ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true);
+    ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true);
+    ch.setUint16(30, 0, true); ch.setUint16(32, 0, true); ch.setUint16(34, 0, true); ch.setUint16(36, 0, true); ch.setUint32(38, 0, true); ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), name);
+    offset += 30 + name.length + data.length;
+  }
+  const cdSize = central.reduce((a, b) => a + b.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], {type: 'application/zip'});
+}
+
+/* ---------- XLSX writer (hand-written SpreadsheetML in a zip) ---------- */
+const XML_BAD = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g;
+const xesc = s => String(s ?? '').replace(XML_BAD, '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function colName(i){ let s = ''; i++; while (i > 0){ const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+const NUM_RE = /^-?(0|[1-9]\d{0,14})(\.\d+)?$/;   // leading-zero values (IDs, ZIPs, card #s) stay text
+function sheetName(raw, used){
+  let s = String(raw || 'Sheet').replace(/[\[\]:*?\/\\]/g, ' ').replace(/\s+/g, ' ').trim().replace(/^'+|'+$/g, '');
+  if (!s || /^history$/i.test(s)) s = 'Sheet';
+  s = s.slice(0, 31).trim();
+  let name = s, n = 2;
+  while (used.has(name.toLowerCase())){ const suf = ' (' + n++ + ')'; name = s.slice(0, 31 - suf.length).trim() + suf; }
+  used.add(name.toLowerCase());
+  return name;
+}
+/* sheets: [{name, rows:[[cell]], header:rowIndex|-1, widths?:[n]}]; cell = value or {v, s, t:'n'|'s'} ; styles: 1=header 2=title 3=currency 4=bold */
+function buildXlsx(sheets){
+  const used = new Set();
+  sheets.forEach(s => s.finalName = sheetName(s.name, used));
+  const files = [];
+  const ct = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">',
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>',
+    '<Default Extension="xml" ContentType="application/xml"/>',
+    '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>',
+    '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>',
+    '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>',
+    '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>'];
+  sheets.forEach((s, i) => ct.push('<Override PartName="/xl/worksheets/sheet' + (i+1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'));
+  ct.push('</Types>');
+  files.push({name:'[Content_Types].xml', data: ct.join('')});
+  files.push({name:'_rels/.rels', data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>'});
+  const iso = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+  files.push({name:'docProps/core.xml', data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:creator>Account Mapper (local)</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">' + iso + '</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">' + iso + '</dcterms:modified></cp:coreProperties>'});
+  files.push({name:'docProps/app.xml', data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>Account Mapper</Application></Properties>'});
+  const wb = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets>'];
+  sheets.forEach((s, i) => wb.push('<sheet name="' + xesc(s.finalName) + '" sheetId="' + (i+1) + '" r:id="rId' + (i+1) + '"/>'));
+  wb.push('</sheets></workbook>');
+  files.push({name:'xl/workbook.xml', data: wb.join('')});
+  const rels = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'];
+  sheets.forEach((s, i) => rels.push('<Relationship Id="rId' + (i+1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i+1) + '.xml"/>'));
+  rels.push('<Relationship Id="rId' + (sheets.length+1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
+  files.push({name:'xl/_rels/workbook.xml.rels', data: rels.join('')});
+  files.push({name:'xl/styles.xml', data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="&quot;$&quot;#,##0.00"/></numFmts><fonts count="3"><font><sz val="11"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="11"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="14"/><name val="Calibri"/><family val="2"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDCE3EC"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'});
+  sheets.forEach((s, i) => {
+    const rows = s.rows || [];
+    const ncol = Math.max(1, ...rows.map(r => r.length));
+    const widths = [];
+    const out = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'];
+    const hdr = s.header ?? 0;
+    if (hdr >= 0 && rows.length > hdr + 1) out.push('<sheetViews><sheetView workbookViewId="0"><pane ySplit="' + (hdr+1) + '" topLeftCell="A' + (hdr+2) + '" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>');
+    else out.push('<sheetViews><sheetView workbookViewId="0"/></sheetViews>');
+    out.push('<sheetFormatPr defaultRowHeight="15"/>');
+    const body = [];
+    rows.forEach((r, ri) => {
+      const cells = [];
+      r.forEach((cell, ci) => {
+        let v = cell, st = 0, t = null;
+        if (cell && typeof cell === 'object'){ v = cell.v; st = cell.s || 0; t = cell.t || null; }
+        if (ri === hdr && !st) st = 1;
+        if (v == null || v === ''){ if (st) cells.push('<c r="' + colName(ci) + (ri+1) + '" s="' + st + '"/>'); return; }
+        const sv = String(v);
+        widths[ci] = Math.max(widths[ci] || 0, Math.min(60, sv.length + 2));
+        const ref = colName(ci) + (ri+1);
+        const isNum = t === 'n' || (t !== 's' && (typeof v === 'number' || (ri !== hdr && NUM_RE.test(sv.trim()))));
+        if (isNum && isFinite(Number(sv))) cells.push('<c r="' + ref + '"' + (st ? ' s="' + st + '"' : '') + '><v>' + Number(sv) + '</v></c>');
+        else cells.push('<c r="' + ref + '" t="inlineStr"' + (st ? ' s="' + st + '"' : '') + '><is><t xml:space="preserve">' + xesc(sv.slice(0, 32767)) + '</t></is></c>');
+      });
+      body.push('<row r="' + (ri+1) + '">' + cells.join('') + '</row>');
+    });
+    const w = s.widths || widths;
+    const cols = [];
+    for (let c = 0; c < ncol; c++) cols.push('<col min="' + (c+1) + '" max="' + (c+1) + '" width="' + Math.max(8, Math.min(60, w[c] || 10)) + '" customWidth="1"/>');
+    out.push('<cols>' + cols.join('') + '</cols>');
+    out.push('<sheetData>' + body.join('') + '</sheetData>');
+    if (hdr >= 0 && rows.length > hdr + 1 && s.filter !== false) out.push('<autoFilter ref="A' + (hdr+1) + ':' + colName(ncol-1) + rows.length + '"/>');
+    out.push('</worksheet>');
+    files.push({name:'xl/worksheets/sheet' + (i+1) + '.xml', data: out.join('')});
+  });
+  return makeZip(files.map(f => ({name: f.name, data: f.data})));
+}
+
+/* ---------- Storage (IndexedDB, localStorage fallback) ---------- */
+const Store = {
+  db: null, mode: 'idb', mem: new Map(),
+  async open(){
+    try {
+      if (!window.indexedDB) throw new Error('no idb');
+      this.db = await new Promise((res, rej) => {
+        const r = indexedDB.open('account-mapper', 1);
+        r.onupgradeneeded = () => { const d = r.result; if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv'); if (!d.objectStoreNames.contains('files')) d.createObjectStore('files'); };
+        r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); r.onblocked = () => rej(new Error('blocked'));
+      });
+    } catch (e) { this.mode = 'local'; }
+  },
+  _tx(store, mode, fn){
+    return new Promise((res, rej) => {
+      const t = this.db.transaction(store, mode); const req = fn(t.objectStore(store));
+      t.oncomplete = () => res(req ? req.result : undefined); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error || new Error('aborted'));
+    });
+  },
+  async getWs(){ if (this.mode === 'idb') return this._tx('kv', 'readonly', s => s.get('ws')); try { const t = localStorage.getItem('am_ws'); return t ? JSON.parse(t) : null; } catch(e){ return null; } },
+  async putWs(ws){ if (this.mode === 'idb') return this._tx('kv', 'readwrite', s => s.put(ws, 'ws')); localStorage.setItem('am_ws', JSON.stringify(ws)); },
+  async getFile(id){ if (this.mode === 'idb') return this._tx('files', 'readonly', s => s.get(id)); return this.mem.get(id); },
+  async putFile(id, data){ if (this.mode === 'idb') return this._tx('files', 'readwrite', s => s.put(data, id)); this.mem.set(id, data); },
+  async delFile(id){ if (this.mode === 'idb') return this._tx('files', 'readwrite', s => s.delete(id)); this.mem.delete(id); },
+  async clearAll(){ if (this.mode === 'idb'){ await this._tx('kv', 'readwrite', s => s.clear()); await this._tx('files', 'readwrite', s => s.clear()); } else { localStorage.removeItem('am_ws'); this.mem.clear(); } },
+};
+
+/* ---------- Data-source adapters ----------
+   Every source turns outside data into plain records, then hands them to
+   applyImport(type, records, opts). Built in: 'paste' (clipboard text) and
+   'csv' (Salesforce report export). A future 'salesforce-api' adapter would
+   implement the same shape — see README "Future: direct Salesforce connection". */
+const DataSources = {
+  list: [],
+  register(src){ this.list.push(src); },
+  get(id){ return this.list.find(s => s.id === id); },
+};
+DataSources.register({ id:'paste', label:'Paste from Salesforce', kind:'local', toTable: text => tableFromText(text) });
+DataSources.register({ id:'csv', label:'Salesforce report CSV', kind:'local', toTable: text => { const rows = cleanReportRows(parseCSV(text)); return {headers: rows[0] || [], rows: rows.slice(1)}; } });
+/* Placeholder — intentionally NOT implemented (no credentials, no network):
+DataSources.register({ id:'salesforce-api', label:'Salesforce (connected app)', kind:'remote',
+  async connect(){ OAuth 2.0 auth-code + PKCE via a Wex-approved External Client App },
+  async fetchAccounts(query){ GET /services/data/vXX.X/query?q=SELECT Id, Name, ParentId ... },
+  async fetchContacts(accountIds){ ... }, async pushAccount(acct){ PATCH /sobjects/Account/{Id} } }); */
+
+function tableFromText(text){
+  text = String(text || '').replace(/^\uFEFF/, '');
+  const lines = text.split(/\r?\n/);
+  const first = lines.find(l => l.trim()) || '';
+  const delim = detectDelim(text);
+  const firstCols = parseCSV(first, delim)[0] || [];
+  if (firstCols.length >= 3 || !looksKV(lines)){
+    const rows = cleanReportRows(parseCSV(text, delim));
+    return {headers: rows[0] || [], rows: rows.slice(1)};
+  }
+  // "Label: value" or "Label<TAB>value" blocks; blank line separates records
+  const recs = []; let cur = null; const headers = [];
+  for (const raw of lines){
+    const l = raw.trim();
+    if (!l){ cur = null; continue; }
+    const m = l.match(/^([^:\t]{1,60})(?::\s*|\t+)(.*)$/);
+    if (!m) continue;
+    const k = m[1].trim(), v = m[2].trim();
+    if (!cur){ cur = {}; recs.push(cur); }
+    if (k in cur){ cur = {}; recs.push(cur); }
+    cur[k] = v; if (!headers.includes(k)) headers.push(k);
+  }
+  if (recs.length) return {headers, rows: recs.map(r => headers.map(h => r[h] ?? ''))};
+  const rows = parseCSV(text, delim);
+  return {headers: rows[0] || [], rows: rows.slice(1)};
+}
+function looksKV(lines){ const ne = lines.filter(l => l.trim()); return ne.length >= 2 && ne.filter(l => /^[^:\t]{1,60}(:\s|\t)/.test(l.trim())).length / ne.length > 0.8 && ne.every(l => l.split('\t').length <= 2); }
+
+/* ===================== Model ===================== */
+let WS = null;
+function blankWs(){ return {format: WS_FORMAT, version: 1, created: Date.now(), updated: Date.now(), accounts: [], contacts: [], files: [], mappings: {accounts: {}, contacts: {}, sig: {}}}; }
+function migrate(ws){
+  if (!ws || typeof ws !== 'object') return blankWs();
+  ws.format = WS_FORMAT; ws.version = ws.version || 1;
+  ws.accounts = Array.isArray(ws.accounts) ? ws.accounts : [];
+  ws.contacts = Array.isArray(ws.contacts) ? ws.contacts : [];
+  ws.files = Array.isArray(ws.files) ? ws.files : [];
+  ws.mappings = ws.mappings || {}; ws.mappings.accounts = ws.mappings.accounts || {}; ws.mappings.contacts = ws.mappings.contacts || {}; ws.mappings.sig = ws.mappings.sig || {};
+  for (const a of ws.accounts){ a.linkedIds = Array.isArray(a.linkedIds) ? a.linkedIds : []; if (!STAGE[a.stage]) a.stage = 'app'; if (a.billMode !== 'own') a.billMode = 'parent'; }
+  for (const c of ws.contacts){ c.accountIds = Array.isArray(c.accountIds) ? c.accountIds : []; if (c.level !== 'child') c.level = 'parent'; }
+  return ws;
+}
+function newAccount(o = {}){
+  const a = {id: uid('acc'), parentId: null, name: '', sfId: '', caseNo: '', oppName: '', oppNo: '', oppId: '', repName: '', repEmail: '', repPhone: '', stage: 'app', billMode: 'parent', creditLimit: '', billCycle: '', terms: '', billContact: '', notes: '', linkedIds: [], created: Date.now(), updated: Date.now(), ...o};
+  if (!a.parentId) a.billMode = 'own';
+  WS.accounts.push(a); return a;
+}
+function newContact(o = {}){ const c = {id: uid('con'), name: '', title: '', email: '', phone: '', role: '', level: 'parent', accountIds: [], created: Date.now(), ...o}; WS.contacts.push(c); return c; }
+const acc = id => WS.accounts.find(a => a.id === id);
+const con = id => WS.contacts.find(c => c.id === id);
+const byName = (a, b) => (a.name || '').localeCompare(b.name || '', undefined, {numeric: true, sensitivity: 'base'});
+const kids = id => WS.accounts.filter(a => a.parentId === id).sort(byName);
+const roots = () => WS.accounts.filter(a => !a.parentId || !acc(a.parentId)).sort(byName);
+const isRoot = a => !a.parentId || !acc(a.parentId);
+function ancestors(a){ const out = []; let x = a, g = 0; while (x && x.parentId && acc(x.parentId) && g++ < 200){ x = acc(x.parentId); out.push(x); } return out; }
+function rootOf(a){ const an = ancestors(a); return an.length ? an[an.length - 1] : a; }
+function tree(id, depth = 0, out = []){ const a = acc(id); if (!a) return out; out.push({a, depth}); for (const k of kids(id)) tree(k.id, depth + 1, out); return out; }
+const subtreeIds = id => new Set(tree(id).map(x => x.a.id));
+const effMode = a => isRoot(a) ? 'own' : (a.billMode === 'own' ? 'own' : 'parent');
+function creditHolder(a){ let x = a, g = 0; while (effMode(x) === 'parent' && g++ < 200) x = acc(x.parentId); return x; }
+function contactsOf(a){
+  const direct = WS.contacts.filter(c => c.accountIds.includes(a.id));
+  const anc = ancestors(a);
+  const inherited = [];
+  for (const p of anc) for (const c of WS.contacts) if (c.level === 'parent' && c.accountIds.includes(p.id) && !direct.includes(c) && !inherited.some(x => x.c === c)) inherited.push({c, from: p});
+  return {direct, inherited};
+}
+function appliesTo(c){ const set = new Set(); for (const id of c.accountIds){ if (!acc(id)) continue; if (c.level === 'parent') tree(id).forEach(x => set.add(x.a.id)); else set.add(id); } return [...set].map(acc).filter(Boolean); }
+const filesOf = id => WS.files.filter(f => f.accountId === id);
+const stageLabel = s => (STAGE[s] || STAGE.app).label;
+const modeLabel = a => isRoot(a) ? 'Parent credit line' : (effMode(a) === 'own' ? 'Billed at child (own credit line)' : 'Billed at parent (rolls up)');
+function shortName(a, root){
+  let n = a.name || '(unnamed)';
+  if (root && a !== root && root.name){ const rn = root.name; if (n.toLowerCase().startsWith(rn.toLowerCase())) n = n.slice(rn.length).replace(/^[\s\-–—:|,]+/, '') || n; }
+  return n.replace(/^sample:\s*/i, '');
+}
+function bizStats(root){
+  const t = tree(root.id); const counts = {app: 0, impl: 0, mc: 0}; let exposure = 0, own = 0, up = 0, missing = 0;
+  for (const {a} of t){ counts[a.stage] = (counts[a.stage] || 0) + 1; if (effMode(a) === 'own'){ own++; const m = parseMoney(a.creditLimit); if (m == null) missing++; else exposure += m; } else up++; }
+  const ids = new Set(t.map(x => x.a.id));
+  const cons = WS.contacts.filter(c => c.accountIds.some(id => ids.has(id)));
+  const files = WS.files.filter(f => ids.has(f.accountId));
+  const pct = t.length ? Math.round(t.reduce((s, x) => s + (STAGE[x.a.stage].n - 1), 0) / (t.length * 2) * 100) : 0;
+  return {n: t.length, counts, exposure, own, up, missing, pct, parentContacts: cons.filter(c => c.level === 'parent').length, childContacts: cons.filter(c => c.level === 'child').length, files: files.length, csv: files.filter(f => f.kind === 'csv').length};
+}
+
+/* ---- copy text builders ---- */
+function acctPairs(a){
+  const p = acc(a.parentId), h = creditHolder(a);
+  const pairs = [['Business Name', a.name], ['Salesforce Account ID', a.sfId], ['Parent Account', p ? p.name : '(top-level / parent)'], ['Parent Account ID', p ? p.sfId : ''],
+    ['Case #', a.caseNo], ['Opportunity Name', a.oppName], ['Opportunity #', a.oppNo], ['Opportunity ID', a.oppId],
+    ['Rep Name', a.repName], ['Rep Email', a.repEmail], ['Rep Phone', a.repPhone], ['Stage', stageLabel(a.stage)],
+    ['Billing Mode', modeLabel(a)]];
+  if (effMode(a) === 'own') pairs.push(['Credit Line Limit', fmtMoney(a.creditLimit)], ['Billing Cycle', a.billCycle], ['Payment Terms', a.terms], ['Billing Contact', a.billContact]);
+  else pairs.push(['Credit Line Held By', h.name + (h.sfId ? ' (' + h.sfId + ')' : '')]);
+  const linked = a.linkedIds.map(acc).filter(Boolean);
+  if (linked.length) pairs.push(['Linked Accounts', linked.map(x => x.name).join('; ')]);
+  pairs.push(['Notes', a.notes]);
+  return pairs;
+}
+const acctLabeled = a => acctPairs(a).map(([k, v]) => k + ': ' + (v ?? '')).join('\n');
+const acctTSV = a => { const p = acctPairs(a); return toTSV([p.map(x => x[0]), p.map(x => x[1])]); };
+function contactPairs(c){
+  const at = c.accountIds.map(acc).filter(Boolean);
+  return [['Name', c.name], ['Title', c.title], ['Email', c.email], ['Phone', c.phone], ['Role', c.role],
+    ['Level', c.level === 'parent' ? 'Parent level (whole business)' : 'Child only'], ['Account(s)', at.map(x => x.name).join('; ')], ['Account ID(s)', at.map(x => x.sfId).filter(Boolean).join('; ')]];
+}
+const contactLabeled = c => contactPairs(c).map(([k, v]) => k + ': ' + (v ?? '')).join('\n');
+const contactTSV = c => { const p = contactPairs(c); return toTSV([p.map(x => x[0]), p.map(x => x[1])]); };
+
+/* ---- search / filter ---- */
+function acctMatches(a, q){
+  if (!q) return true; q = q.toLowerCase();
+  const hay = [a.name, a.sfId, a.caseNo, a.oppName, a.oppNo, a.oppId, a.repName, a.repEmail, a.notes, a.billContact].join(' ').toLowerCase();
+  if (hay.includes(q)) return true;
+  return WS.contacts.some(c => c.accountIds.includes(a.id) && [c.name, c.email, c.phone, c.title].join(' ').toLowerCase().includes(q));
+}
+
+/* ---- import ---- */
+const ACC_TARGETS = [...ACCOUNT_FIELDS.map(f => ({k: f.k, label: f.label})), {k: 'parentRef', label: 'Parent Account (name or ID)'}];
+const CON_TARGETS = [{k: 'name', label: 'Full Name'}, {k: 'firstName', label: 'First Name'}, {k: 'lastName', label: 'Last Name'}, {k: 'title', label: 'Title'}, {k: 'email', label: 'Email'}, {k: 'phone', label: 'Phone'}, {k: 'role', label: 'Role'}, {k: 'level', label: 'Contact Level (Parent/Child)'}, {k: 'accountRef', label: 'Account (name or ID)'}];
+const GUESS = {
+  accounts: {
+    'account name': 'name', 'business name': 'name', 'name': 'name', 'account': 'name', 'company': 'name', 'legal name': 'name', 'dba': 'name',
+    'account id': 'sfId', 'salesforce id': 'sfId', 'salesforce account id': 'sfId', 'sf id': 'sfId', 'account 18 id': 'sfId', 'account id 18': 'sfId', 'id': 'sfId', 'account number': 'sfId',
+    'case number': 'caseNo', 'case #': 'caseNo', 'case': 'caseNo', 'case no': 'caseNo',
+    'opportunity name': 'oppName', 'opportunity': 'oppName', 'oppty': 'oppName', 'oppty name': 'oppName',
+    'opportunity number': 'oppNo', 'opportunity #': 'oppNo', 'opp #': 'oppNo', 'oppty #': 'oppNo', 'opportunity id': 'oppId', 'opp id': 'oppId',
+    'account owner': 'repName', 'owner': 'repName', 'owner name': 'repName', 'rep': 'repName', 'rep name': 'repName', 'sales rep': 'repName', 'opportunity owner': 'repName', 'implementation rep': 'repName',
+    'owner email': 'repEmail', 'rep email': 'repEmail', 'account owner email': 'repEmail', 'owner phone': 'repPhone', 'rep phone': 'repPhone',
+    'stage': 'stage', 'status': 'stage', 'implementation stage': 'stage', 'onboarding stage': 'stage', 'stage name': 'stage',
+    'parent account': 'parentRef', 'parent account name': 'parentRef', 'parent': 'parentRef', 'parent account id': 'parentRef', 'parent id': 'parentRef',
+    'billing mode': 'billMode', 'billing level': 'billMode', 'billed at': 'billMode', 'credit limit': 'creditLimit', 'credit line': 'creditLimit', 'credit line limit': 'creditLimit',
+    'billing cycle': 'billCycle', 'billing frequency': 'billCycle', 'terms': 'terms', 'payment terms': 'terms', 'billing contact': 'billContact', 'notes': 'notes', 'description': 'notes'},
+  contacts: {
+    'full name': 'name', 'contact name': 'name', 'name': 'name', 'contact': 'name', 'first name': 'firstName', 'last name': 'lastName',
+    'title': 'title', 'job title': 'title', 'email': 'email', 'email address': 'email', 'contact email': 'email',
+    'phone': 'phone', 'business phone': 'phone', 'mobile': 'phone', 'mobile phone': 'phone', 'contact phone': 'phone',
+    'role': 'role', 'contact role': 'role', 'level': 'level', 'contact level': 'level',
+    'account name': 'accountRef', 'account': 'accountRef', 'account id': 'accountRef', 'company': 'accountRef', 'business name': 'accountRef'}
+};
+const sigOf = (type, headers) => type + '|' + headers.map(norm).join('|');
+function guessMap(type, headers){
+  const sig = WS.mappings.sig[sigOf(type, headers)];
+  if (sig && sig.length === headers.length) return sig.slice();
+  const used = new Set();
+  return headers.map(h => {
+    const n = norm(h); const rem = WS.mappings[type][n];
+    let f = rem !== undefined ? rem : (GUESS[type][n] || '');
+    if (f && used.has(f) && f !== '') f = '';
+    if (f) used.add(f);
+    return f;
+  });
+}
+function rememberMap(type, headers, map){ WS.mappings.sig[sigOf(type, headers)] = map.slice(); headers.forEach((h, i) => { WS.mappings[type][norm(h)] = map[i] || ''; }); }
+function findAccount(ref){
+  const r = String(ref || '').trim(); if (!r) return null;
+  const lo = r.toLowerCase();
+  return WS.accounts.find(a => a.sfId && (a.sfId.toLowerCase() === lo || (Math.min(lo.length, a.sfId.length) === 15 && Math.max(lo.length, a.sfId.length) === 18 && a.sfId.slice(0, 15) === r.slice(0, 15))))
+      || WS.accounts.find(a => norm(a.name) === norm(r)) || null;
+}
+function recordsFrom(type, table, map){
+  const recs = [];
+  for (const row of table.rows){
+    const r = {};
+    map.forEach((f, i) => { if (f && row[i] != null && String(row[i]).trim() !== '') r[f] = String(row[i]).trim(); });
+    if (type === 'contacts' && !r.name && (r.firstName || r.lastName)) r.name = [r.firstName, r.lastName].filter(Boolean).join(' ');
+    delete r.firstName; delete r.lastName;
+    if (type === 'accounts' ? r.name || r.sfId : r.name || r.email) recs.push(r);
+  }
+  return recs;
+}
+function planImport(type, recs){
+  return recs.map(r => {
+    if (type === 'accounts'){ const m = (r.sfId && findAccount(r.sfId)) || (r.name && WS.accounts.find(a => norm(a.name) === norm(r.name))); return {op: m ? 'update' : 'create', label: r.name || r.sfId, target: m, r}; }
+    const m = (r.email && WS.contacts.find(c => c.email && c.email.toLowerCase() === r.email.toLowerCase())) || (r.name && WS.contacts.find(c => norm(c.name) === norm(r.name) && (!r.accountRef || c.accountIds.includes((findAccount(r.accountRef) || {}).id))));
+    return {op: m ? 'update' : 'create', label: r.name || r.email, target: m, r, acct: findAccount(r.accountRef)};
+  });
+}
+function applyImport(type, recs, opts = {}){
+  const res = {created: 0, updated: 0, warnings: []};
+  const plan = planImport(type, recs);
+  if (type === 'accounts'){
+    const touched = [];
+    for (const p of plan){
+      const r = p.r; let a = p.target;
+      if (!a){ a = newAccount({parentId: null, name: r.name || r.sfId}); a._new = true; res.created++; } else res.updated++;
+      for (const f of ACCOUNT_FIELDS){ if (r[f.k] == null) continue;
+        if (f.k === 'stage'){ const s = parseStage(r.stage); if (s) a.stage = s; else res.warnings.push('Unknown stage "' + r.stage + '" for ' + a.name); }
+        else if (f.k === 'billMode'){ const m = parseBillMode(r.billMode); if (m) a.billMode = m; }
+        else a[f.k] = r[f.k]; }
+      a.updated = Date.now(); touched.push([a, r]);
+    }
+    for (const [a, r] of touched){
+      let parent = null;
+      if (r.parentRef){ parent = findAccount(r.parentRef); if (!parent) res.warnings.push('Parent "' + r.parentRef + '" not found for ' + a.name); }
+      else if (a._new && opts.under) parent = acc(opts.under);
+      if (parent && parent !== a && !subtreeIds(a.id).has(parent.id)){ a.parentId = parent.id; if (a._new && !r.billMode) a.billMode = 'parent'; }
+      delete a._new;
+    }
+  } else {
+    for (const p of plan){
+      const r = p.r; let c = p.target;
+      let a = r.accountRef ? findAccount(r.accountRef) : null;
+      if (r.accountRef && !a) res.warnings.push('Account "' + r.accountRef + '" not found for contact ' + (r.name || r.email));
+      if (!a && opts.under) a = acc(opts.under);
+      if (!c){ c = newContact({name: r.name || r.email}); res.created++; } else res.updated++;
+      for (const k of ['name', 'title', 'email', 'phone', 'role']) if (r[k]) c[k] = r[k];
+      if (a && !c.accountIds.includes(a.id)) c.accountIds.push(a.id);
+      if (r.level){ c.level = /child|location|site|only/i.test(r.level) ? 'child' : 'parent'; }
+      else if (p.op === 'create') c.level = a && !isRoot(a) ? 'child' : 'parent';
+      if (!c.accountIds.length) res.warnings.push('Contact ' + c.name + ' is not attached to any account yet');
+    }
+  }
+  return res;
+}
+
+/* ===================== UI ===================== */
+const UI = {biz: null, tab: 'chart', layout: 'org', stage: 'all', q: '', scope: 'biz', imp: null, menu: false, modal: null};
+let saveTimer = null;
+function setSave(t){ const el = $('#saveState'); if (el) el.textContent = t; }
+function touch(redraw = true){
+  WS.updated = Date.now(); setSave('Saving…'); clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => { try { await Store.putWs(WS); setSave(Store.mode === 'idb' ? 'Saved in this browser ✓' : 'Saved (limited storage) ✓'); } catch (e) { setSave('Save failed — export a backup'); console.warn(e); } }, 250);
+  if (redraw) render();
+}
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1800); }
+async function copy(text, what){
+  text = String(text ?? '');
+  let ok = false; window.__lastCopy = text;
+  try { if (navigator.clipboard && window.isSecureContext){ await Promise.race([navigator.clipboard.writeText(text), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 1500))]); ok = true; } } catch (e) { ok = false; }
+  if (!ok){ const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0'; document.body.appendChild(ta); ta.select(); try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); }
+  toast(ok ? 'Copied' + (what ? ' ' + what : '') : 'Copy blocked by browser — select and copy manually');
+}
+function download(blob, name){ const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }
+const cpBtn = (text, what) => '<button class="cp" title="Copy" data-act="copy" data-text="' + esc(text) + '" data-what="' + esc(what || '') + '">📋</button>';
+const stageBadge = s => '<span class="badge st-' + s + '">' + esc(stageLabel(s)) + '</span>';
+const steps = s => '<span class="steps">' + STAGES.map(x => '<i class="' + (x.n <= STAGE[s].n ? 'on' : '') + '"></i>').join('') + '</span>';
+const isSample = a => /^sample\b/i.test(a.name || '');
+
+function curBiz(){ let b = UI.biz && acc(UI.biz); if (!b || !isRoot(b)){ b = roots()[0] || null; UI.biz = b ? b.id : null; } return b; }
+
+/* ---------- render ---------- */
+function render(){ renderSide(); renderMain(); }
+function renderSide(){
+  const rs = roots(); const b = curBiz();
+  const q = UI.q.toLowerCase();
+  const list = rs.filter(r => !q || tree(r.id).some(x => acctMatches(x.a, q)));
+  const item = r => { const s = bizStats(r); return '<button class="biz' + (b && r.id === b.id ? ' sel' : '') + '" data-act="biz" data-id="' + r.id + '"><span class="bn">' + esc(r.name || '(unnamed)') + '</span><span class="bm">' + s.n + ' account' + (s.n === 1 ? '' : 's') + ' · ' + s.pct + '% through stages</span><span class="stagebar">' + STAGES.map(x => '<i class="s-' + x.id + '" style="width:' + (s.n ? s.counts[x.id] / s.n * 100 : 0) + '%"></i>').join('') + '</span></button>'; };
+  $('#side').innerHTML = '<input type="search" id="q" placeholder="Search name, ID, case, rep, contact…" value="' + esc(UI.q) + '">'
+    + '<div class="side-h">Businesses (' + rs.length + ')</div>' + (list.map(item).join('') || '<div class="muted small" style="padding:6px">No matches</div>')
+    + '<button class="primary" style="width:100%;margin-top:8px" data-act="newbiz">+ New business</button>'
+    + '<div class="side-h">Privacy</div><div class="small muted" style="padding:0 4px">🔒 <b>Your data stays in this browser. Nothing is uploaded.</b> To share a business with another rep, use <i>Export workspace</i> and send them the .json file through an approved channel.</div>';
+  const mb = $('#mobileBiz');
+  mb.innerHTML = '<select data-act-change="bizsel" style="flex:1">' + rs.map(r => '<option value="' + r.id + '"' + (b && r.id === b.id ? ' selected' : '') + '>' + esc(r.name) + '</option>').join('') + '</select><button data-act="newbiz">+ Business</button>';
+}
+function renderMain(){
+  const m = $('#main'); const b = curBiz();
+  if (UI.tab === 'import'){ m.innerHTML = (b ? bizHeader(b) : '') + tabsHtml() + importView(); return; }
+  if (!b){
+    m.innerHTML = '<div class="empty"><h2>Map a business: parent, child locations, contacts, billing</h2><p>Start with a new business, paste or import from Salesforce, or load the fictional sample to look around.</p><div class="row" style="justify-content:center"><button class="primary" data-act="newbiz">+ New business</button><button data-act="tab" data-tab="import">Paste / import from Salesforce</button><button data-act="loadsample">Load sample (fictional)</button><button data-act="importws">Open workspace file</button></div><p class="small" style="margin-top:22px">🔒 Your data stays in this browser. Nothing is uploaded.</p></div>';
+    return;
+  }
+  const views = {chart: chartView, table: tableView, contacts: contactsView, billing: billingView, files: filesView};
+  m.innerHTML = bizHeader(b) + tabsHtml() + (views[UI.tab] || chartView)(b);
+}
+function tabsHtml(){
+  const t = [['chart', 'Chart'], ['table', 'Table'], ['contacts', 'Contacts'], ['billing', 'Billing / credit'], ['files', 'Files & master file'], ['import', 'Paste / import from Salesforce']];
+  return '<div class="tabs">' + t.map(([k, l]) => '<button class="tab' + (UI.tab === k ? ' on' : '') + '" data-act="tab" data-tab="' + k + '">' + l + '</button>').join('') + '</div>';
+}
+function bizHeader(b){
+  const s = bizStats(b);
+  const names = st => tree(b.id).filter(x => x.a.stage === st).map(x => shortName(x.a, b));
+  return '<div class="bizhead"><div class="row"><h2>' + esc(b.name || '(unnamed)') + '</h2>' + (isSample(b) ? '<span class="badge sample">Fictional sample</span>' : '') + '<span class="spacer"></span>'
+    + '<button data-act="open" data-id="' + b.id + '">Open parent</button><button data-act="copybiz" data-id="' + b.id + '">Copy business summary</button></div>'
+    + '<div class="muted small">' + (b.sfId ? 'SF Account ID ' + esc(b.sfId) + ' · ' : '') + (b.repName ? 'Rep ' + esc(b.repName) + ' · ' : '') + s.n + ' accounts in this business</div>'
+    + '<div class="pipeline">' + STAGES.map(x => { const n = names(x.id); return '<div class="pipe st-' + x.id + '"><div class="row"><b>' + x.n + '. ' + x.label + '</b></div><div class="n">' + s.counts[x.id] + '</div><div class="small" title="' + esc(n.join(', ')) + '">' + esc(n.slice(0, 3).join(', ')) + (n.length > 3 ? ' +' + (n.length - 3) + ' more' : '') + '</div></div>'; }).join('') + '</div>'
+    + '<div class="overview">'
+    + '<div class="stat"><div class="k">Overall progress</div><div class="v">' + s.pct + '%</div><div class="stagebar">' + STAGES.map(x => '<i class="s-' + x.id + '" style="width:' + (s.counts[x.id] / s.n * 100) + '%"></i>').join('') + '</div></div>'
+    + '<div class="stat"><div class="k">Credit exposure</div><div class="v">' + (fmtMoney(s.exposure) || '$0') + '</div><div class="d">' + s.own + ' own line' + (s.own === 1 ? '' : 's') + ' · ' + s.up + ' roll up to parent' + (s.missing ? ' · <b style="color:#b45309">' + s.missing + ' missing limit</b>' : '') + '</div></div>'
+    + '<div class="stat"><div class="k">Contacts</div><div class="v">' + (s.parentContacts + s.childContacts) + '</div><div class="d">' + s.parentContacts + ' parent-level · ' + s.childContacts + ' child-only</div></div>'
+    + '<div class="stat"><div class="k">Files</div><div class="v">' + s.files + '</div><div class="d">' + s.csv + ' CSV fleet file' + (s.csv === 1 ? '' : 's') + '</div></div>'
+    + '</div></div>';
+}
+function filterBar(extra = ''){
+  return '<div class="toolbar"><input type="search" id="q2" placeholder="Filter…" value="' + esc(UI.q) + '"><div class="seg">'
+    + [['all', 'All stages']].concat(STAGES.map(s => [s.id, s.short])).map(([k, l]) => '<button class="' + (UI.stage === k ? 'on' : '') + '" data-act="stage" data-v="' + k + '">' + l + '</button>').join('') + '</div>' + extra + '</div>';
+}
+const passes = a => (UI.stage === 'all' || a.stage === UI.stage) && acctMatches(a, UI.q);
+
+/* ---------- chart ---------- */
+function nodeHtml(a, root){
+  const {direct, inherited} = contactsOf(a);
+  const pc = direct.filter(c => c.level === 'parent').length, cc = direct.filter(c => c.level === 'child').length;
+  const fl = filesOf(a.id).length; const own = effMode(a) === 'own';
+  const h = creditHolder(a);
+  const dim = !passes(a), hit = UI.q && acctMatches(a, UI.q);
+  const linked = a.linkedIds.map(acc).filter(Boolean);
+  return '<div class="node st-' + a.stage + (a === root ? ' root' : '') + (dim ? ' dim' : '') + (hit ? ' hit' : '') + '" data-act="open" data-id="' + a.id + '" data-name="' + esc(a.name) + '">'
+    + '<div class="node-top"><span class="lvl-tag">' + (a === root ? 'Parent' : 'Child · L' + ancestors(a).length) + '</span>' + steps(a.stage) + '</div>'
+    + '<div class="node-name">' + esc(a.name || '(unnamed)') + '</div>'
+    + '<div class="node-meta">' + [a.sfId && 'SF ' + esc(a.sfId), a.caseNo && 'Case ' + esc(a.caseNo), a.oppNo && 'Opp ' + esc(a.oppNo)].filter(Boolean).join(' · ') + '</div>'
+    + '<div style="margin-top:6px">' + stageBadge(a.stage) + '</div>'
+    + '<div class="node-chips">' + (own ? '<span class="chip own">💳 ' + (a === root ? 'Parent line ' : 'Own line ') + (fmtMoney(a.creditLimit) || '(no limit set)') + '</span>' : '<span class="chip up" title="Billed through ' + esc(h.name) + '">↑ Billed at parent</span>')
+    + (pc ? '<span class="chip" style="background:#e0e7ff;color:#3730a3">👤 ' + pc + ' parent-level</span>' : '') + (cc ? '<span class="chip" style="background:#fce7f3;color:#9d174d">👤 ' + cc + ' child-only</span>' : '')
+    + (inherited.length ? '<span class="chip" style="border:1px dashed #94a3b8">⤵ ' + inherited.length + ' inherited</span>' : '') + (fl ? '<span class="chip">📎 ' + fl + '</span>' : '')
+    + (a.repName ? '<span class="chip">Rep ' + esc(a.repName) + '</span>' : '')
+    + linked.map(l => '<span class="chip link" data-act="goto" data-id="' + l.id + '" title="Linked account">🔗 ' + esc(l.name) + '</span>').join('') + '</div>'
+    + '<div class="node-actions"><button class="small" data-act="addchild" data-id="' + a.id + '">+ Child</button><button class="small" data-act="copyacct" data-id="' + a.id + '">Copy</button><button class="small" data-act="copytsv" data-id="' + a.id + '">Copy row</button></div></div>';
+}
+function treeHtml(a, root){ const ks = kids(a.id); return '<li>' + nodeHtml(a, root) + (ks.length ? '<ul>' + ks.map(k => treeHtml(k, root)).join('') + '</ul>' : '') + '</li>'; }
+function chartView(b){
+  const seg = '<div class="seg"><button class="' + (UI.layout === 'org' ? 'on' : '') + '" data-act="layout" data-v="org">Org chart</button><button class="' + (UI.layout === 'list' ? 'on' : '') + '" data-act="layout" data-v="list">Outline</button></div>';
+  return filterBar(seg + '<span class="spacer"></span><button data-act="addchild" data-id="' + b.id + '">+ Child account</button>')
+    + '<div class="legend">' + STAGES.map(s => '<span><i class="sw" style="background:var(--st-' + s.id + ')"></i>' + s.label + '</span>').join('') + '<span>💳 own credit line</span><span>↑ billed at parent</span><span>⤵ inherited parent-level contacts</span><span>🔗 linked account</span></div>'
+    + '<div class="chartwrap"><div class="' + (UI.layout === 'org' ? 'tree' : 'outline') + '" id="tree"><ul>' + treeHtml(b, b) + '</ul></div></div>'
+    + '<p class="small muted">Tap a card to open it and edit. Every field has a 📋 copy button. Use Outline for businesses with many locations.</p>';
+}
+
+/* ---------- table ---------- */
+function tableRows(b){
+  const list = UI.scope === 'all' ? roots().flatMap(r => tree(r.id)) : tree(b.id);
+  return list.filter(x => passes(x.a));
+}
+const TABLE_COLS = [
+  ['Account', x => x.a.name], ['Parent', x => (acc(x.a.parentId) || {}).name || '—'], ['SF Account ID', x => x.a.sfId], ['Case #', x => x.a.caseNo],
+  ['Opportunity', x => [x.a.oppName, x.a.oppNo].filter(Boolean).join(' · ')], ['Opp ID', x => x.a.oppId], ['Rep', x => x.a.repName], ['Rep Email', x => x.a.repEmail], ['Rep Phone', x => x.a.repPhone],
+  ['Stage', x => stageLabel(x.a.stage)], ['Billing', x => modeLabel(x.a)], ['Credit Limit', x => effMode(x.a) === 'own' ? fmtMoney(x.a.creditLimit) : ''], ['Credit Line Held By', x => creditHolder(x.a).name],
+  ['Contacts', x => contactsOf(x.a).direct.map(c => c.name).join('; ')]];
+function tableView(b){
+  const rows = tableRows(b);
+  const scope = '<div class="seg"><button class="' + (UI.scope === 'biz' ? 'on' : '') + '" data-act="scope" data-v="biz">This business</button><button class="' + (UI.scope === 'all' ? 'on' : '') + '" data-act="scope" data-v="all">All businesses</button></div>';
+  return filterBar(scope + '<span class="spacer"></span><button data-act="copytable">Copy table (paste into Excel/SF)</button><button data-act="csvtable">Download CSV</button>')
+    + '<div class="tblwrap"><table class="t"><thead><tr><th></th>' + TABLE_COLS.map(c => '<th>' + c[0] + '</th>').join('') + '</tr></thead><tbody>'
+    + rows.map(x => '<tr><td style="white-space:nowrap"><button class="small" data-act="open" data-id="' + x.a.id + '">Open</button> <button class="small" data-act="copytsv" data-id="' + x.a.id + '" title="Copy row">📋</button></td>'
+      + TABLE_COLS.map((c, i) => { const v = c[1](x); if (i === 0) return '<td class="cc" data-act="copy" data-text="' + esc(v) + '"><span class="indent" style="width:' + x.depth * 16 + 'px"></span>' + (x.depth ? '└ ' : '') + '<b>' + esc(v) + '</b></td>'; if (c[0] === 'Stage') return '<td class="cc" data-act="copy" data-text="' + esc(v) + '">' + stageBadge(x.a.stage) + '</td>'; return '<td class="cc" data-act="copy" data-text="' + esc(v) + '">' + esc(v) + '</td>'; }).join('') + '</tr>').join('')
+    + '</tbody></table></div>' + (rows.length ? '<p class="small muted">Click any cell to copy it.</p>' : '<div class="empty">No accounts match the filter.</div>');
+}
+const tableMatrix = b => [TABLE_COLS.map(c => c[0])].concat(tableRows(b).map(x => TABLE_COLS.map(c => c[1](x))));
+
+/* ---------- contacts ---------- */
+function contactCard(c, ctx = {}){
+  const at = c.accountIds.map(acc).filter(Boolean);
+  const cls = ctx.inherited ? 'inh' : 'lvl-' + c.level;
+  const badge = ctx.inherited ? '<span class="badge lvl-inh">Inherited from ' + esc(shortName(ctx.from, ctx.root)) + '</span>' : (c.level === 'parent' ? '<span class="badge lvl-parent">Parent level</span>' : '<span class="badge lvl-child">Child only</span>');
+  const line = (icon, v, w) => v ? '<div class="cl"><span>' + icon + ' ' + esc(v) + '</span>' + cpBtn(v, w) + '</div>' : '';
+  return '<div class="contact ' + cls + '" data-cid="' + c.id + '"><div class="row"><span class="cn">' + esc(c.name || '(no name)') + '</span><span class="spacer"></span>' + badge + '</div>'
+    + '<div class="small muted">' + esc([c.title, c.role].filter(Boolean).join(' · ')) + '</div>'
+    + line('✉', c.email, 'email') + line('☎', c.phone, 'phone')
+    + (ctx.inherited ? '' : '<div class="small muted" style="margin-top:4px">' + (c.level === 'parent' ? 'Applies to: ' + esc(at.map(x => shortName(x, ctx.root)).join(', ')) + ' and everything under it' : 'Only: ' + esc(at.map(x => shortName(x, ctx.root)).join(', '))) + '</div>')
+    + '<div class="row" style="margin-top:6px"><button class="small" data-act="editcontact" data-id="' + c.id + '">Edit</button><button class="small" data-act="copycontact" data-id="' + c.id + '">Copy</button><button class="small" data-act="copycontacttsv" data-id="' + c.id + '">Copy row</button></div></div>';
+}
+function contactsView(b){
+  const t = tree(b.id); const ids = new Set(t.map(x => x.a.id));
+  const cons = WS.contacts.filter(c => c.accountIds.some(id => ids.has(id))).filter(c => !UI.q || [c.name, c.email, c.phone, c.title, c.role].join(' ').toLowerCase().includes(UI.q.toLowerCase()));
+  const parentLvl = cons.filter(c => c.level === 'parent');
+  let h = '<div class="toolbar"><input type="search" id="q2" placeholder="Filter contacts…" value="' + esc(UI.q) + '"><span class="spacer"></span><button class="primary" data-act="newcontact" data-id="' + b.id + '">+ Add contact</button><button data-act="copycontacts">Copy all contacts (table)</button></div>';
+  h += '<div class="legend"><span><span class="badge lvl-parent">Parent level</span> applies to the account it is on and every child under it</span><span><span class="badge lvl-child">Child only</span> only that location</span><span><span class="badge lvl-inh">Inherited</span> shown on a child, comes from above</span></div>';
+  h += '<div class="group-h">🏢 Parent-level contacts <span class="muted small">(whole business)</span></div><div class="cgrid">' + (parentLvl.map(c => contactCard(c, {root: b})).join('') || '<div class="muted small">None yet.</div>') + '</div>';
+  for (const {a} of t){
+    if (a === b) continue;
+    const own = cons.filter(c => c.level === 'child' && c.accountIds.includes(a.id));
+    const inh = contactsOf(a).inherited;
+    h += '<div class="group-h"><span class="badge st-' + a.stage + '">' + esc(STAGE[a.stage].short) + '</span> ' + esc(shortName(a, b)) + ' <span class="muted small">' + own.length + ' child-only · ' + inh.length + ' inherited</span><span class="spacer"></span><button class="small" data-act="newcontact" data-id="' + a.id + '" data-level="child">+ Child-only contact</button></div>';
+    h += '<div class="cgrid">' + own.map(c => contactCard(c, {root: b})).join('') + inh.map(x => contactCard(x.c, {inherited: true, from: x.from, root: b})).join('') + (own.length + inh.length ? '' : '<div class="muted small">No contacts.</div>') + '</div>';
+  }
+  if (cons.length){
+    h += '<div class="card" style="margin-top:16px"><h3>Who covers which account</h3><div class="tblwrap"><table class="t matrix"><thead><tr><th>Contact</th><th>Level</th>' + t.map(x => '<th title="' + esc(x.a.name) + '">' + esc(shortName(x.a, b)) + '</th>').join('') + '</tr></thead><tbody>'
+      + cons.map(c => { const ap = new Set(appliesTo(c).map(a => a.id)); return '<tr><td><b>' + esc(c.name) + '</b><div class="small muted">' + esc(c.title || '') + '</div></td><td>' + (c.level === 'parent' ? '<span class="badge lvl-parent">Parent</span>' : '<span class="badge lvl-child">Child</span>') + '</td>'
+        + t.map(x => c.accountIds.includes(x.a.id) ? '<td class="c ' + (c.level === 'parent' ? 'dot-direct' : 'dot-child') + '" title="Attached here">' + (c.level === 'parent' ? '●' : '◆') + '</td>' : ap.has(x.a.id) ? '<td class="c dot-inh" title="Inherited">○</td>' : '<td class="c"></td>').join('') + '</tr>'; }).join('')
+      + '</tbody></table></div><p class="small muted">● attached at parent level · ○ inherited from above · ◆ child-only</p></div>';
+  }
+  return h;
+}
+
+/* ---------- billing ---------- */
+function billingView(b){
+  const t = tree(b.id); const s = bizStats(b);
+  const holders = t.filter(x => effMode(x.a) === 'own');
+  let h = '<div class="toolbar"><span class="spacer"></span><button data-act="copybilling">Copy billing table</button></div>';
+  h += '<div class="overview" style="margin-bottom:12px"><div class="stat"><div class="k">Total credit exposure</div><div class="v">' + (fmtMoney(s.exposure) || '$0') + '</div><div class="d">sum of every own credit line</div></div>'
+    + '<div class="stat"><div class="k">Own credit lines</div><div class="v">' + s.own + '</div><div class="d">parent + children billed on their own</div></div>'
+    + '<div class="stat"><div class="k">Roll up to a parent</div><div class="v">' + s.up + '</div><div class="d">billed on someone else\'s line</div></div></div>';
+  if (s.missing) h += '<div class="warnbar">⚠ ' + s.missing + ' account(s) have their own credit line but no limit entered.</div>';
+  for (const {a} of holders){
+    const riders = t.filter(x => x.a !== a && effMode(x.a) === 'parent' && creditHolder(x.a) === a);
+    h += '<div class="rollup"><div class="row"><b>💳 ' + esc(a.name) + '</b><span class="badge own">' + esc(a === b ? 'Parent credit line' : 'Billed at child — own line') + '</span><span class="spacer"></span><button class="small" data-act="open" data-id="' + a.id + '">Edit</button><button class="small" data-act="copy" data-text="' + esc(acctPairs(a).filter(p => /Business|Salesforce|Billing|Credit|Payment/.test(p[0])).map(p => p[0] + ': ' + p[1]).join('\n')) + '">Copy</button></div>'
+      + '<div class="small" style="margin-top:4px">Limit <b>' + (fmtMoney(a.creditLimit) || '—') + '</b> · Cycle ' + esc(a.billCycle || '—') + ' · Terms ' + esc(a.terms || '—') + ' · Billing contact ' + esc(a.billContact || '—') + '</div>'
+      + '<div class="rl">' + (riders.length ? '<span class="small muted">Also billed on this line:</span>' + riders.map(x => '<span class="chip up" data-act="open" data-id="' + x.a.id + '" style="cursor:pointer">↑ ' + esc(shortName(x.a, b)) + '</span>').join('') : '<span class="small muted">No other accounts roll up to this line.</span>') + '</div></div>';
+  }
+  h += '<div class="tblwrap" style="margin-top:12px"><table class="t"><thead><tr>' + billingMatrix(b)[0].map(x => '<th>' + esc(x) + '</th>').join('') + '</tr></thead><tbody>'
+    + billingMatrix(b).slice(1).map(r => '<tr>' + r.map(v => '<td class="cc" data-act="copy" data-text="' + esc(v) + '">' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
+  return h;
+}
+function billingMatrix(b){
+  return [['Account', 'SF Account ID', 'Level', 'Billing Mode', 'Credit Line Held By', 'Holder SF ID', 'Credit Limit', 'Billing Cycle', 'Payment Terms', 'Billing Contact']]
+    .concat(tree(b.id).map(({a, depth}) => { const h = creditHolder(a), own = effMode(a) === 'own'; return [a.name, a.sfId, depth ? 'Child L' + depth : 'Parent', modeLabel(a), h.name, h.sfId, own ? fmtMoney(a.creditLimit) : '', own ? a.billCycle : '', own ? a.terms : '', own ? a.billContact : '']; }));
+}
+
+/* ---------- files ---------- */
+function filesView(b){
+  const t = tree(b.id); const s = bizStats(b);
+  let h = '<div class="card"><div class="row"><div><h3 style="margin:0">Master file for this business</h3><div class="small muted">One Excel workbook: Summary, Accounts, Contacts, Billing, All Fleet Data, plus one tab per uploaded CSV.</div></div><span class="spacer"></span>'
+    + '<button class="primary" data-act="buildxlsx" id="btnXlsx">⬇ Build master file (.xlsx)</button><button data-act="buildzip">⬇ Separate CSVs (.zip)</button></div>'
+    + '<div class="small muted" style="margin-top:6px">' + s.files + ' file(s), ' + s.csv + ' CSV. Files are kept only in this browser.</div></div>';
+  for (const {a, depth} of t){
+    const fl = filesOf(a.id);
+    h += '<div class="card" style="margin-left:' + Math.min(depth, 4) * 18 + 'px"><div class="row"><span class="lvl-tag">' + (depth ? 'Child' : 'Parent') + '</span><b>' + esc(a.name) + '</b>' + stageBadge(a.stage) + '<span class="spacer"></span>'
+      + '<label class="btnlike"><input type="file" multiple data-upload="' + a.id + '" class="hidden" accept=".csv,.tsv,.txt,.xlsx,.xls,.pdf,.png,.jpg,.jpeg,.doc,.docx,*/*"><span class="button" role="button">⬆ Upload files</span></label></div>'
+      + '<div class="filelist">' + (fl.map(f => '<div class="fi"><span>' + (f.kind === 'csv' ? '📊' : '📄') + '</span><span class="nm" title="' + esc(f.name) + '">' + esc(f.name) + '</span><span class="small muted">' + fmtBytes(f.size) + (f.kind === 'csv' ? ' · ' + (f.rows ?? '?') + ' rows' : '') + '</span>'
+        + (f.kind === 'csv' ? '<button class="small" data-act="preview" data-id="' + f.id + '">Preview</button>' : '') + '<button class="small" data-act="dlfile" data-id="' + f.id + '">Download</button><button class="small danger" data-act="delfile" data-id="' + f.id + '">Remove</button></div>').join('') || '<div class="small muted" style="padding:6px 0">No files. CSV fleet data is combined into the master file.</div>') + '</div></div>';
+  }
+  return h;
+}
+async function addFiles(accountId, fileList){
+  let n = 0;
+  for (const file of fileList){
+    const isCsv = /\.(csv|tsv|txt)$/i.test(file.name) || /csv|tab-separated/.test(file.type);
+    const meta = {id: uid('file'), accountId, name: file.name, mime: file.type || '', size: file.size, added: Date.now(), kind: isCsv ? 'csv' : 'other'};
+    if (isCsv){ const text = await file.text(); const rows = parseCSV(text); meta.rows = Math.max(0, rows.length - 1); meta.cols = (rows[0] || []).length; await Store.putFile(meta.id, text); }
+    else await Store.putFile(meta.id, await file.arrayBuffer());
+    WS.files.push(meta); n++;
+  }
+  touch(); toast(n + ' file(s) added — stored in this browser only');
+}
+
+/* ---------- master workbook ---------- */
+async function masterSheets(b){
+  const t = tree(b.id); const s = bizStats(b);
+  const csvs = [];
+  for (const {a} of t) for (const f of filesOf(a.id)) if (f.kind === 'csv'){ const text = await Store.getFile(f.id); const rows = parseCSV(typeof text === 'string' ? text : new TextDecoder().decode(text || new ArrayBuffer(0))); csvs.push({a, f, rows}); }
+  // union headers for All Fleet Data
+  const hdrKeys = [], hdrNames = [];
+  for (const c of csvs) for (const h of (c.rows[0] || [])){ const k = norm(h) || h; if (!hdrKeys.includes(k)){ hdrKeys.push(k); hdrNames.push(h); } }
+  const sameHeaders = csvs.length > 0 && csvs.every(c => (c.rows[0] || []).map(h => norm(h)).join('|') === (csvs[0].rows[0] || []).map(h => norm(h)).join('|'));
+  const fleet = [['Account', 'Account SF ID', 'Source File', ...hdrNames]];
+  for (const c of csvs){ const idx = (c.rows[0] || []).map(h => hdrKeys.indexOf(norm(h) || h)); for (const r of c.rows.slice(1)){ const out = new Array(hdrKeys.length).fill(''); r.forEach((v, i) => { if (idx[i] >= 0) out[idx[i]] = v; }); fleet.push([c.a.name, c.a.sfId, c.f.name, ...out]); } }
+  const summary = [[{v: 'Master file — ' + b.name, s: 2}], ['Generated', new Date().toLocaleString() + ' (Account Mapper, made locally in the browser)'], ['Salesforce Account ID', b.sfId], ['Rep', [b.repName, b.repEmail, b.repPhone].filter(Boolean).join(' · ')], [],
+    [{v: 'Where the business stands', s: 4}], [{v: 'Stage', s: 1}, {v: 'Accounts', s: 1}, {v: 'Share', s: 1}],
+    ...STAGES.map(x => [x.label, s.counts[x.id], Math.round(s.counts[x.id] / s.n * 100) + '%']), ['Overall progress', s.pct + '%'], [],
+    [{v: 'Billing', s: 4}], ['Total credit exposure', {v: s.exposure, s: 3, t: 'n'}], ['Own credit lines', s.own], ['Billed at parent (roll up)', s.up], [],
+    [{v: 'Hierarchy', s: 4}], ['Level', 'Account', 'Salesforce Account ID', 'Stage', 'Billing', 'Credit Line Held By', 'Credit Limit', 'Case #', 'Opportunity', 'Rep', 'Contacts', 'Files'].map(v => ({v, s: 1})),
+    ...t.map(({a, depth}) => [depth ? 'Child L' + depth : 'Parent', '   '.repeat(depth) + (depth ? '└ ' : '') + a.name, {v: a.sfId, t: 's'}, stageLabel(a.stage), modeLabel(a), creditHolder(a).name, effMode(a) === 'own' && parseMoney(a.creditLimit) != null ? {v: parseMoney(a.creditLimit), s: 3, t: 'n'} : '', {v: a.caseNo, t: 's'}, [a.oppName, a.oppNo].filter(Boolean).join(' · '), a.repName, contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length]), [],
+    [{v: 'Fleet data', s: 4}], ['CSV files combined', csvs.length], ['Headers', csvs.length ? (sameHeaders ? 'All files share the same columns — stacked with an Account column' : 'Columns differed — combined using every column found (blank where a file lacks it)') : 'No CSV files uploaded']];
+  const accounts = [['Level', 'Account', 'Parent Account', 'Parent SF ID', ...ACCOUNT_FIELDS.filter(f => f.k !== 'name').map(f => f.label), 'Credit Line Held By', 'Linked Accounts', 'Contacts', 'Files']]
+    .concat(t.map(({a, depth}) => { const p = acc(a.parentId); const own = effMode(a) === 'own';
+      return [depth ? 'Child L' + depth : 'Parent', a.name, p ? p.name : '', p ? {v: p.sfId, t: 's'} : '', ...ACCOUNT_FIELDS.filter(f => f.k !== 'name').map(f => {
+        if (f.k === 'stage') return stageLabel(a.stage); if (f.k === 'billMode') return modeLabel(a);
+        if (f.k === 'creditLimit') return own && parseMoney(a.creditLimit) != null ? {v: parseMoney(a.creditLimit), s: 3, t: 'n'} : '';
+        if (['billCycle', 'terms', 'billContact'].includes(f.k) && !own) return '';
+        return {v: a[f.k], t: 's'}; }), creditHolder(a).name, a.linkedIds.map(acc).filter(Boolean).map(x => x.name).join('; '), contactsOf(a).direct.map(c => c.name).join('; '), filesOf(a.id).length]; }));
+  const ids = new Set(t.map(x => x.a.id));
+  const contacts = [['Name', 'Title', 'Email', 'Phone', 'Role', 'Level', 'Attached To', 'Attached SF ID(s)', 'Applies To']]
+    .concat(WS.contacts.filter(c => c.accountIds.some(id => ids.has(id))).sort((x, y) => (x.level === y.level ? byName(x, y) : x.level === 'parent' ? -1 : 1))
+      .map(c => { const at = c.accountIds.map(acc).filter(Boolean); return [c.name, c.title, c.email, {v: c.phone, t: 's'}, c.role, c.level === 'parent' ? 'Parent level (whole business)' : 'Child only', at.map(x => x.name).join('; '), at.map(x => x.sfId).filter(Boolean).join('; '), appliesTo(c).map(x => x.name).join('; ')]; }));
+  const billing = billingMatrix(b).map((r, i) => i && parseMoney(r[6]) != null ? r.map((v, j) => j === 6 ? {v: parseMoney(v), s: 3, t: 'n'} : j === 1 || j === 5 ? {v, t: 's'} : v) : r);
+  const sheets = [{name: 'Summary', rows: summary, header: -1, widths: [26, 44, 24, 22, 30, 30, 14, 12, 28, 18, 30, 8]}, {name: 'Accounts', rows: accounts}, {name: 'Contacts', rows: contacts}, {name: 'Billing', rows: billing}];
+  if (csvs.length) sheets.push({name: 'All Fleet Data', rows: fleet});
+  const bases = csvs.map(c => c.f.name.replace(/\.[^.]+$/, ''));
+  let pre = bases.length > 1 ? bases.reduce((p, x) => { let i = 0; while (i < p.length && p[i] === x[i]) i++; return p.slice(0, i); }) : '';
+  if (bases.some(x => x.length - pre.length < 3)) pre = '';
+  csvs.forEach((c, i) => c.tabBase = bases[i].slice(pre.length).replace(/^[\s_\-]+/, '') || bases[i]);
+  for (const c of csvs) sheets.push({name: shortName(c.a, b).slice(0, 17).trim() + ' - ' + c.tabBase, isFile: true, rows: typeColumns(c.rows)});
+  if (csvs.length) sheets[4].rows = typeColumns(fleet);
+  return {sheets, csvs};
+}
+/* A column is numeric only if every value is a plain number with no leading zero; otherwise the whole column is text (keeps IDs, card #s, ZIPs intact). */
+function typeColumns(rows){
+  const w = Math.max(0, ...rows.map(r => r.length)); const numeric = [];
+  for (let c = 0; c < w; c++){ let any = false, ok = true; for (const r of rows.slice(1)){ const v = String(r[c] ?? '').trim(); if (!v) continue; any = true; if (!NUM_RE.test(v)){ ok = false; break; } } numeric[c] = any && ok; }
+  return rows.map((r, i) => r.map((v, c) => i === 0 ? v : {v, t: numeric[c] ? 'n' : 's'}));
+}
+async function buildMasterXlsx(b){
+  const {sheets} = await masterSheets(b);
+  const blob = buildXlsx(sheets);
+  window.__lastXlsx = {blob, names: sheets.map(s => s.finalName)};
+  download(blob, safeFile(b.name) + '_master_' + today() + '.xlsx');
+  toast('Master file built: ' + sheets.length + ' tabs');
+}
+async function buildMasterZip(b){
+  const {sheets, csvs} = await masterSheets(b);
+  const plain = rows => rows.map(r => r.map(c => c && typeof c === 'object' ? c.v : c));
+  const files = sheets.filter(s => !s.isFile).map((s, i) => ({name: String(i + 1).padStart(2, '0') + '_' + safeFile(s.name) + '.csv', data: '\uFEFF' + toCSV(plain(s.rows))}));
+  for (const c of csvs) files.push({name: 'fleet/' + safeFile(shortName(c.a, b)) + '__' + safeFile(c.f.name.replace(/\.[^.]+$/, '')) + '.csv', data: '\uFEFF' + toCSV(c.rows)});
+  for (const {a} of tree(b.id)) for (const f of filesOf(a.id)) if (f.kind !== 'csv'){ const d = await Store.getFile(f.id); if (d) files.push({name: 'attachments/' + safeFile(shortName(a, b)) + '__' + safeFile(f.name), data: d}); }
+  download(makeZip(files), safeFile(b.name) + '_master_csvs_' + today() + '.zip');
+  toast('Zip built: ' + files.length + ' files');
+}
+
+/* ---------- modals ---------- */
+function openModal(kind, id, extra = {}){ UI.modal = {kind, id, ...extra}; renderModal(); }
+function closeModal(){
+  const m = UI.modal; UI.modal = null;
+  if (m && m.kind === 'contact'){ const c = con(m.id); if (c && !c.name && !c.email && !c.phone) WS.contacts = WS.contacts.filter(x => x !== c); }
+  $('#modal').classList.add('hidden'); $('#modalCard').innerHTML = ''; touch();
+}
+function renderModal(){
+  const m = $('#modal'); if (!UI.modal){ m.classList.add('hidden'); return; }
+  const k = UI.modal.kind; m.classList.remove('hidden'); m.classList.toggle('center', k !== 'acct');
+  const html = k === 'acct' ? acctModal(acc(UI.modal.id)) : k === 'contact' ? contactModal(con(UI.modal.id)) : k === 'preview' ? UI.modal.html : '';
+  if (html == null){ closeModal(); return; }
+  const card = $('#modalCard'); const st = card.scrollTop; card.innerHTML = html; card.scrollTop = st;
+}
+const fieldRow = (label, key, val, type = 'text', attr = 'data-f') => '<div class="f"><label for="f_' + key + '">' + label + '</label><input id="f_' + key + '" type="' + type + '" ' + attr + '="' + key + '" value="' + esc(val) + '" autocomplete="off"><button class="cp" data-act="copyfield" data-sel="#f_' + key + '" data-what="' + esc(label) + '">📋</button></div>';
+function acctModal(a){
+  if (!a) return null;
+  const root = rootOf(a), own = effMode(a) === 'own', h = creditHolder(a);
+  const sub = subtreeIds(a.id);
+  const parentOpts = '<option value="">(none — top-level parent business)</option>' + roots().flatMap(r => tree(r.id)).filter(x => !sub.has(x.a.id)).map(x => '<option value="' + x.a.id + '"' + (x.a.id === a.parentId ? ' selected' : '') + '>' + '\u00a0\u00a0'.repeat(x.depth) + esc(x.a.name) + '</option>').join('');
+  const {direct, inherited} = contactsOf(a);
+  const linkOpts = WS.accounts.filter(x => x !== a && !a.linkedIds.includes(x.id)).sort(byName).map(x => '<option value="' + x.id + '">' + esc(x.name) + '</option>').join('');
+  const attachOpts = WS.contacts.filter(c => !c.accountIds.includes(a.id) && c.accountIds.some(id => subtreeIds(root.id).has(id))).map(c => '<option value="' + c.id + '">' + esc(c.name) + '</option>').join('');
+  const fl = filesOf(a.id);
+  return '<div class="mh"><span class="badge st-' + a.stage + '">' + esc(STAGE[a.stage].short) + '</span><h3>' + esc(a.name || '(unnamed)') + '</h3><button class="small" data-act="copyacct" data-id="' + a.id + '">Copy all</button><button class="small" data-act="copytsv" data-id="' + a.id + '">Copy row</button><button data-act="close" aria-label="Close">✕</button></div><div class="mb">'
+    + '<div class="sec"><h4>' + (isRoot(a) ? '🏢 Parent account' : '📍 Child account of ' + esc(acc(a.parentId).name)) + '</h4>'
+    + fieldRow('Business name', 'name', a.name) + fieldRow('Salesforce Account ID', 'sfId', a.sfId) + fieldRow('Case #', 'caseNo', a.caseNo)
+    + fieldRow('Opportunity name', 'oppName', a.oppName) + fieldRow('Opportunity #', 'oppNo', a.oppNo) + fieldRow('Opportunity ID', 'oppId', a.oppId)
+    + fieldRow('Rep name', 'repName', a.repName) + fieldRow('Rep email', 'repEmail', a.repEmail, 'email') + fieldRow('Rep phone', 'repPhone', a.repPhone, 'tel') + '</div>'
+    + '<div class="sec"><h4>Stage</h4><div class="stepper">' + STAGES.map(s => '<button class="st-' + s.id + (s.id === a.stage ? ' on' : s.n < STAGE[a.stage].n ? ' done' : '') + '" data-act="setstage" data-v="' + s.id + '">' + s.n + '. ' + s.label + '</button>').join('') + '</div></div>'
+    + '<div class="sec"><h4>Billing / credit line</h4>'
+    + (isRoot(a) ? '<div class="small muted" style="margin-bottom:8px">This is the parent. Children set to “Billed at parent” roll up to this line.</div>'
+      : '<div class="radio-cards"><label class="' + (!own ? 'on' : '') + '" data-act="setbill" data-v="parent"><input type="radio" name="bm"' + (!own ? ' checked' : '') + '><span><b>Billed at parent</b><br><span class="small muted">Rolls up to ' + esc(creditHolder(acc(a.parentId)).name) + '’s credit line</span></span></label><label class="' + (own ? 'on' : '') + '" data-act="setbill" data-v="own"><input type="radio" name="bm"' + (own ? ' checked' : '') + '><span><b>Billed at child</b><br><span class="small muted">Has its own credit line</span></span></label></div><div style="height:8px"></div>')
+    + (own ? fieldRow('Credit line limit', 'creditLimit', a.creditLimit) + '<div class="f"><label for="f_billCycle">Billing cycle</label><select id="f_billCycle" data-f="billCycle">' + [...new Set([...BILL_CYCLES, a.billCycle])].map(c => '<option' + (c === a.billCycle ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select><button class="cp" data-act="copyfield" data-sel="#f_billCycle" data-what="Billing cycle">📋</button></div>' + fieldRow('Payment terms', 'terms', a.terms) + fieldRow('Billing contact', 'billContact', a.billContact)
+      : '<div class="small">Credit line held by <b>' + esc(h.name) + '</b> (' + (fmtMoney(h.creditLimit) || 'no limit set') + ')</div>') + '</div>'
+    + '<div class="sec"><h4>Contacts <span class="spacer"></span><button class="small" data-act="newcontact" data-id="' + a.id + '" data-level="parent">+ ' + (isRoot(a) ? 'Parent-level' : 'Contact for this + below') + '</button>' + (isRoot(a) ? '' : '<button class="small" data-act="newcontact" data-id="' + a.id + '" data-level="child">+ Child-only</button>') + '</h4>'
+    + '<div class="cgrid">' + direct.map(c => contactCard(c, {root})).join('') + inherited.map(x => contactCard(x.c, {inherited: true, from: x.from, root})).join('') + '</div>'
+    + (direct.length + inherited.length ? '' : '<div class="small muted">No contacts yet.</div>')
+    + (attachOpts ? '<div class="row" style="margin-top:8px"><select id="attachSel" style="max-width:260px">' + attachOpts + '</select><button class="small" data-act="attachcontact" data-id="' + a.id + '">Attach existing contact here</button></div>' : '') + '</div>'
+    + '<div class="sec"><h4>Files <span class="spacer"></span><label class="btnlike"><input type="file" multiple data-upload="' + a.id + '" class="hidden"><span class="button small" role="button">⬆ Upload</span></label></h4><div class="filelist">'
+    + (fl.map(f => '<div class="fi"><span>' + (f.kind === 'csv' ? '📊' : '📄') + '</span><span class="nm">' + esc(f.name) + '</span><span class="small muted">' + fmtBytes(f.size) + '</span>' + (f.kind === 'csv' ? '<button class="small" data-act="preview" data-id="' + f.id + '">Preview</button>' : '') + '<button class="small" data-act="dlfile" data-id="' + f.id + '">⬇</button><button class="small danger" data-act="delfile" data-id="' + f.id + '">✕</button></div>').join('') || '<div class="small muted">No files.</div>') + '</div></div>'
+    + '<div class="sec"><h4>Hierarchy & linked accounts</h4><div class="f"><label for="f_parent">Parent account</label><select id="f_parent" data-act-change="setparent" data-id="' + a.id + '">' + parentOpts + '</select><span></span></div>'
+    + '<div class="row small" style="margin:4px 0 8px">Children: ' + (kids(a.id).map(k => '<span class="chip" data-act="open" data-id="' + k.id + '" style="cursor:pointer">' + esc(shortName(k, root)) + '</span>').join(' ') || '<span class="muted">none</span>') + '<button class="small" data-act="addchild" data-id="' + a.id + '">+ Child</button></div>'
+    + '<div class="row small">Linked: ' + (a.linkedIds.map(acc).filter(Boolean).map(l => '<span class="chip link"><span data-act="open" data-id="' + l.id + '" style="cursor:pointer">🔗 ' + esc(l.name) + '</span> <a href="#" data-act="unlink" data-id="' + a.id + '" data-v="' + l.id + '" title="Unlink">✕</a></span>').join(' ') || '<span class="muted">none</span>') + '</div>'
+    + (linkOpts ? '<div class="row" style="margin-top:6px"><select id="linkSel" style="max-width:280px">' + linkOpts + '</select><button class="small" data-act="link" data-id="' + a.id + '">Link account</button></div><div class="small muted">Link related accounts that are not parent/child (sister companies, other business units).</div>' : '') + '</div>'
+    + '<div class="sec"><h4>Notes</h4><textarea id="f_notes" data-f="notes" rows="4">' + esc(a.notes) + '</textarea><div class="row" style="margin-top:6px"><button class="small" data-act="copyfield" data-sel="#f_notes" data-what="notes">📋 Copy notes</button></div></div>'
+    + '<div class="row"><button class="danger" data-act="delacct" data-id="' + a.id + '">Delete account</button><span class="spacer"></span><button class="primary" data-act="close">Done</button></div></div>';
+}
+function contactModal(c){
+  if (!c) return null;
+  const first = acc(c.accountIds[0]); const root = first ? rootOf(first) : curBiz();
+  const accts = root ? tree(root.id) : [];
+  return '<div class="mh"><h3>Contact: ' + esc(c.name || 'new') + '</h3><button class="small" data-act="copycontact" data-id="' + c.id + '">Copy</button><button data-act="close">✕</button></div><div class="mb">'
+    + '<div class="sec">' + CONTACT_FIELDS.map(f => fieldRow(f.label, f.k, c[f.k], f.k === 'email' ? 'email' : f.k === 'phone' ? 'tel' : 'text', 'data-cf')).join('') + '</div>'
+    + '<div class="sec"><h4>Level</h4><div class="radio-cards"><label class="' + (c.level === 'parent' ? 'on' : '') + '" data-act="setlevel" data-v="parent"><input type="radio" name="lv"' + (c.level === 'parent' ? ' checked' : '') + '><span><b>Parent level</b><br><span class="small muted">Applies to the account(s) checked below and every child under them</span></span></label>'
+    + '<label class="' + (c.level === 'child' ? 'on' : '') + '" data-act="setlevel" data-v="child"><input type="radio" name="lv"' + (c.level === 'child' ? ' checked' : '') + '><span><b>Child only</b><br><span class="small muted">Only the checked location(s)</span></span></label></div>'
+    + '<div class="small" style="margin:10px 0 4px"><b>Attached to</b></div><div class="checklist">' + accts.map(({a, depth}) => '<label><input type="checkbox" data-act-change="cacct" data-v="' + a.id + '"' + (c.accountIds.includes(a.id) ? ' checked' : '') + '><span style="padding-left:' + depth * 14 + 'px">' + esc(a.name) + '</span></label>').join('') + '</div></div>'
+    + '<div class="row"><button class="danger" data-act="delcontact" data-id="' + c.id + '">Delete contact</button><span class="spacer"></span><button class="primary" data-act="close">Done</button></div></div>';
+}
+async function previewFile(id){
+  const f = WS.files.find(x => x.id === id); if (!f) return;
+  const text = await Store.getFile(id); const rows = parseCSV(typeof text === 'string' ? text : '');
+  const show = rows.slice(0, 201);
+  UI.modal = {kind: 'preview', id, html: '<div class="mh"><h3>📊 ' + esc(f.name) + '</h3><button class="small" data-act="copypreview" data-id="' + id + '">Copy as table</button><button class="small" data-act="dlfile" data-id="' + id + '">Download</button><button data-act="close">✕</button></div><div class="mb"><div class="small muted" style="margin-bottom:8px">' + Math.max(0, rows.length - 1) + ' rows × ' + (rows[0] || []).length + ' columns' + (rows.length > 201 ? ' — showing first 200' : '') + ' · on ' + esc((acc(f.accountId) || {}).name || '') + '</div><div class="tblwrap" style="max-height:60vh"><table class="t"><thead><tr>' + (show[0] || []).map(h => '<th>' + esc(h) + '</th>').join('') + '</tr></thead><tbody>' + show.slice(1).map(r => '<tr>' + r.map(v => '<td>' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div></div>'};
+  renderModal();
+}
+
+/* ---------- import view ---------- */
+function importView(){
+  const I = UI.imp || (UI.imp = {step: 1, type: 'accounts', text: '', under: UI.biz || ''});
+  const rs = roots();
+  let h = '<div class="card"><h3>Paste or import from Salesforce</h3><div class="small muted">Nothing leaves this browser. Paste rows copied from a Salesforce list view/report (with the header row), labeled lines like <span class="kbd">Account Name: …</span>, or choose a report export (.csv). You map the columns once — the mapping is remembered.</div></div>';
+  h += '<div class="card"><div class="row"><b>1.</b> What are you importing?<div class="seg"><button class="' + (I.type === 'accounts' ? 'on' : '') + '" data-act="imptype" data-v="accounts">Accounts</button><button class="' + (I.type === 'contacts' ? 'on' : '') + '" data-act="imptype" data-v="contacts">Contacts</button></div></div>'
+    + '<textarea id="impText" rows="8" style="margin-top:10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px" placeholder="Paste here (Ctrl/⌘+V)…">' + esc(I.text) + '</textarea>'
+    + '<div class="row" style="margin-top:8px"><button class="primary" data-act="impread">Read pasted data</button><span class="muted">or</span><label class="btnlike"><input type="file" id="impFile" accept=".csv,.tsv,.txt,text/csv" class="hidden"><span class="button" role="button">Choose Salesforce report CSV…</span></label>' + (I.fileName ? '<span class="small muted">' + esc(I.fileName) + '</span>' : '') + '</div></div>';
+  if (I.step >= 2 && I.table){
+    const targets = I.type === 'accounts' ? ACC_TARGETS : CON_TARGETS;
+    h += '<div class="card maptbl"><h3>2. Match columns to fields <span class="small muted">(' + I.table.rows.length + ' row' + (I.table.rows.length === 1 ? '' : 's') + ' found)</span></h3><div class="tblwrap"><table class="t"><thead><tr><th>Column in your data</th><th>Example</th><th>Goes into</th></tr></thead><tbody>'
+      + I.table.headers.map((hd, i) => '<tr><td><b>' + esc(hd) + '</b></td><td class="small muted">' + esc(I.table.rows.slice(0, 2).map(r => r[i]).filter(Boolean).join(' | ').slice(0, 80)) + '</td><td><select data-act-change="impmap" data-v="' + i + '"><option value="">— skip —</option>' + targets.map(t => '<option value="' + t.k + '"' + (I.map[i] === t.k ? ' selected' : '') + '>' + esc(t.label) + '</option>').join('') + '</select></td></tr>').join('')
+      + '</tbody></table></div><div class="row" style="margin-top:10px"><span class="small">' + (I.type === 'accounts' ? 'New accounts with no parent column go under:' : 'Contacts with no matching account attach to:') + '</span><select data-act-change="impunder" style="max-width:320px"><option value="">' + (I.type === 'accounts' ? '(make them top-level businesses)' : '(leave unattached)') + '</option>' + rs.flatMap(r => tree(r.id)).map(x => '<option value="' + x.a.id + '"' + (I.under === x.a.id ? ' selected' : '') + '>' + '\u00a0\u00a0'.repeat(x.depth) + esc(x.a.name) + '</option>').join('') + '</select><span class="spacer"></span><button data-act="impreset">Start over</button><button class="primary" data-act="impplan">Preview import</button></div></div>';
+  }
+  if (I.step >= 3 && I.plan){
+    const c = I.plan.filter(p => p.op === 'create').length, u = I.plan.length - c;
+    h += '<div class="card"><h3>3. Review</h3><div class="okbar">' + c + ' new · ' + u + ' update existing (blank cells never erase what you have)</div><div class="tblwrap" style="max-height:300px"><table class="t"><thead><tr><th>Action</th><th>' + (I.type === 'accounts' ? 'Account' : 'Contact') + '</th><th>Details</th></tr></thead><tbody>'
+      + I.plan.map(p => '<tr><td>' + (p.op === 'create' ? '<span class="badge st-mc">New</span>' : '<span class="badge st-impl">Update</span>') + '</td><td>' + esc(p.label) + '</td><td class="small muted">' + esc(Object.entries(p.r).filter(([k]) => k !== 'name').map(([k, v]) => k + ': ' + v).join(' · ').slice(0, 160)) + '</td></tr>').join('')
+      + '</tbody></table></div><div class="row" style="margin-top:10px"><span class="spacer"></span><button class="primary" data-act="impgo" id="impGo">Import ' + I.plan.length + ' ' + I.type + '</button></div></div>';
+  }
+  if (I.result) h += '<div class="okbar">✓ Imported: ' + I.result.created + ' new, ' + I.result.updated + ' updated.' + (I.result.warnings.length ? '<br>⚠ ' + I.result.warnings.map(esc).join('<br>⚠ ') : '') + ' <button class="small" data-act="tab" data-tab="chart">View chart</button> <button class="small" data-act="impreset">New import</button></div>';
+  return h;
+}
+function impRead(text, fileName){
+  const I = UI.imp; I.text = text; I.fileName = fileName || '';
+  const src = DataSources.get(fileName ? 'csv' : 'paste');
+  const table = src.toTable(text);
+  if (!table.headers.length || !table.rows.length){ toast('Could not find a header row and data rows'); return; }
+  const w = table.headers.length; table.rows = table.rows.map(r => { const x = r.slice(0, w); while (x.length < w) x.push(''); return x; });
+  // auto-detect contacts vs accounts if headers clearly look like contacts
+  const hn = table.headers.map(norm);
+  if (hn.some(h => /^(first name|last name|email|contact name|full name)$/.test(h)) && !hn.some(h => /^(parent account|case number|opportunity)/.test(h))) I.type = 'contacts';
+  I.table = table; I.under = I.type === 'contacts' ? (UI.biz || '') : ''; I.map = guessMap(I.type, table.headers); I.step = 2; I.plan = null; I.result = null;
+  render();
+}
+
+/* ---------- sample data (fictional) ---------- */
+function loadSample(){
+  if (WS.accounts.some(a => /^sample: acme logistics$/i.test(a.name))){ toast('Sample already loaded'); UI.biz = WS.accounts.find(a => /^sample: acme logistics$/i.test(a.name)).id; render(); return; }
+  const rep = {repName: 'Sample Rep (Jordan Avery)', repEmail: 'jordan.avery@example.com', repPhone: '555-0100'};
+  const p = newAccount({name: 'Sample: Acme Logistics', sfId: '001SMPL00000001AAA', caseNo: '00990001', oppName: 'Sample: Acme Logistics — Fleet Card Rollout', oppNo: 'OPP-90001', oppId: '006SMPL00000001AAA', stage: 'impl', billMode: 'own', creditLimit: '150000', billCycle: 'Weekly', terms: 'Net 14', billContact: 'Sample: Dana Whitfield', notes: 'FICTIONAL SAMPLE DATA for demo only.', ...rep});
+  const c1 = newAccount({parentId: p.id, name: 'Sample: Acme Logistics – Grand Rapids Yard', sfId: '001SMPL00000002AAA', caseNo: '00990002', stage: 'mc', billMode: 'parent', ...rep});
+  const c2 = newAccount({parentId: p.id, name: 'Sample: Acme Logistics – Detroit Depot', sfId: '001SMPL00000003AAA', caseNo: '00990003', oppNo: 'OPP-90003', stage: 'impl', billMode: 'own', creditLimit: '25000', billCycle: 'Monthly', terms: 'Net 15', billContact: 'Sample: Marcus Lee', ...rep});
+  const c3 = newAccount({parentId: p.id, name: 'Sample: Acme Logistics – Toledo Hub', sfId: '001SMPL00000004AAA', caseNo: '00990004', stage: 'app', billMode: 'parent', ...rep});
+  const c3a = newAccount({parentId: c3.id, name: 'Sample: Acme Logistics – Toledo Night Fleet', sfId: '001SMPL00000005AAA', stage: 'app', billMode: 'parent', ...rep});
+  const s = newAccount({name: 'Sample: Acme Rentals', sfId: '001SMPL00000006AAA', stage: 'mc', billMode: 'own', creditLimit: '40000', billCycle: 'Monthly', terms: 'Net 30', notes: 'FICTIONAL SAMPLE — sister company, linked to Acme Logistics.', ...rep});
+  p.linkedIds.push(s.id); s.linkedIds.push(p.id);
+  newContact({name: 'Sample: Dana Whitfield', title: 'Fleet Director', email: 'dana.whitfield@example.com', phone: '555-0111', role: 'Decision maker', level: 'parent', accountIds: [p.id]});
+  newContact({name: 'Sample: Priya Shah', title: 'Controller', email: 'priya.shah@example.com', phone: '555-0112', role: 'Billing / AP', level: 'parent', accountIds: [p.id]});
+  newContact({name: 'Sample: Marcus Lee', title: 'Depot Manager', email: 'marcus.lee@example.com', phone: '555-0113', role: 'Billing contact (Detroit)', level: 'child', accountIds: [c2.id]});
+  newContact({name: 'Sample: Rosa Alvarez', title: 'Yard Supervisor', email: 'rosa.alvarez@example.com', phone: '555-0114', role: 'Card administrator', level: 'child', accountIds: [c1.id]});
+  newContact({name: 'Sample: Tom Becker', title: 'Ops Lead', email: 'tom.becker@example.com', phone: '555-0115', role: 'Implementation contact', level: 'parent', accountIds: [c3.id]});
+  UI.biz = p.id; UI.tab = 'chart'; touch(); toast('Fictional sample loaded');
+}
+
+/* ---------- workspace file ---------- */
+async function exportWs(){
+  const files = [];
+  for (const f of WS.files){ const d = await Store.getFile(f.id); if (d == null) continue; files.push(typeof d === 'string' ? {id: f.id, encoding: 'text', data: d} : {id: f.id, encoding: 'base64', data: ab2b64(d)}); }
+  const out = {format: WS_FORMAT, version: 1, appVersion: APP_VERSION, exported: new Date().toISOString(), workspace: WS, fileData: files};
+  download(new Blob([JSON.stringify(out, null, 1)], {type: 'application/json'}), 'account-mapper-workspace_' + today() + '.json');
+  toast('Workspace exported — keep this file private');
+}
+async function importWs(file){
+  let j; try { j = JSON.parse(await file.text()); } catch (e) { toast('That file is not a workspace (.json)'); return; }
+  if (!j || j.format !== WS_FORMAT || !j.workspace){ toast('That file is not an Account Mapper workspace'); return; }
+  const merge = WS.accounts.length ? confirm('Merge this file into what you already have?\n\nOK = merge (matching accounts are kept, new ones added)\nCancel = choose replace') : false;
+  if (!merge && WS.accounts.length && !confirm('Replace EVERYTHING in this browser with the file’s contents?')) return;
+  const inc = migrate(j.workspace);
+  const data = new Map((j.fileData || []).map(f => [f.id, f]));
+  const putData = async id => { const f = data.get(id); if (!f) return; await Store.putFile(id, f.encoding === 'base64' ? b642ab(f.data) : f.data); };
+  if (!merge){ await Store.clearAll(); WS = inc; for (const f of WS.files) await putData(f.id); }
+  else {
+    const have = new Set(WS.accounts.map(a => a.id)); const haveC = new Set(WS.contacts.map(c => c.id)); const haveF = new Set(WS.files.map(f => f.id));
+    for (const a of inc.accounts) if (!have.has(a.id)) WS.accounts.push(a);
+    for (const c of inc.contacts) if (!haveC.has(c.id)) WS.contacts.push(c);
+    for (const f of inc.files) if (!haveF.has(f.id)){ WS.files.push(f); await putData(f.id); }
+  }
+  UI.biz = null; touch(); toast('Workspace loaded');
+}
+
+/* ---------- actions ---------- */
+const ACT = {
+  biz: el => { UI.biz = el.dataset.id; if (UI.tab === 'import') UI.tab = 'chart'; render(); window.scrollTo(0, 0); },
+  tab: el => { UI.tab = el.dataset.tab; if (UI.modal) closeModal(); else render(); },
+  stage: el => { UI.stage = el.dataset.v; render(); },
+  layout: el => { UI.layout = el.dataset.v; render(); },
+  scope: el => { UI.scope = el.dataset.v; render(); },
+  open: el => openModal('acct', el.dataset.id),
+  goto: el => { const a = acc(el.dataset.id); if (!a) return; UI.biz = rootOf(a).id; render(); openModal('acct', a.id); },
+  close: () => closeModal(),
+  newbiz: () => { const a = newAccount({name: 'New business', billMode: 'own'}); UI.biz = a.id; if (UI.tab === 'import') UI.tab = 'chart'; touch(); openModal('acct', a.id); setTimeout(() => { const i = $('#f_name'); if (i){ i.focus(); i.select(); } }, 30); },
+  addchild: el => { const p = acc(el.dataset.id); const a = newAccount({parentId: p.id, name: (rootOf(p).name || 'Business') + ' – New location', billMode: 'parent', repName: p.repName, repEmail: p.repEmail, repPhone: p.repPhone}); touch(); openModal('acct', a.id); setTimeout(() => { const i = $('#f_name'); if (i){ i.focus(); i.select(); } }, 30); },
+  copy: el => copy(el.dataset.text, el.dataset.what),
+  copyfield: el => { const i = $(el.dataset.sel); copy(i ? i.value : '', el.dataset.what); },
+  copyacct: el => copy(acctLabeled(acc(el.dataset.id)), 'account'),
+  copytsv: el => copy(acctTSV(acc(el.dataset.id)), 'row (tab-separated)'),
+  copybiz: el => { const b = acc(el.dataset.id); const s = bizStats(b); copy([b.name + ' — business summary', 'Accounts: ' + s.n + ' (' + STAGES.map(x => x.label + ' ' + s.counts[x.id]).join(', ') + ')', 'Credit exposure: ' + (fmtMoney(s.exposure) || '$0') + ' across ' + s.own + ' own line(s); ' + s.up + ' billed at parent', '', ...tree(b.id).map(({a, depth}) => '  '.repeat(depth) + (depth ? '└ ' : '') + a.name + (a.sfId ? ' [' + a.sfId + ']' : '') + ' — ' + stageLabel(a.stage) + ' — ' + modeLabel(a) + (effMode(a) === 'own' && a.creditLimit ? ' ' + fmtMoney(a.creditLimit) : ''))].join('\n'), 'business summary'); },
+  copytable: () => copy(toTSV(tableMatrix(curBiz())), 'table'),
+  csvtable: () => download(new Blob(['\uFEFF' + toCSV(tableMatrix(curBiz()))], {type: 'text/csv'}), safeFile(curBiz().name) + '_accounts_' + today() + '.csv'),
+  copycontact: el => copy(contactLabeled(con(el.dataset.id)), 'contact'),
+  copycontacttsv: el => copy(contactTSV(con(el.dataset.id)), 'contact row'),
+  copycontacts: () => { const ids = subtreeIds(curBiz().id); const cs = WS.contacts.filter(c => c.accountIds.some(i => ids.has(i))); const rows = cs.map(contactPairs); copy(toTSV([rows[0] ? rows[0].map(x => x[0]) : []].concat(rows.map(r => r.map(x => x[1])))), 'contacts'); },
+  copybilling: () => copy(toTSV(billingMatrix(curBiz())), 'billing table'),
+  setstage: el => { const a = acc(UI.modal.id); a.stage = el.dataset.v; a.updated = Date.now(); touch(); renderModal(); },
+  setbill: (el, ev) => { ev.preventDefault(); const a = acc(UI.modal.id); a.billMode = el.dataset.v; touch(); renderModal(); },
+  setlevel: (el, ev) => { ev.preventDefault(); const c = con(UI.modal.id); c.level = el.dataset.v; touch(); renderModal(); },
+  newcontact: el => { const a = acc(el.dataset.id); const c = newContact({level: el.dataset.level || (isRoot(a) ? 'parent' : 'child'), accountIds: [a.id]}); UI.backTo = UI.modal && UI.modal.kind === 'acct' ? UI.modal.id : null; openModal('contact', c.id); setTimeout(() => { const i = $('#f_name'); if (i) i.focus(); }, 30); },
+  editcontact: el => { UI.backTo = UI.modal && UI.modal.kind === 'acct' ? UI.modal.id : null; openModal('contact', el.dataset.id); },
+  attachcontact: el => { const c = con($('#attachSel').value); if (c){ c.accountIds.push(el.dataset.id); touch(); renderModal(); } },
+  delcontact: el => { if (!confirm('Delete this contact?')) return; WS.contacts = WS.contacts.filter(c => c.id !== el.dataset.id); UI.modal = null; touch(); backOrClose(); },
+  link: el => { const a = acc(el.dataset.id), b = acc($('#linkSel').value); if (!b) return; if (!a.linkedIds.includes(b.id)) a.linkedIds.push(b.id); if (!b.linkedIds.includes(a.id)) b.linkedIds.push(a.id); touch(); renderModal(); },
+  unlink: (el, ev) => { ev.preventDefault(); const a = acc(el.dataset.id), b = acc(el.dataset.v); a.linkedIds = a.linkedIds.filter(x => x !== b.id); if (b) b.linkedIds = b.linkedIds.filter(x => x !== a.id); touch(); renderModal(); },
+  delacct: el => {
+    const a = acc(el.dataset.id); const ks = kids(a.id); const p = acc(a.parentId);
+    if (!confirm('Delete "' + a.name + '"?' + (ks.length ? '\n\nIts ' + ks.length + ' child account(s) will move up to ' + (p ? p.name : 'become top-level businesses') + '.' : '') + '\nIts files are removed from this browser.')) return;
+    for (const k of ks){ k.parentId = a.parentId || null; if (!k.parentId) k.billMode = 'own'; }
+    for (const f of filesOf(a.id)) Store.delFile(f.id).catch(() => {});
+    WS.files = WS.files.filter(f => f.accountId !== a.id);
+    for (const c of WS.contacts) c.accountIds = c.accountIds.filter(x => x !== a.id);
+    for (const x of WS.accounts) x.linkedIds = x.linkedIds.filter(i => i !== a.id);
+    WS.accounts = WS.accounts.filter(x => x !== a);
+    if (UI.biz === a.id) UI.biz = p ? rootOf(p).id : (ks[0] ? ks[0].id : null);
+    UI.modal = null; $('#modal').classList.add('hidden'); touch();
+  },
+  preview: el => previewFile(el.dataset.id),
+  copypreview: async el => { const t = await Store.getFile(el.dataset.id); copy(toTSV(parseCSV(t)), 'table'); },
+  dlfile: async el => { const f = WS.files.find(x => x.id === el.dataset.id); const d = await Store.getFile(f.id); download(new Blob([d], {type: f.mime || (f.kind === 'csv' ? 'text/csv' : 'application/octet-stream')}), f.name); },
+  delfile: async el => { const f = WS.files.find(x => x.id === el.dataset.id); if (!f || !confirm('Remove "' + f.name + '" from this account?')) return; await Store.delFile(f.id); WS.files = WS.files.filter(x => x !== f); touch(); renderModal(); },
+  buildxlsx: async () => { try { await buildMasterXlsx(curBiz()); } catch (e) { console.warn(e); toast('Could not build the file: ' + e.message); } },
+  buildzip: async () => { try { await buildMasterZip(curBiz()); } catch (e) { console.warn(e); toast('Could not build the zip: ' + e.message); } },
+  imptype: el => { UI.imp.type = el.dataset.v; UI.imp.under = el.dataset.v === 'contacts' ? (UI.biz || '') : ''; if (UI.imp.table){ UI.imp.map = guessMap(UI.imp.type, UI.imp.table.headers); UI.imp.step = 2; UI.imp.plan = null; } render(); },
+  impread: () => { const t = $('#impText').value; if (!t.trim()){ toast('Paste something first'); return; } impRead(t, ''); },
+  impplan: () => { const I = UI.imp; rememberMap(I.type, I.table.headers, I.map); const recs = recordsFrom(I.type, I.table, I.map); if (!recs.length){ toast(I.type === 'accounts' ? 'Map a column to Business Name or Salesforce Account ID' : 'Map a column to Name or Email'); return; } I.recs = recs; I.plan = planImport(I.type, recs); I.step = 3; touch(); },
+  impgo: () => { const I = UI.imp; const res = applyImport(I.type, I.recs, {under: I.under}); I.result = res; I.step = 1; I.plan = null; I.table = null; I.text = ''; I.fileName = '';
+    if (I.type === 'accounts'){ const last = WS.accounts[WS.accounts.length - 1]; if (!UI.biz && last) UI.biz = rootOf(last).id; } touch(); toast('Imported ' + (res.created + res.updated)); },
+  impreset: () => { UI.imp = null; render(); },
+  loadsample: () => { UI.menu = false; renderMenu(); loadSample(); },
+  exportws: () => { UI.menu = false; renderMenu(); exportWs(); },
+  importws: () => { UI.menu = false; renderMenu(); $('#fileWs').click(); },
+  menu: () => { UI.menu = !UI.menu; renderMenu(); },
+  clearall: async () => { UI.menu = false; renderMenu(); if (!confirm('Erase ALL accounts, contacts and files from this browser?\n\nExport a workspace file first if you want a backup.')) return; await Store.clearAll(); WS = blankWs(); UI.biz = null; UI.imp = null; touch(); toast('Everything erased from this browser'); },
+  about: () => { UI.menu = false; renderMenu(); UI.modal = {kind: 'preview', html: '<div class="mh"><h3>About Account Mapper</h3><button data-act="close">✕</button></div><div class="mb"><p><b>🔒 Your data stays in this browser. Nothing is uploaded.</b></p><p>The page has a strict Content-Security-Policy that blocks all network requests from the app (no analytics, no fonts, no CDNs). Accounts, contacts and files are saved in this browser\'s storage on this device only. Clearing site data erases them, so export a workspace file as a backup.</p><p>To hand a business to another rep, use <b>Export workspace</b> and send the .json file through an approved, internal channel. They use <b>Open workspace file</b>.</p><p class="small muted">Version ' + APP_VERSION + ' · storage: ' + (Store.mode === 'idb' ? 'IndexedDB' : 'localStorage (limited)') + '</p></div>'}; renderModal(); },
+};
+function backOrClose(){ const back = UI.backTo; UI.backTo = null; if (back && acc(back)) openModal('acct', back); else { UI.modal = null; renderModal(); } }
+function renderMenu(){ $('#menuPop').classList.toggle('hidden', !UI.menu); }
+
+/* ---------- events ---------- */
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]');
+  if (!el){ if (UI.menu && !ev.target.closest('.menu')){ UI.menu = false; renderMenu(); } if (ev.target.id === 'modal') closeOrBack(); return; }
+  const f = ACT[el.dataset.act]; if (!f) return;
+  if (el.tagName === 'A') ev.preventDefault();
+  ev.stopPropagation();
+  if (el.dataset.act === 'close'){ closeOrBack(); return; }
+  f(el, ev);
+});
+function closeOrBack(){ if (UI.modal && UI.modal.kind === 'contact' && UI.backTo){ const c = con(UI.modal.id); if (c && !c.name && !c.email && !c.phone) WS.contacts = WS.contacts.filter(x => x !== c); touch(); backOrClose(); } else closeModal(); }
+let bgTimer = null;
+document.addEventListener('input', ev => {
+  const t = ev.target;
+  if (t.id === 'q' || t.id === 'q2'){ UI.q = t.value; const id = t.id, pos = t.selectionStart; render(); const n = $('#' + id); if (n){ n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} } return; }
+  if (t.id === 'impText' && UI.imp){ UI.imp.text = t.value; return; }
+  if (t.dataset.f && UI.modal && UI.modal.kind === 'acct'){ const a = acc(UI.modal.id); a[t.dataset.f] = t.value; a.updated = Date.now(); if (t.dataset.f === 'name') $('.mh h3').textContent = t.value || '(unnamed)'; touch(false); clearTimeout(bgTimer); bgTimer = setTimeout(render, 300); }
+  if (t.dataset.cf && UI.modal && UI.modal.kind === 'contact'){ const c = con(UI.modal.id); c[t.dataset.cf] = t.value; touch(false); clearTimeout(bgTimer); bgTimer = setTimeout(render, 300); }
+});
+document.addEventListener('change', async ev => {
+  const t = ev.target;
+  if (t.dataset.upload){ if (t.files.length) await addFiles(t.dataset.upload, t.files); t.value = ''; renderModal(); return; }
+  if (t.id === 'fileWs'){ if (t.files[0]) await importWs(t.files[0]); t.value = ''; return; }
+  if (t.id === 'impFile'){ const f = t.files[0]; if (f) impRead(await f.text(), f.name); t.value = ''; return; }
+  if (t.dataset.f === 'billCycle' && UI.modal){ const a = acc(UI.modal.id); a.billCycle = t.value; touch(); return; }
+  const a = t.dataset.actChange; if (!a) return;
+  if (a === 'bizsel'){ UI.biz = t.value; render(); }
+  if (a === 'setparent'){ const x = acc(t.dataset.id); const np = t.value || null; if (np && subtreeIds(x.id).has(np)){ toast('Can’t move an account under its own child'); renderModal(); return; } x.parentId = np; if (!np) x.billMode = 'own'; UI.biz = rootOf(x).id; touch(); renderModal(); }
+  if (a === 'cacct'){ const c = con(UI.modal.id); const id = t.dataset.v; if (t.checked){ if (!c.accountIds.includes(id)) c.accountIds.push(id); } else c.accountIds = c.accountIds.filter(x => x !== id); touch(); }
+  if (a === 'impmap'){ UI.imp.map[+t.dataset.v] = t.value; }
+  if (a === 'impunder'){ UI.imp.under = t.value; }
+});
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && UI.modal) closeOrBack(); });
+
+/* ---------- boot ---------- */
+async function boot(){
+  await Store.open();
+  try { WS = migrate(await Store.getWs()); } catch (e) { WS = blankWs(); }
+  if (Store.mode !== 'idb') $('#storeWarn').classList.remove('hidden');
+  setSave(WS.accounts.length ? 'Saved in this browser ✓' : 'Nothing saved yet');
+  render();
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+  window.__ready = true;
+}
+boot();
+
+</script>
+</body>
+</html>
